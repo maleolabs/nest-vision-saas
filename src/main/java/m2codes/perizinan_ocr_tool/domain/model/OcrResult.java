@@ -37,18 +37,18 @@ public class OcrResult {
 
     @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name="image_upload_id", nullable=false)
-    private ImageUpload image_upload;
+    private ImageUpload imageUpload;
 
     @Column(name="is_success", nullable=false)
-    private boolean is_success;
+    private boolean isSuccess;
 
     @Column(name="error_message", nullable=false, length=255)
-    private String error_message;
+    private String errorMessage;
 
     @Column(name="extracted_at", nullable=false)
-    private Long extracted_at;
+    private Long extractedAt;
 
-    @OneToMany(mappedBy="ocr_result", cascade=CascadeType.ALL, fetch=FetchType.LAZY)
-    private List<ExtractedText> extracted_text;
+    @OneToMany(mappedBy="ocrResult", cascade=CascadeType.ALL, fetch=FetchType.LAZY)
+    private List<ExtractedText> extractedText;
 
 }

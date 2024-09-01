@@ -30,21 +30,22 @@ public class ImageUpload {
 
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
+    @Column(name="id")
     private Long id;
 
-    @Column(nullable=false)
-    private Long izin_id;
+    @Column(name="izin_id", nullable=false)
+    private Long izinId;
 
-    @Column(nullable=false)
-    private Long syarat_izin_id;
+    @Column(name="syarat_izin_id", nullable=false)
+    private Long syaratIzinId;
 
-    @Column(nullable=false, length=255)
-    private String image_url;
+    @Column(name="image_url", nullable=false, length=255)
+    private String imageUrl;
 
-    @Column(nullable=false)
-    private Long uploaded_at;
+    @Column(name="uploaded_at", nullable=false)
+    private Long uploadedAt;
 
-    @OneToMany(mappedBy="image_upload", cascade=CascadeType.ALL, fetch=FetchType.LAZY)
-    private List<OcrResult> ocr_results;
+    @OneToMany(mappedBy="imageUpload", cascade=CascadeType.ALL, fetch=FetchType.LAZY)
+    private List<OcrResult> ocrResults;
 
 }

@@ -33,12 +33,12 @@ public class ExtractedText {
 
     @ManyToOne(fetch=FetchType.LAZY)
     @JoinColumn(name="ocr_result_id", nullable=false)
-    private OcrResult ocr_result;
+    private OcrResult ocrResult;
 
     @Column(name="text_key", nullable=false, length=100)
-    private String text_key;
+    private String textKey;
 
-    @Column(columnDefinition="TEXT NOT NULL")
-    private String text_value;
+    @Column(columnDefinition="text_value TEXT NOT NULL")
+    private String textValue;
 
 }
