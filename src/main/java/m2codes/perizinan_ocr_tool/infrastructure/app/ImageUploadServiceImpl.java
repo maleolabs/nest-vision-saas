@@ -24,6 +24,7 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     public ImageUpload save(ImageUploadRequest request) {
         ImageUpload imageUpload = ImageUpload.builder()
                                     .izinId(request.getIzinId())
+                                    .jenisPerizinanId(request.getJenisPerizinanId())
                                     .syaratIzinId(request.getSyaratIzinId())
                                     .imageUrl(request.getImageUrl())
                                     .uploadedAt(System.currentTimeMillis())

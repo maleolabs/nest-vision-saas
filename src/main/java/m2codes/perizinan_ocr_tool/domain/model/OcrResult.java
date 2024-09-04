@@ -14,6 +14,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -24,6 +25,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -42,7 +44,7 @@ public class OcrResult {
     @Column(name="is_success", nullable=false)
     private boolean isSuccess;
 
-    @Column(name="error_message", nullable=false, length=255)
+    @Column(name="error_message", nullable=true, length=255)
     private String errorMessage;
 
     @Column(name="extracted_at", nullable=false)

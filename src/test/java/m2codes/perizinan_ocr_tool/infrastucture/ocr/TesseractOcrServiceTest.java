@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import m2codes.perizinan_ocr_tool.infrastructure.dto.ExtractedTextDto;
@@ -17,18 +18,21 @@ import m2codes.perizinan_ocr_tool.infrastructure.ocr.TesseractOcrService;
 @SpringBootTest
 public class TesseractOcrServiceTest {
 
+    @Value("${perizinan-dpmptsp.api.base-url}")
+    private String perizinanApiBaseUrl;
+
     @Autowired
     private TesseractOcrService tesseractOcrService;
     
     @Test
     public void extractTextFromImageTest() {
-        String imageUrl = "http://sistem-informasi-dinas-pmptsp.me/api/files/MTcyNTM4MDI3NzUta3RwMi5qcGVn";
+        String imageUrl = perizinanApiBaseUrl + "/files/MTcyNTQzMzA1MDg1NS10ZXN0LmpwZw==";
         OcrResultDto result = tesseractOcrService.extractTextFromImage(imageUrl);
 
         List<ExtractedTextDto> extractedTexts = tesseractOcrService.extractKeyValueFromText(result.getExtractedText());
 
         extractedTexts.forEach(extractedText -> {
-            System.out.println(extractedText.getTextKey() + ": " + extractedText.getTextValue());
+            System.out.println(extractedText.getTextKey() + "-> " + extractedText.getTextValue());
         });
     }
 

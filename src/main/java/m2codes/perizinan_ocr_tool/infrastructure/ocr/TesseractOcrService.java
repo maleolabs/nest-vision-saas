@@ -75,7 +75,7 @@ public class TesseractOcrService implements TextExtractionService {
         for (String line : lines) {
             if (line.contains(":")) {
                 String[] parts = line.split(":", 2);
-                String key = parts[0].trim();
+                String key = parts[0].trim().toLowerCase();
                 String value = parts[1].trim();
 
                 ExtractedTextDto extractedText = ExtractedTextDto.builder()

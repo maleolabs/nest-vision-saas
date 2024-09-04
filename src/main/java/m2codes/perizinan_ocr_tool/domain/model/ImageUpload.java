@@ -38,6 +38,9 @@ public class ImageUpload {
     @Column(name="izin_id", nullable=false)
     private Long izinId;
 
+    @Column(name="jenis_perizinan_id", nullable=false)
+    private Long jenisPerizinanId;
+
     @Column(name="syarat_izin_id", nullable=false)
     private Long syaratIzinId;
 

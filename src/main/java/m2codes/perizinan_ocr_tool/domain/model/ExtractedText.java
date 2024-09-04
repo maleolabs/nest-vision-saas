@@ -10,6 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -20,6 +21,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -38,7 +40,7 @@ public class ExtractedText {
     @Column(name="text_key", nullable=false, length=100)
     private String textKey;
 
-    @Column(columnDefinition="text_value TEXT NOT NULL")
+    @Column(columnDefinition="TEXT NOT NULL")
     private String textValue;
 
 }
