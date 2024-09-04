@@ -14,7 +14,11 @@ public class OcrConfig {
 
     @Bean
     public Tesseract tesseract() {
-        return new Tesseract();
+        Tesseract tesseract = new Tesseract();
+        tesseract.setDatapath("C:\\tesseract\\tessdata");
+        tesseract.setLanguage("ind");
+
+        return tesseract;
     }
 
 }

@@ -1,6 +1,9 @@
 package m2codes.perizinan_ocr_tool.domain.service;
 
-import m2codes.perizinan_ocr_tool.domain.model.OcrResult;
+import java.util.List;
+
+import m2codes.perizinan_ocr_tool.infrastructure.dto.ExtractedTextDto;
+import m2codes.perizinan_ocr_tool.infrastructure.dto.OcrResultDto;
 
 /**
  *
@@ -8,6 +11,8 @@ import m2codes.perizinan_ocr_tool.domain.model.OcrResult;
  */
 public interface TextExtractionService {
 
-    OcrResult extractTextFromImage(String imageUrl);
+    OcrResultDto extractTextFromImage(String imageUrl);
+
+    List<ExtractedTextDto> extractKeyValueFromText(String text);
 
 }
