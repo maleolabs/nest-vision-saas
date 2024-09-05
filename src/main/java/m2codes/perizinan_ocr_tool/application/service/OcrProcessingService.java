@@ -60,13 +60,15 @@ public class OcrProcessingService {
 
         OcrResultDto ocrResultDto = textExtractionService.extractTextFromImage(request.getImageUrl());
 
-         if (ocrResultDto.isSuccess()) {
+        if (ocrResultDto.isSuccess()) {
              OcrResult ocrResult = ocrResultService.save(ocrResultDto, imageUpload);
+
+             log.info("SAVED OCR RESULT IN OCR PROCESSING SERVICE : {}", ocrResult);
 
              List<ExtractedTextDto> extractedTextDto = textExtractionService.extractKeyValueFromText(ocrResultDto.getExtractedText());
 
              extractedTextToDataEntri(extractedTextDto, request.getJenisPerizinanId(), ocrResult);
-         }
+        }
 
         return WebResponse.builder()
             .success(ocrResultDto.isSuccess())

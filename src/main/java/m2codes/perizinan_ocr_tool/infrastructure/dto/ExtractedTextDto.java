@@ -17,4 +17,11 @@ public class ExtractedTextDto {
 
     private String textValue;
 
+    @Override
+    public String toString() {
+        return "ExtractedTextDto{" +
+                "textKey=" + textKey +
+                ", textValue=" + textValue +
+                "}";
+    }
 }

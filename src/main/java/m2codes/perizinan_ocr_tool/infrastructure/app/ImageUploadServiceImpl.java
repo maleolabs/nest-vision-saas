@@ -1,5 +1,6 @@
 package m2codes.perizinan_ocr_tool.infrastructure.app;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import m2codes.perizinan_ocr_tool.domain.model.ImageUpload;
@@ -14,6 +15,7 @@ import java.util.Optional;
  *
  * @author marij_mokoginta
  */
+@Slf4j
 @Service
 public class ImageUploadServiceImpl implements ImageUploadService {
 
@@ -25,15 +27,18 @@ public class ImageUploadServiceImpl implements ImageUploadService {
 
     @Override
     public ImageUpload save(ImageUploadRequest request) {
+        log.info("IMAGE UPLOAD REQUEST IN IMAGE UPLOAD SERVICE : {}", request);
 
+        Long savedImageUploadId = imageUploadRepository.findFirstByIzinId(request.getIzinId()).map(ImageUpload::getId).orElse(null);
 
         ImageUpload imageUpload = ImageUpload.builder()
-                                    .izinId(request.getIzinId())
-                                    .jenisPerizinanId(request.getJenisPerizinanId())
-                                    .syaratIzinId(request.getSyaratIzinId())
-                                    .imageUrl(request.getImageUrl())
-                                    .uploadedAt(System.currentTimeMillis())
-                                    .build();
+                .id(savedImageUploadId)
+                .izinId(request.getIzinId())
+                .jenisPerizinanId(request.getJenisPerizinanId())
+                .syaratIzinId(request.getSyaratIzinId())
+                .imageUrl(request.getImageUrl())
+                .uploadedAt(System.currentTimeMillis())
+                .build();
 
         return imageUploadRepository.save(imageUpload);
     }

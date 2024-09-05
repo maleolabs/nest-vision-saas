@@ -31,4 +31,13 @@ public class ImageUploadRequest {
     @NotEmpty
     private String imageUrl;
 
+    @Override
+    public String toString() {
+        return "ImageUpload{" +
+                "izinId=" + izinId +
+                ", jenisPerizinanId=" + jenisPerizinanId +
+                ", syaratIzinId=" + syaratIzinId +
+                ", imageUrl='" + imageUrl + '\'' +
+                '}';
+    }
 }

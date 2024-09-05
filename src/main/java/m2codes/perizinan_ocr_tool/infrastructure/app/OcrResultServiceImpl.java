@@ -1,5 +1,6 @@
 package m2codes.perizinan_ocr_tool.infrastructure.app;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +14,7 @@ import m2codes.perizinan_ocr_tool.infrastructure.dto.OcrResultDto;
  *
  * @author marij_mokoginta
  */
+@Slf4j
 @Service
 public class OcrResultServiceImpl implements OcrResultService {
 
@@ -24,12 +26,18 @@ public class OcrResultServiceImpl implements OcrResultService {
 
     @Override
     public OcrResult save(OcrResultDto ocrResultDto, @NonNull ImageUpload imageUpload) {
+        log.info("OCR RESULT IN OCR RESULT SERVICE : {}", ocrResultDto);
+
+        Long savedOcrResultId = ocrResultRepository.findFirstByImageUpload(imageUpload).map(OcrResult::getId).orElse(null);
         OcrResult ocrResult = OcrResult.builder()
-                                .imageUpload(imageUpload)
-                                .isSuccess(ocrResultDto.isSuccess())
-                                .errorMessage(ocrResultDto.getErrorMessage())
-                                .extractedAt(ocrResultDto.getExtractedAt())
-                                .build();
+                .id(savedOcrResultId)
+                .imageUpload(imageUpload)
+                .isSuccess(ocrResultDto.isSuccess())
+                .errorMessage(ocrResultDto.getErrorMessage())
+                .extractedAt(ocrResultDto.getExtractedAt())
+                .build();
+
+        log.info("OCR RESULT MODEL TO SAVE : {}", ocrResult);
 
         return ocrResultRepository.save(ocrResult);
     }

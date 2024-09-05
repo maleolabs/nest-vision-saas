@@ -54,4 +54,14 @@ public class OcrResult {
     )
     private List<ExtractedText> extractedText;
 
+    @Override
+    public String toString() {
+        return "OcrResult{" +
+                "id=" + id +
+                ", imageUpload=" + imageUpload +
+                ", isSuccess=" + isSuccess +
+                ", errorMessage=" + errorMessage +
+                ", extractedAt=" + extractedAt +
+                "}";
+    }
 }

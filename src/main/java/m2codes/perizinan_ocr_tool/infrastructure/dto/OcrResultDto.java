@@ -25,4 +25,13 @@ public class OcrResultDto {
 
     private Long extractedAt;
 
+    @Override
+    public String toString() {
+        return "OcrResultDto{" +
+                "extractedText=" + (extractedText.length() > 25 ? extractedText.substring(0,25) : extractedText) +
+                ", isSuccess=" + isSuccess +
+                ", errorMessage=" + errorMessage +
+                ", extractedAt=" + extractedAt +
+                "}";
+    }
 }

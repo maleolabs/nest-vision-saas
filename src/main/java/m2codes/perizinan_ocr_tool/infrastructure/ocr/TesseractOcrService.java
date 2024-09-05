@@ -52,17 +52,14 @@ public class TesseractOcrService implements TextExtractionService {
             result.setExtractedText(text);
             result.setSuccess(true);
             result.setExtractedAt(System.currentTimeMillis());
-        } catch (MalformedURLException exception) {
-            result.setSuccess(false);
-            result.setErrorMessage(exception.getMessage());
-
-            log.error(exception.getMessage());
         } catch (IOException | TesseractException exception) {
             result.setSuccess(false);
             result.setErrorMessage(exception.getMessage());
 
             log.error(exception.getMessage());
         }
+
+        log.info("OCR RESULT FROM TESSERACT OCR SERVICE : {}", result);
 
         return result;
     }
