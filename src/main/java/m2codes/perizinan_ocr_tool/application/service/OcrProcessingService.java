@@ -1,8 +1,11 @@
 package m2codes.perizinan_ocr_tool.application.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import m2codes.perizinan_ocr_tool.domain.model.ExtractedText;
+import m2codes.perizinan_ocr_tool.web.dto.response.ExtractedTextResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,7 +55,7 @@ public class OcrProcessingService {
     }
 
     @Transactional
-    public WebResponse processOcr(ImageUploadRequest request) {
+    public WebResponse<?> processOcr(ImageUploadRequest request) {
         ImageUpload imageUpload = imageUploadService.save(request);
 
         OcrResultDto ocrResultDto = textExtractionService.extractTextFromImage(request.getImageUrl());
@@ -83,6 +86,52 @@ public class OcrProcessingService {
                     }
                 }
             }));
+    }
+
+    public WebResponse<ExtractedTextResponse> findByTextKey(String textKey, Long izinId) {
+        WebResponse<ExtractedTextResponse> webResponse = new WebResponse<>();
+        ExtractedTextResponse response = new ExtractedTextResponse();
+
+        try {
+            extractedTextService.findByTextKey(textKey, izinId).ifPresentOrElse(extractedText -> {
+                response.setTextKey(extractedText.getTextKey());
+                response.setTextValue(extractedText.getTextValue());
+
+                webResponse.setData(response);
+                webResponse.setSuccess(true);
+            }, () -> {
+                webResponse.setSuccess(false);
+                webResponse.setErrorMessage("extracted text with key: " + textKey + " and izinId: " + izinId + " not found.");
+            });
+        } catch (RuntimeException exception) {
+            webResponse.setSuccess(false);
+            webResponse.setErrorMessage(exception.getMessage());
+        }
+
+        return webResponse;
+    }
+
+    public WebResponse<List<ExtractedTextResponse>> findByIzinId(Long izinId) {
+        List<ExtractedTextResponse> responses = new ArrayList<>();
+
+        imageUploadService.findByIzinId(izinId).forEach(imageUpload -> {
+            if (!imageUpload.getOcrResults().isEmpty()) {
+                List<ExtractedText> extractedTexts = imageUpload.getOcrResults().get(imageUpload.getOcrResults().size() - 1).getExtractedText();
+                for (ExtractedText extractedText : extractedTexts) {
+                    ExtractedTextResponse extractedTextResponse = ExtractedTextResponse.builder()
+                            .textKey(extractedText.getTextKey())
+                            .textValue(extractedText.getTextValue())
+                            .build();
+                    responses.add(extractedTextResponse);
+                }
+            }
+        });
+
+        WebResponse<List<ExtractedTextResponse>> webResponse = new WebResponse<>();
+        webResponse.setSuccess(true);
+        webResponse.setData(responses);
+
+        return webResponse;
     }
 
 }

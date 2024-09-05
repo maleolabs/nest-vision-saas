@@ -7,6 +7,8 @@ import m2codes.perizinan_ocr_tool.domain.repository.ImageUploadRepository;
 import m2codes.perizinan_ocr_tool.domain.service.ImageUploadService;
 import m2codes.perizinan_ocr_tool.web.dto.request.ImageUploadRequest;
 
+import java.util.List;
+
 /**
  *
  * @author marij_mokoginta
@@ -32,5 +34,10 @@ public class ImageUploadServiceImpl implements ImageUploadService {
 
         return imageUploadRepository.save(imageUpload);
     }
-    
+
+    @Override
+    public List<ImageUpload> findByIzinId(Long izinId) {
+        return imageUploadRepository.findByIzinId(izinId);
+    }
+
 }

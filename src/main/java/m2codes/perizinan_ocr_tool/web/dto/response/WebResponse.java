@@ -1,8 +1,6 @@
 package m2codes.perizinan_ocr_tool.web.dto.response;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 /**
  *
@@ -11,7 +9,11 @@ import lombok.Setter;
 @Setter
 @Getter
 @Builder
-public class WebResponse {
+@NoArgsConstructor
+@AllArgsConstructor
+public class WebResponse<T> {
+
+    private T data;
 
     private boolean success;
 
