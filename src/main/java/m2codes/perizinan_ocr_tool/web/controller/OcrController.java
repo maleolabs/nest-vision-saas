@@ -48,7 +48,7 @@ public class OcrController {
     public ResponseEntity<WebResponse<List<ExtractedTextResponse>>> findByIzinId(@PathVariable(name = "izinId") Long izinId) {
         WebResponse<List<ExtractedTextResponse>> response = ocrProcessingService.findByIzinId(izinId);
 
-        return ResponseEntity.ok(response);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
 
 }

@@ -3,7 +3,7 @@ package m2codes.perizinan_ocr_tool.domain.service;
 import m2codes.perizinan_ocr_tool.domain.model.ImageUpload;
 import m2codes.perizinan_ocr_tool.web.dto.request.ImageUploadRequest;
 
-import java.util.List;
+import java.util.Optional;
 
 /**
  *
@@ -13,6 +13,6 @@ public interface ImageUploadService {
 
     ImageUpload save(ImageUploadRequest request);
 
-    List<ImageUpload> findByIzinId(Long izinId);
+    Optional<ImageUpload> findByIzinId(Long izinId);
 
 }

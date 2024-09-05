@@ -8,6 +8,7 @@ import m2codes.perizinan_ocr_tool.domain.service.ImageUploadService;
 import m2codes.perizinan_ocr_tool.web.dto.request.ImageUploadRequest;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  *
@@ -24,6 +25,8 @@ public class ImageUploadServiceImpl implements ImageUploadService {
 
     @Override
     public ImageUpload save(ImageUploadRequest request) {
+
+
         ImageUpload imageUpload = ImageUpload.builder()
                                     .izinId(request.getIzinId())
                                     .jenisPerizinanId(request.getJenisPerizinanId())
@@ -36,8 +39,8 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     }
 
     @Override
-    public List<ImageUpload> findByIzinId(Long izinId) {
-        return imageUploadRepository.findByIzinId(izinId);
+    public Optional<ImageUpload> findByIzinId(Long izinId) {
+        return imageUploadRepository.findFirstByIzinId(izinId);
     }
 
 }

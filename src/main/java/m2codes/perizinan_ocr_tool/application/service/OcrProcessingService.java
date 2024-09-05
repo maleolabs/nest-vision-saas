@@ -112,9 +112,11 @@ public class OcrProcessingService {
     }
 
     public WebResponse<List<ExtractedTextResponse>> findByIzinId(Long izinId) {
+        WebResponse<List<ExtractedTextResponse>> webResponse = new WebResponse<>();
+
         List<ExtractedTextResponse> responses = new ArrayList<>();
 
-        imageUploadService.findByIzinId(izinId).forEach(imageUpload -> {
+        imageUploadService.findByIzinId(izinId).ifPresentOrElse(imageUpload -> {
             if (!imageUpload.getOcrResults().isEmpty()) {
                 List<ExtractedText> extractedTexts = imageUpload.getOcrResults().get(imageUpload.getOcrResults().size() - 1).getExtractedText();
                 for (ExtractedText extractedText : extractedTexts) {
@@ -124,12 +126,13 @@ public class OcrProcessingService {
                             .build();
                     responses.add(extractedTextResponse);
                 }
+                webResponse.setSuccess(true);
+                webResponse.setData(responses);
             }
+        }, () -> {
+            webResponse.setSuccess(false);
+            webResponse.setErrorMessage("extracted text with izinId: " + izinId + " not found.");
         });
-
-        WebResponse<List<ExtractedTextResponse>> webResponse = new WebResponse<>();
-        webResponse.setSuccess(true);
-        webResponse.setData(responses);
 
         return webResponse;
     }
