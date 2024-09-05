@@ -117,8 +117,8 @@ public class OcrProcessingService {
         List<ExtractedTextResponse> responses = new ArrayList<>();
 
         imageUploadService.findByIzinId(izinId).ifPresentOrElse(imageUpload -> {
-            if (!imageUpload.getOcrResults().isEmpty()) {
-                List<ExtractedText> extractedTexts = imageUpload.getOcrResults().get(imageUpload.getOcrResults().size() - 1).getExtractedText();
+            if (imageUpload.getOcrResults() != null) {
+                List<ExtractedText> extractedTexts = imageUpload.getOcrResults().getExtractedText();
                 for (ExtractedText extractedText : extractedTexts) {
                     ExtractedTextResponse extractedTextResponse = ExtractedTextResponse.builder()
                             .textKey(extractedText.getTextKey())

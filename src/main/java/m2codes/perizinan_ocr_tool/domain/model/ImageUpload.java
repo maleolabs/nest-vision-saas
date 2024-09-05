@@ -1,16 +1,6 @@
 package m2codes.perizinan_ocr_tool.domain.model;
 
-import java.util.List;
-
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -44,13 +34,17 @@ public class ImageUpload {
     @Column(name="syarat_izin_id", nullable=false)
     private Long syaratIzinId;
 
-    @Column(name="image_url", nullable=false, length=255)
+    @Column(name="image_url", nullable=false)
     private String imageUrl;
 
     @Column(name="uploaded_at", nullable=false)
     private Long uploadedAt;
 
-    @OneToMany(mappedBy="imageUpload", cascade=CascadeType.ALL, fetch=FetchType.LAZY)
-    private List<OcrResult> ocrResults;
+    @OneToOne(
+            mappedBy="imageUpload",
+            cascade=CascadeType.ALL,
+            fetch=FetchType.LAZY
+    )
+    private OcrResult ocrResults;
 
 }

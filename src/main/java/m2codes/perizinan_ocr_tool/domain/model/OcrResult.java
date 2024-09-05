@@ -2,17 +2,7 @@ package m2codes.perizinan_ocr_tool.domain.model;
 
 import java.util.List;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -37,8 +27,15 @@ public class OcrResult {
     @Column(name="id")
     private Long id;
 
-    @ManyToOne(fetch=FetchType.LAZY)
-    @JoinColumn(name="image_upload_id", nullable=false)
+    @OneToOne(
+            fetch=FetchType.LAZY,
+            cascade = CascadeType.ALL
+    )
+    @JoinColumn(
+            name="image_upload_id",
+            referencedColumnName = "id",
+            nullable=false
+    )
     private ImageUpload imageUpload;
 
     @Column(name="is_success", nullable=false)
@@ -50,7 +47,11 @@ public class OcrResult {
     @Column(name="extracted_at", nullable=false)
     private Long extractedAt;
 
-    @OneToMany(mappedBy="ocrResult", cascade=CascadeType.ALL, fetch=FetchType.LAZY)
+    @OneToMany(
+            mappedBy="ocrResult",
+            cascade=CascadeType.ALL,
+            fetch=FetchType.LAZY
+    )
     private List<ExtractedText> extractedText;
 
 }
