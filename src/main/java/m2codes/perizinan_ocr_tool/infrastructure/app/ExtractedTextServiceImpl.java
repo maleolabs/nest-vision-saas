@@ -23,7 +23,7 @@ public class ExtractedTextServiceImpl implements ExtractedTextService {
     private final ExtractedTextRepository extractedTextRepository;
 
     public ExtractedTextServiceImpl(ExtractedTextRepository extractedTextRepository) {
-        this.extractedTextRepository = extractedTextRepository;;
+        this.extractedTextRepository = extractedTextRepository;
     }
 
     @Override
