@@ -6,7 +6,6 @@ import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class ExtractedTextMapper {
@@ -36,15 +35,14 @@ public class ExtractedTextMapper {
 
     public static List<ExtractedTextDto> filterParsedDataByRequiredKeys(List<ExtractedTextDto> parsedData, List<DataEntriDto> requiredKeys) {
         return parsedData.stream()
-                .filter(
-                        extractedTextDto -> requiredKeys.stream().anyMatch(requiredKey -> requiredKey.getNama().startsWith(extractedTextDto.getTextKey()))
-                ).peek(extractedTextDto -> requiredKeys.stream()
-                        .filter(dataEntriDto -> dataEntriDto.getNama().startsWith(extractedTextDto.getTextKey()))
-                        .findFirst()
-                        .ifPresent(matchingKey -> {
-                            extractedTextDto.setTextKey(matchingKey.getNama());
-                            extractedTextDto.setDataEntriId(matchingKey.getId());
-                        })
+                .peek(extractedTextDto ->
+                        requiredKeys.stream()
+                            .filter(dataEntriDto -> dataEntriDto.getNama().startsWith(extractedTextDto.getTextKey()))
+                            .findFirst()
+                            .ifPresent(matchingKey -> {
+                                extractedTextDto.setTextKey(matchingKey.getNama());
+                                extractedTextDto.setDataEntriId(matchingKey.getId());
+                            })
                 ).toList();
     }
 

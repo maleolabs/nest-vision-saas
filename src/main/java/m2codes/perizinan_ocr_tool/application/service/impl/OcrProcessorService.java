@@ -17,9 +17,11 @@ import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static m2codes.perizinan_ocr_tool.application.util.ExtractedTextCleaner.linesCleaner;
 import static m2codes.perizinan_ocr_tool.application.util.ExtractedTextMapper.*;
 
 @Slf4j
@@ -64,10 +66,14 @@ public class OcrProcessorService extends TextProcessorService {
     @Override
     protected List<ExtractedTextDto> processExtractedText(String extractedText, List<DataEntriDto> dataEntri) {
         String[] lines = extractedText.split("\\r?\\n");
+        String[] cleanLines = linesCleaner(lines);
+
+        Arrays.stream(cleanLines)
+                .forEach(System.out::println);
 
         List<ExtractedTextDto> extractedTextDtos = new ArrayList<>();
-        extractedTextDtos.addAll(parseLinesByColon(lines));
-        extractedTextDtos.addAll(detectAndAddMissingKeyValue(lines, dataEntri));
+        extractedTextDtos.addAll(parseLinesByColon(cleanLines));
+        extractedTextDtos.addAll(detectAndAddMissingKeyValue(cleanLines, dataEntri));
 
         log.info("PROCESSED EXTRACTED TEXT BEFORE FILTERED : {}", extractedTextDtos.size());
         extractedTextDtos.forEach(extractedTextDto -> log.info("TEXT PROCESSED : {} -> {}", extractedTextDto.getTextKey(), extractedTextDto.getTextValue()));
