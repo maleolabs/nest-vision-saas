@@ -1,6 +1,5 @@
 package m2codes.perizinan_ocr_tool.interfaces.controller;
 
-import m2codes.perizinan_ocr_tool.application.service.impl.OcrProcessorService1;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.ImageUploadRequest;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.ExtractedTextResponse;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
