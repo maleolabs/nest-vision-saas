@@ -1,9 +1,9 @@
-package m2codes.perizinan_ocr_tool.domain.service;
+package m2codes.perizinan_ocr_tool.application.service;
 
 import java.util.List;
 
-import m2codes.perizinan_ocr_tool.infrastructure.dto.ExtractedTextDto;
-import m2codes.perizinan_ocr_tool.infrastructure.dto.OcrResultDto;
+import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
+import m2codes.perizinan_ocr_tool.application.dto.OcrResultDto;
 
 /**
  *

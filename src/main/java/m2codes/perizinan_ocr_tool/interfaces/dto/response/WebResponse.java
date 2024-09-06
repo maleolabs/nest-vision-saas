@@ -1,4 +1,4 @@
-package m2codes.perizinan_ocr_tool.web.dto.response;
+package m2codes.perizinan_ocr_tool.interfaces.dto.response;
 
 import lombok.*;
 

@@ -1,8 +1,8 @@
-package m2codes.perizinan_ocr_tool.client.service;
+package m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.service;
 
 import java.util.List;
 
-import m2codes.perizinan_ocr_tool.client.dto.DataEntriDto;
+import m2codes.perizinan_ocr_tool.application.dto.DataEntriDto;
 import reactor.core.publisher.Mono;
 
 /**

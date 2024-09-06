@@ -7,9 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import m2codes.perizinan_ocr_tool.infrastructure.dto.ExtractedTextDto;
-import m2codes.perizinan_ocr_tool.infrastructure.dto.OcrResultDto;
-import m2codes.perizinan_ocr_tool.infrastructure.ocr.TesseractOcrService;
+import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
+import m2codes.perizinan_ocr_tool.application.dto.OcrResultDto;
+import m2codes.perizinan_ocr_tool.application.service.impl.TesseractOcrService;
 
 /**
  *

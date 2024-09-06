@@ -1,4 +1,4 @@
-package m2codes.perizinan_ocr_tool.infrastructure.app;
+package m2codes.perizinan_ocr_tool.domain.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
@@ -8,7 +8,7 @@ import m2codes.perizinan_ocr_tool.domain.model.ExtractedText;
 import m2codes.perizinan_ocr_tool.domain.model.OcrResult;
 import m2codes.perizinan_ocr_tool.domain.repository.ExtractedTextRepository;
 import m2codes.perizinan_ocr_tool.domain.service.ExtractedTextService;
-import m2codes.perizinan_ocr_tool.infrastructure.dto.ExtractedTextDto;
+import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
 
 import java.util.Optional;
 

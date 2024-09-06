@@ -1,7 +1,7 @@
 package m2codes.perizinan_ocr_tool.domain.service;
 
 import m2codes.perizinan_ocr_tool.domain.model.ImageUpload;
-import m2codes.perizinan_ocr_tool.web.dto.request.ImageUploadRequest;
+import m2codes.perizinan_ocr_tool.interfaces.dto.request.ImageUploadRequest;
 
 import java.util.Optional;
 

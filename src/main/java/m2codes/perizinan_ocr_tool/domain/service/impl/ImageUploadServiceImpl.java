@@ -1,4 +1,4 @@
-package m2codes.perizinan_ocr_tool.infrastructure.app;
+package m2codes.perizinan_ocr_tool.domain.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -6,9 +6,8 @@ import org.springframework.stereotype.Service;
 import m2codes.perizinan_ocr_tool.domain.model.ImageUpload;
 import m2codes.perizinan_ocr_tool.domain.repository.ImageUploadRepository;
 import m2codes.perizinan_ocr_tool.domain.service.ImageUploadService;
-import m2codes.perizinan_ocr_tool.web.dto.request.ImageUploadRequest;
+import m2codes.perizinan_ocr_tool.interfaces.dto.request.ImageUploadRequest;
 
-import java.util.List;
 import java.util.Optional;
 
 /**

@@ -1,4 +1,4 @@
-package m2codes.perizinan_ocr_tool.infrastructure.app;
+package m2codes.perizinan_ocr_tool.domain.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
@@ -8,7 +8,7 @@ import m2codes.perizinan_ocr_tool.domain.model.ImageUpload;
 import m2codes.perizinan_ocr_tool.domain.model.OcrResult;
 import m2codes.perizinan_ocr_tool.domain.repository.OcrResultRepository;
 import m2codes.perizinan_ocr_tool.domain.service.OcrResultService;
-import m2codes.perizinan_ocr_tool.infrastructure.dto.OcrResultDto;
+import m2codes.perizinan_ocr_tool.application.dto.OcrResultDto;
 
 /**
  *

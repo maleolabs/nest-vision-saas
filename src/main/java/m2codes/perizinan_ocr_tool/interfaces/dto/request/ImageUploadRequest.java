@@ -1,4 +1,4 @@
-package m2codes.perizinan_ocr_tool.web.dto.request;
+package m2codes.perizinan_ocr_tool.interfaces.dto.request;
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;

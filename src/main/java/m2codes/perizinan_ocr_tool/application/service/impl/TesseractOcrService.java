@@ -1,20 +1,19 @@
-package m2codes.perizinan_ocr_tool.infrastructure.ocr;
+package m2codes.perizinan_ocr_tool.application.service.impl;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
 
+import m2codes.perizinan_ocr_tool.application.service.TextExtractionService;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
-import m2codes.perizinan_ocr_tool.domain.service.TextExtractionService;
-import m2codes.perizinan_ocr_tool.infrastructure.dto.ExtractedTextDto;
-import m2codes.perizinan_ocr_tool.infrastructure.dto.OcrResultDto;
+import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
+import m2codes.perizinan_ocr_tool.application.dto.OcrResultDto;
 import net.sourceforge.tess4j.Tesseract;
 import net.sourceforge.tess4j.TesseractException;
 

@@ -1,9 +1,9 @@
-package m2codes.perizinan_ocr_tool.web.controller;
+package m2codes.perizinan_ocr_tool.interfaces.controller;
 
 import m2codes.perizinan_ocr_tool.application.service.OcrProcessingService;
-import m2codes.perizinan_ocr_tool.web.dto.request.ImageUploadRequest;
-import m2codes.perizinan_ocr_tool.web.dto.response.ExtractedTextResponse;
-import m2codes.perizinan_ocr_tool.web.dto.response.WebResponse;
+import m2codes.perizinan_ocr_tool.interfaces.dto.request.ImageUploadRequest;
+import m2codes.perizinan_ocr_tool.interfaces.dto.response.ExtractedTextResponse;
+import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

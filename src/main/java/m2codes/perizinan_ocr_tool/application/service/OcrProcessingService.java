@@ -5,22 +5,21 @@ import java.util.List;
 import java.util.Optional;
 
 import m2codes.perizinan_ocr_tool.domain.model.ExtractedText;
-import m2codes.perizinan_ocr_tool.web.dto.response.ExtractedTextResponse;
+import m2codes.perizinan_ocr_tool.interfaces.dto.response.ExtractedTextResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
-import m2codes.perizinan_ocr_tool.client.service.DataEntriService;
+import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.service.DataEntriService;
 import m2codes.perizinan_ocr_tool.domain.model.ImageUpload;
 import m2codes.perizinan_ocr_tool.domain.model.OcrResult;
 import m2codes.perizinan_ocr_tool.domain.service.ExtractedTextService;
 import m2codes.perizinan_ocr_tool.domain.service.ImageUploadService;
 import m2codes.perizinan_ocr_tool.domain.service.OcrResultService;
-import m2codes.perizinan_ocr_tool.domain.service.TextExtractionService;
-import m2codes.perizinan_ocr_tool.infrastructure.dto.ExtractedTextDto;
-import m2codes.perizinan_ocr_tool.infrastructure.dto.OcrResultDto;
-import m2codes.perizinan_ocr_tool.web.dto.request.ImageUploadRequest;
-import m2codes.perizinan_ocr_tool.web.dto.response.WebResponse;
+import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
+import m2codes.perizinan_ocr_tool.application.dto.OcrResultDto;
+import m2codes.perizinan_ocr_tool.interfaces.dto.request.ImageUploadRequest;
+import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 
 /**
  *

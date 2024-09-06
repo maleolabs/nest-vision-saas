@@ -5,8 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import m2codes.perizinan_ocr_tool.web.dto.request.ImageUploadRequest;
-import m2codes.perizinan_ocr_tool.web.dto.response.WebResponse;
+import m2codes.perizinan_ocr_tool.interfaces.dto.request.ImageUploadRequest;
+import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 
 /**
  *
