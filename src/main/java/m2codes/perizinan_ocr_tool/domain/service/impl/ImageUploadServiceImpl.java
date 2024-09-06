@@ -8,6 +8,7 @@ import m2codes.perizinan_ocr_tool.domain.repository.ImageUploadRepository;
 import m2codes.perizinan_ocr_tool.domain.service.ImageUploadService;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.ImageUploadRequest;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -28,7 +29,9 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     public ImageUpload save(ImageUploadRequest request) {
         log.info("IMAGE UPLOAD REQUEST IN IMAGE UPLOAD SERVICE : {}", request);
 
-        Long savedImageUploadId = imageUploadRepository.findFirstByIzinId(request.getIzinId()).map(ImageUpload::getId).orElse(null);
+        Long savedImageUploadId = imageUploadRepository
+                .findFirstByIzinIdAndSyaratIzinId(request.getIzinId(), request.getSyaratIzinId())
+                .map(ImageUpload::getId).orElse(null);
 
         ImageUpload imageUpload = ImageUpload.builder()
                 .id(savedImageUploadId)
@@ -43,8 +46,13 @@ public class ImageUploadServiceImpl implements ImageUploadService {
     }
 
     @Override
-    public Optional<ImageUpload> findByIzinId(Long izinId) {
-        return imageUploadRepository.findFirstByIzinId(izinId);
+    public List<ImageUpload> findByIzinId(Long izinId) {
+        return imageUploadRepository.findByIzinId(izinId);
+    }
+
+    @Override
+    public Optional<ImageUpload> findFirstByIzinIdAndSyaratIzinId(Long izinId, Long syaratIzinId) {
+        return imageUploadRepository.findFirstByIzinIdAndSyaratIzinId(izinId, syaratIzinId);
     }
 
 }

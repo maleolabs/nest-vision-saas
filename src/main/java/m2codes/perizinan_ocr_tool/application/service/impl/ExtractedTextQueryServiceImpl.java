@@ -24,12 +24,17 @@ public class ExtractedTextQueryServiceImpl extends ExtractedTextQueryService {
     }
 
     @Override
-    protected Optional<ExtractedText> findFirstByTextKey(String textKey, Long izinId) {
+    protected Optional<ExtractedText> findETByTextKeyAndIzinId(String textKey, Long izinId) {
         return extractedTextService.findByTextKey(textKey, izinId);
     }
 
     @Override
-    protected Optional<ImageUpload> findFirstByIzinId(Long izinId) {
+    protected Optional<ImageUpload> findIUByIzinIdAndSyaratIzinId(Long izinId, Long syaratIzinId) {
+        return imageUploadService.findFirstByIzinIdAndSyaratIzinId(izinId, syaratIzinId);
+    }
+
+    @Override
+    protected List<ImageUpload> findIUByIzinId(Long izinId) {
         return imageUploadService.findByIzinId(izinId);
     }
 

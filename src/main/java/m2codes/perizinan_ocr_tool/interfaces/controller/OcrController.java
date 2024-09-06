@@ -39,7 +39,7 @@ public class OcrController {
     }
 
     @GetMapping(
-            path = "/find-by-text-key/{textKey}/{izinId}",
+            path = "/find-text/{izinId}/{textKey}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<WebResponse<ExtractedTextResponse>> findByTextKey(@PathVariable(name = "textKey") String textKey, @PathVariable(name = "izinId") Long izinId) {
@@ -49,11 +49,21 @@ public class OcrController {
     }
 
     @GetMapping(
-            path = "/find-by-izin-id/{izinId}",
+            path = "/find/{izinId}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<WebResponse<List<ExtractedTextResponse>>> findByIzinId(@PathVariable(name = "izinId") Long izinId) {
         WebResponse<List<ExtractedTextResponse>> response = extractedTextQueryService.findByIzinId(izinId);
+
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping(
+            path = "/find/{izinId}/{syaratIzinId}",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<WebResponse<List<ExtractedTextResponse>>> findByIzinIdAndSyaratIzinId(@PathVariable(name = "izinId") Long izinId, @PathVariable(name = "syaratIzinId") Long syaratIzinId) {
+        WebResponse<List<ExtractedTextResponse>> response = extractedTextQueryService.findByIzinIdAndSyaratIzinId(izinId, syaratIzinId);
 
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }

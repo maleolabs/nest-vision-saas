@@ -29,10 +29,10 @@ public abstract class ExtractedTextQueryService {
         return handleTextKeyLookup(textKey, izinId);
     }
 
-    public final WebResponse<List<ExtractedTextResponse>> findByIzinId(Long izinId) {
+    public final WebResponse<List<ExtractedTextResponse>> findByIzinIdAndSyaratIzinId(Long izinId, Long syaratIzinId) {
         List<ExtractedTextResponse> responses = new ArrayList<>();
 
-        return findFirstByIzinId(izinId)
+        return findIUByIzinIdAndSyaratIzinId(izinId, syaratIzinId)
                 .map(imageUpload -> {
                     if (imageUpload.getOcrResults() != null) {
                         responses.addAll(mapExtractedTextsToResponses(imageUpload.getOcrResults().getExtractedText()));
@@ -43,9 +43,25 @@ public abstract class ExtractedTextQueryService {
                 .orElseGet(() -> buildWebResponse(responses, false, "Extracted text with izinId: " + izinId + " not found."));
     }
 
+    public final WebResponse<List<ExtractedTextResponse>> findByIzinId(Long izinId) {
+        List<ExtractedTextResponse> responses = new ArrayList<>();
+
+        findIUByIzinId(izinId)
+                .forEach(imageUpload -> {
+                    if (imageUpload.getOcrResults() != null) {
+                        responses.addAll(mapExtractedTextsToResponses(imageUpload.getOcrResults().getExtractedText()));
+                    }
+                });
+
+        if (!responses.isEmpty())
+            return buildWebResponse(responses, true, null);
+        else
+            return buildWebResponse(responses, false, "Extracted text with izinId: " + izinId + " not found.");
+    }
+
     protected WebResponse<ExtractedTextResponse> handleTextKeyLookup(String textKey, Long izinId) {
         try {
-            return findFirstByTextKey(textKey, izinId)
+            return findETByTextKeyAndIzinId(textKey, izinId)
                     .map(extractedText -> {
                         ExtractedTextResponse extractedTextResponse = ExtractedTextResponse.builder()
                                 .textKey(extractedText.getTextKey())
@@ -62,9 +78,11 @@ public abstract class ExtractedTextQueryService {
         }
     }
 
-    protected abstract Optional<ExtractedText> findFirstByTextKey(String textKey, Long izinId);
+    protected abstract Optional<ExtractedText> findETByTextKeyAndIzinId(String textKey, Long izinId);
 
-    protected abstract Optional<ImageUpload> findFirstByIzinId(Long izinId);
+    protected abstract Optional<ImageUpload> findIUByIzinIdAndSyaratIzinId(Long izinId, Long syaratIzinId);
+
+    protected abstract List<ImageUpload> findIUByIzinId(Long izinId);
 
     protected abstract List<ExtractedTextResponse> mapExtractedTextsToResponses(List<ExtractedText> extractedTexts);
 

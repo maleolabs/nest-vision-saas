@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import m2codes.perizinan_ocr_tool.domain.model.ImageUpload;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -12,6 +13,8 @@ import java.util.Optional;
  */
 public interface ImageUploadRepository extends  JpaRepository<ImageUpload, Long> {
 
-    Optional<ImageUpload> findFirstByIzinId(Long izinId);
+    List<ImageUpload> findByIzinId(Long izinId);
+
+    Optional<ImageUpload> findFirstByIzinIdAndSyaratIzinId(Long izinId, Long syaratIzinId);
 
 }

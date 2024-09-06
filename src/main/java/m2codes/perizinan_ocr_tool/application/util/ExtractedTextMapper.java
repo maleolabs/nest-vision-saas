@@ -20,6 +20,9 @@ public class ExtractedTextMapper {
 
             String key = parts[0].trim().toLowerCase();
             String value = parts[1].trim();
+
+            if (value.isEmpty() || value.isBlank()) continue;
+
             mappedText.add(ExtractedTextDto.builder()
                     .textKey(key)
                     .textValue(value)
