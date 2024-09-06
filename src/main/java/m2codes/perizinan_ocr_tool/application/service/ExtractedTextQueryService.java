@@ -25,7 +25,7 @@ public abstract class ExtractedTextQueryService {
         this.imageUploadService = imageUploadService;
     }
 
-    public final WebResponse<ExtractedTextResponse> findByTextkey(String textKey, Long izinId) {
+    public final WebResponse<ExtractedTextResponse> findByTextKey(String textKey, Long izinId) {
         return handleTextKeyLookup(textKey, izinId);
     }
 

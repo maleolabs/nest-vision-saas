@@ -1,5 +1,7 @@
 package m2codes.perizinan_ocr_tool.interfaces.controller;
 
+import m2codes.perizinan_ocr_tool.application.service.impl.ExtractedTextQueryServiceImpl;
+import m2codes.perizinan_ocr_tool.application.service.impl.OcrProcessorService;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.ImageUploadRequest;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.ExtractedTextResponse;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
@@ -13,10 +15,16 @@ import java.util.List;
 @RequestMapping(path = "/api/ocr")
 public class OcrController {
 
-    private final OcrProcessorService1 ocrProcessorService1;
+    private final OcrProcessorService ocrProcessorService;
 
-    public OcrController(OcrProcessorService1 ocrProcessorService1) {
-        this.ocrProcessorService1 = ocrProcessorService1;
+    private final ExtractedTextQueryServiceImpl extractedTextQueryService;
+
+    public OcrController(
+            OcrProcessorService ocrProcessorService,
+            ExtractedTextQueryServiceImpl extractedTextQueryService
+    ) {
+        this.ocrProcessorService = ocrProcessorService;
+        this.extractedTextQueryService = extractedTextQueryService;
     }
 
     @PostMapping(
@@ -25,7 +33,7 @@ public class OcrController {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<WebResponse<?>> doOcr(@RequestBody ImageUploadRequest request) {
-        WebResponse<?> response = ocrProcessorService1.processOcr(request);
+        WebResponse<?> response = ocrProcessorService.processingExtractionText(request);
 
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
@@ -34,8 +42,8 @@ public class OcrController {
             path = "/find-by-text-key/{textKey}/{izinId}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<WebResponse<ExtractedTextResponse>> findByTextKeyAnd(@PathVariable(name = "textKey") String textKey, @PathVariable(name = "izinId") Long izinId) {
-        WebResponse<ExtractedTextResponse> response = ocrProcessorService1.findByTextKey(textKey, izinId);
+    public ResponseEntity<WebResponse<ExtractedTextResponse>> findByTextKey(@PathVariable(name = "textKey") String textKey, @PathVariable(name = "izinId") Long izinId) {
+        WebResponse<ExtractedTextResponse> response = extractedTextQueryService.findByTextKey(textKey, izinId);
 
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
@@ -45,7 +53,7 @@ public class OcrController {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<WebResponse<List<ExtractedTextResponse>>> findByIzinId(@PathVariable(name = "izinId") Long izinId) {
-        WebResponse<List<ExtractedTextResponse>> response = ocrProcessorService1.findByIzinId(izinId);
+        WebResponse<List<ExtractedTextResponse>> response = extractedTextQueryService.findByIzinId(izinId);
 
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
