@@ -1,5 +1,6 @@
 package m2codes.perizinan_ocr_tool.application.service.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import m2codes.perizinan_ocr_tool.application.dto.DataEntriDto;
 import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
 import m2codes.perizinan_ocr_tool.application.dto.OcrResultDto;
@@ -21,6 +22,7 @@ import java.util.Optional;
 
 import static m2codes.perizinan_ocr_tool.application.util.ExtractedTextMapper.*;
 
+@Slf4j
 @Service
 public class OcrProcessorService extends TextProcessorService {
 
@@ -66,6 +68,9 @@ public class OcrProcessorService extends TextProcessorService {
         List<ExtractedTextDto> extractedTextDtos = new ArrayList<>();
         extractedTextDtos.addAll(parseLinesByColon(lines));
         extractedTextDtos.addAll(detectAndAddMissingKeyValue(lines, dataEntri));
+
+        log.info("PROCESSED EXTRACTED TEXT BEFORE FILTERED : {}", extractedTextDtos.size());
+        extractedTextDtos.forEach(extractedTextDto -> log.info("TEXT PROCESSED : {} -> {}", extractedTextDto.getTextKey(), extractedTextDto.getTextValue()));
 
         return filterParsedDataByRequiredKeys(extractedTextDtos, dataEntri);
     }

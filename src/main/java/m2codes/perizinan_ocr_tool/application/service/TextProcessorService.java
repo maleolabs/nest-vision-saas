@@ -1,5 +1,6 @@
 package m2codes.perizinan_ocr_tool.application.service;
 
+import lombok.extern.slf4j.Slf4j;
 import m2codes.perizinan_ocr_tool.application.dto.DataEntriDto;
 import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
 import m2codes.perizinan_ocr_tool.application.dto.OcrResultDto;
@@ -14,6 +15,7 @@ import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+@Slf4j
 public abstract class TextProcessorService {
 
     protected final ImageUploadService imageUploadService;
@@ -46,6 +48,9 @@ public abstract class TextProcessorService {
                 return buildWebResponse(ocrResultDto);
             }
             List<ExtractedTextDto> extractedTextDtos = processExtractedText(ocrResultDto.getExtractedText(), dataEntri);
+
+            log.info("PROCESSED EXTRACTED TEXT AFTER FILTERED : {}", extractedTextDtos.size());
+
             saveAllExtractedText(extractedTextDtos, ocrResult);
         }
 

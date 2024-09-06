@@ -39,6 +39,7 @@ public class ExtractedTextServiceImpl implements ExtractedTextService {
                 .ocrResult(ocrResult)
                 .textKey(extractedTextDto.getTextKey())
                 .textValue(extractedTextDto.getTextValue())
+                .dataEntriId(extractedTextDto.getDataEntriId())
                 .build();
 
         extractedTextRepository.save(extractedText);
@@ -48,13 +49,15 @@ public class ExtractedTextServiceImpl implements ExtractedTextService {
     public void saveAll(List<ExtractedTextDto> extractedTextDtos, @NonNull OcrResult ocrResult) {
         List<ExtractedText> extractedTexts = new ArrayList<>();
 
-        extractedTextDtos.forEach(extractedTextDto -> {
-            extractedTexts.add(ExtractedText.builder()
+        extractedTextDtos.forEach(extractedTextDto ->
+                extractedTexts.add(ExtractedText.builder()
                     .textKey(extractedTextDto.getTextKey())
                     .textValue(extractedTextDto.getTextValue())
                     .ocrResult(ocrResult)
-                    .build());
-        });
+                    .dataEntriId(extractedTextDto.getDataEntriId())
+                    .build()
+                )
+        );
 
         extractedTextRepository.saveAll(extractedTexts);
     }

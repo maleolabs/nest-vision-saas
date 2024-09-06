@@ -43,4 +43,7 @@ public class ExtractedText {
     @Column(columnDefinition="TEXT NOT NULL")
     private String textValue;
 
+    @Column(name = "data_entri_id", nullable = false)
+    private Long dataEntriId;
+
 }
