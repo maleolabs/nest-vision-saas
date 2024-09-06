@@ -1,9 +1,10 @@
-package m2codes.perizinan_ocr_tool.application.service;
+package m2codes.perizinan_ocr_tool.application.service.impl;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import m2codes.perizinan_ocr_tool.application.service.TextExtractionService;
 import m2codes.perizinan_ocr_tool.domain.model.ExtractedText;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.ExtractedTextResponse;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,7 @@ import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
  */
 @Slf4j
 @Service
-public class OcrProcessingService {
+public class OcrProcessorService1 {
 
     private final DataEntriService dataEntriService;
 
@@ -39,7 +40,7 @@ public class OcrProcessingService {
 
     private final ExtractedTextService extractedTextService;
 
-    public OcrProcessingService(
+    public OcrProcessorService1(
         DataEntriService dataEntriService,
         TextExtractionService textExtractionService,
         ImageUploadService imageUploadService,

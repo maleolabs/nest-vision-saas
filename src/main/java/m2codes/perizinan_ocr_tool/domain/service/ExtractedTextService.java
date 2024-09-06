@@ -5,6 +5,7 @@ import m2codes.perizinan_ocr_tool.domain.model.OcrResult;
 import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
 import org.springframework.lang.NonNull;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -13,7 +14,9 @@ import java.util.Optional;
  */
 public interface ExtractedTextService {
 
-    ExtractedText save(ExtractedTextDto extractedTextDto, @NonNull OcrResult ocrResult);
+    void save(ExtractedTextDto extractedTextDto, @NonNull OcrResult ocrResult);
+
+    void saveAll(List<ExtractedTextDto> extractedTextDtos, @NonNull OcrResult ocrResult);
 
     Optional<ExtractedText> findByTextKey(String textKey, Long izinId);
 

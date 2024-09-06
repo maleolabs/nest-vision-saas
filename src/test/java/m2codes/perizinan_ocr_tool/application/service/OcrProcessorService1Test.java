@@ -1,5 +1,6 @@
 package m2codes.perizinan_ocr_tool.application.service;
 
+import m2codes.perizinan_ocr_tool.application.service.impl.OcrProcessorService1;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,13 +14,13 @@ import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
  * @author marij_mokoginta
  */
 @SpringBootTest
-public class OcrProcessingServiceTest {
+public class OcrProcessorService1Test {
 
     @Value("${perizinan-dpmptsp.api.base-url}")
     private String perizinanApiBaseUrl;
 
     @Autowired
-    private OcrProcessingService ocrProcessingService;
+    private OcrProcessorService1 ocrProcessorService1;
 
     @Test
     public void processOcrTest() {
@@ -31,7 +32,7 @@ public class OcrProcessingServiceTest {
                                         .imageUrl(imageUrl)
                                         .build();
 
-        WebResponse response = ocrProcessingService.processOcr(request);
+        WebResponse response = ocrProcessorService1.processOcr(request);
         System.out.println(response.toString());
     }
 

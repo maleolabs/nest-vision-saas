@@ -10,6 +10,8 @@ import m2codes.perizinan_ocr_tool.domain.repository.ExtractedTextRepository;
 import m2codes.perizinan_ocr_tool.domain.service.ExtractedTextService;
 import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -27,7 +29,7 @@ public class ExtractedTextServiceImpl implements ExtractedTextService {
     }
 
     @Override
-    public ExtractedText save(ExtractedTextDto extractedTextDto, @NonNull OcrResult ocrResult) {
+    public void save(ExtractedTextDto extractedTextDto, @NonNull OcrResult ocrResult) {
         log.info("EXTRACTED TEXT IN EXTRACTED TEXT SERVICE : {}", extractedTextDto);
 
         Long savedETId = extractedTextRepository.findFirstByOcrResultAndTextKey(ocrResult, extractedTextDto.getTextKey()).map(ExtractedText::getId).orElse(null);
@@ -39,7 +41,22 @@ public class ExtractedTextServiceImpl implements ExtractedTextService {
                 .textValue(extractedTextDto.getTextValue())
                 .build();
 
-        return extractedTextRepository.save(extractedText);
+        extractedTextRepository.save(extractedText);
+    }
+
+    @Override
+    public void saveAll(List<ExtractedTextDto> extractedTextDtos, @NonNull OcrResult ocrResult) {
+        List<ExtractedText> extractedTexts = new ArrayList<>();
+
+        extractedTextDtos.forEach(extractedTextDto -> {
+            extractedTexts.add(ExtractedText.builder()
+                    .textKey(extractedTextDto.getTextKey())
+                    .textValue(extractedTextDto.getTextValue())
+                    .ocrResult(ocrResult)
+                    .build());
+        });
+
+        extractedTextRepository.saveAll(extractedTexts);
     }
 
     @Override
