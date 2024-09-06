@@ -1,4 +1,4 @@
-package m2codes.perizinan_ocr_tool.client.service;
+package m2codes.perizinan_ocr_tool.infrastucture.integration.perizinan.service.impl;
 
 import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.service.DataEntriService;
 import org.junit.jupiter.api.Test;
