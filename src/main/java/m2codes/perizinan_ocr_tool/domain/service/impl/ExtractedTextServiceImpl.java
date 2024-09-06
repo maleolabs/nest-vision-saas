@@ -32,7 +32,7 @@ public class ExtractedTextServiceImpl implements ExtractedTextService {
     public void save(ExtractedTextDto extractedTextDto, @NonNull OcrResult ocrResult) {
         log.info("EXTRACTED TEXT IN EXTRACTED TEXT SERVICE : {}", extractedTextDto);
 
-        Long savedETId = extractedTextRepository.findFirstByOcrResultAndTextKey(ocrResult, extractedTextDto.getTextKey()).map(ExtractedText::getId).orElse(null);
+        Long savedETId = extractedTextRepository.findFirstByOcrResultAndDataEntriId(ocrResult, extractedTextDto.getDataEntriId()).map(ExtractedText::getId).orElse(null);
 
         ExtractedText extractedText = ExtractedText.builder()
                 .id(savedETId)
@@ -49,15 +49,17 @@ public class ExtractedTextServiceImpl implements ExtractedTextService {
     public void saveAll(List<ExtractedTextDto> extractedTextDtos, @NonNull OcrResult ocrResult) {
         List<ExtractedText> extractedTexts = new ArrayList<>();
 
-        extractedTextDtos.forEach(extractedTextDto ->
-                extractedTexts.add(ExtractedText.builder()
+        extractedTextDtos.forEach(extractedTextDto -> {
+            Long savedETId = extractedTextRepository.findFirstByOcrResultAndDataEntriId(ocrResult, extractedTextDto.getDataEntriId()).map(ExtractedText::getId).orElse(null);
+            extractedTexts.add(ExtractedText.builder()
+                    .id(savedETId)
                     .textKey(extractedTextDto.getTextKey())
                     .textValue(extractedTextDto.getTextValue())
                     .ocrResult(ocrResult)
                     .dataEntriId(extractedTextDto.getDataEntriId())
                     .build()
-                )
-        );
+            );
+        });
 
         extractedTextRepository.saveAll(extractedTexts);
     }

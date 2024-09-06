@@ -7,7 +7,6 @@ import m2codes.perizinan_ocr_tool.domain.model.ExtractedText;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -25,8 +24,6 @@ public interface ExtractedTextRepository extends JpaRepository<ExtractedText, Lo
     )
     Optional<ExtractedText> findFirstByTextKeyAndIzinId(@Param("textKey") String textKey, @Param("izinId") Long izinId);
 
-    List<ExtractedText> findByOcrResult(OcrResult ocrResult);
-
-    Optional<ExtractedText> findFirstByOcrResultAndTextKey(OcrResult ocrResult, String textKey);
+    Optional<ExtractedText> findFirstByOcrResultAndDataEntriId(OcrResult ocrResult, Long dataEntriId);
 
 }
