@@ -6,6 +6,7 @@ import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 
 @Slf4j
 public class ExtractedTextMapper {
@@ -37,16 +38,20 @@ public class ExtractedTextMapper {
     }
 
     public static List<ExtractedTextDto> filterParsedDataByRequiredKeys(List<ExtractedTextDto> parsedData, List<DataEntriDto> requiredKeys) {
-        return parsedData.stream()
-                .peek(extractedTextDto ->
-                        requiredKeys.stream()
-                            .filter(dataEntriDto -> dataEntriDto.getNama().startsWith(extractedTextDto.getTextKey()))
-                            .findFirst()
-                            .ifPresent(matchingKey -> {
-                                extractedTextDto.setTextKey(matchingKey.getNama());
-                                extractedTextDto.setDataEntriId(matchingKey.getId());
-                            })
-                ).toList();
+        ListIterator<ExtractedTextDto> parsedDataIterator = parsedData.listIterator();
+        while (parsedDataIterator.hasNext()) {
+            var data = parsedDataIterator.next();
+            requiredKeys.stream()
+                    .filter(dataEntri -> dataEntri.getNama().startsWith(data.getTextKey()))
+                    .findFirst()
+                    .ifPresent(matchesKey -> {
+                        data.setDataEntriId(matchesKey.getId());
+                        data.setTextKey(matchesKey.getNama());
+                        parsedDataIterator.set(data);
+                    });
+        }
+
+        return parsedData;
     }
 
 }

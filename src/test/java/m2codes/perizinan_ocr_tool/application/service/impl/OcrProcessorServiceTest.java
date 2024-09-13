@@ -50,7 +50,7 @@ class OcrProcessorServiceTest {
 
     @Test
     public void testProcessOcr_Success() {
-        String imageUrl = perizinanApiBaseUrl + "/files/MTcyNTQzMzA1MDg1NS10ZXN0LmpwZw==";
+        String imageUrl = perizinanApiBaseUrl + "/files/MTcyNjA3MzUyNDg1NC1zdXJhdC1wZW5lbGl0aWFuLnBuZw==";
         ImageUploadRequest request = ImageUploadRequest.builder().imageUrl(imageUrl).izinId(4L).syaratIzinId(855L).jenisPerizinanId(167L).build();
         OcrResultDto ocrResultDto = OcrResultDto.builder().isSuccess(true).extractedText("").build();
         ImageUpload imageUpload = new ImageUpload();

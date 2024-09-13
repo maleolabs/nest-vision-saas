@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 
 public class ExtractedTextCleaner {
 
-    private static final String invalidCharsContain = "«#$^*;";
+    private static final String invalidCharsContain = "«#$^*;%_!?";
 
     public static String[] linesCleaner(String[] lines) {
         if (lines == null || lines.length == 0)
