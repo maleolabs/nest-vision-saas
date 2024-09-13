@@ -41,17 +41,17 @@ public class ExtractedTextCleaner {
     private String cleanLine(String line) {
         line = removeUnusedSpace(line);
 
+        String validRegex = ".*[^A-Za-z0-9:/.\s()'].*";
+
         String[] words = line.split("\\s+");
-
-        String invalidCharsContain = "«#$^*;%_!?";
-        String invalidCharRegex = ".*[" + invalidCharsContain + "].*";
-
-        line = Arrays.stream(words)
-                .filter(word -> !word.matches(invalidCharRegex))
+        return Arrays.stream(words)
+                .filter(word -> !word.matches(validRegex) && wordValid(word))
                 .map(String::trim)
                 .collect(Collectors.joining(" "));
+    }
 
-        return line;
+    private boolean wordValid(String word) {
+        return word.contains(":") || word.length() > 2;
     }
 
     private String removeUnusedSpace(String text) {
