@@ -6,6 +6,8 @@ import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
 import m2codes.perizinan_ocr_tool.application.dto.OcrResultDto;
 import m2codes.perizinan_ocr_tool.application.service.TextExtractionService;
 import m2codes.perizinan_ocr_tool.application.service.TextProcessorService;
+import m2codes.perizinan_ocr_tool.application.util.ExtractedTextCleaner;
+import m2codes.perizinan_ocr_tool.application.util.ExtractedTextMapper;
 import m2codes.perizinan_ocr_tool.domain.model.ImageUpload;
 import m2codes.perizinan_ocr_tool.domain.model.OcrResult;
 import m2codes.perizinan_ocr_tool.domain.service.ExtractedTextService;
@@ -17,12 +19,8 @@ import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-
-import static m2codes.perizinan_ocr_tool.application.util.ExtractedTextCleaner.linesCleaner;
-import static m2codes.perizinan_ocr_tool.application.util.ExtractedTextMapper.*;
 
 @Slf4j
 @Service
@@ -31,16 +29,24 @@ public class OcrProcessorService extends TextProcessorService {
     private final TextExtractionService textExtractionService;
     private final DataEntriService dataEntriService;
 
+    private final ExtractedTextCleaner extractedTextCleaner;
+    private final ExtractedTextMapper extractedTextMapper;
+
     public OcrProcessorService(
             ImageUploadService imageUploadService,
             OcrResultService ocrResultService,
             ExtractedTextService extractedTextService,
             TextExtractionService textExtractionService,
-            DataEntriService dataEntriService
+            DataEntriService dataEntriService,
+            ExtractedTextCleaner extractedTextCleaner,
+            ExtractedTextMapper extractedTextMapper
     ) {
         super(imageUploadService, ocrResultService, extractedTextService);
         this.textExtractionService = textExtractionService;
         this.dataEntriService = dataEntriService;
+
+        this.extractedTextCleaner = extractedTextCleaner;
+        this.extractedTextMapper = extractedTextMapper;
     }
 
     @Override
@@ -65,20 +71,15 @@ public class OcrProcessorService extends TextProcessorService {
 
     @Override
     protected List<ExtractedTextDto> processExtractedText(String extractedText, List<DataEntriDto> dataEntri) {
+        System.out.println("EXTRACTED TEXT : " + extractedText);
         String[] lines = extractedText.split("\\r?\\n");
-        String[] cleanLines = linesCleaner(lines);
-
-        Arrays.stream(cleanLines)
-                .forEach(System.out::println);
+        String[] cleanLines = extractedTextCleaner.linesCleaner(lines);
 
         List<ExtractedTextDto> extractedTextDtos = new ArrayList<>();
-        extractedTextDtos.addAll(parseLinesByColon(cleanLines));
-        extractedTextDtos.addAll(detectAndAddMissingKeyValue(cleanLines, dataEntri));
+        extractedTextDtos.addAll(extractedTextMapper.parseLinesByColon(cleanLines));
+        extractedTextDtos.addAll(extractedTextMapper.detectAndAddMissingKeyValue(cleanLines, dataEntri));
 
-        log.info("PROCESSED EXTRACTED TEXT BEFORE FILTERED : {}", extractedTextDtos.size());
-        extractedTextDtos.forEach(extractedTextDto -> log.info("TEXT PROCESSED : {} -> {}", extractedTextDto.getTextKey(), extractedTextDto.getTextValue()));
-
-        return filterParsedDataByRequiredKeys(extractedTextDtos, dataEntri);
+        return extractedTextMapper.filterParsedDataByRequiredKeys(extractedTextDtos, dataEntri);
     }
 
     @Override

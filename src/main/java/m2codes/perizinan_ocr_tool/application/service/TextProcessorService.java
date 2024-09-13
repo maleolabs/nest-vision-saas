@@ -49,8 +49,6 @@ public abstract class TextProcessorService {
             }
             List<ExtractedTextDto> extractedTextDtos = processExtractedText(ocrResultDto.getExtractedText(), dataEntri);
 
-            log.info("PROCESSED EXTRACTED TEXT AFTER FILTERED : {}", extractedTextDtos.size());
-
             saveAllExtractedText(extractedTextDtos, ocrResult);
         }
 

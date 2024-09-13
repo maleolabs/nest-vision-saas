@@ -1,13 +1,14 @@
 package m2codes.perizinan_ocr_tool.application.util;
 
+import org.springframework.stereotype.Component;
+
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+@Component
 public class ExtractedTextCleaner {
 
-    private static final String invalidCharsContain = "«#$^*;%_!?";
-
-    public static String[] linesCleaner(String[] lines) {
+    public String[] linesCleaner(String[] lines) {
         if (lines == null || lines.length == 0)
             return lines;
 
@@ -29,19 +30,20 @@ public class ExtractedTextCleaner {
                 .toArray(String[]::new);
     }
 
-    private static boolean startsWithLowerCase(String text) {
+    private boolean startsWithLowerCase(String text) {
         return !text.isEmpty() && Character.isLowerCase(text.charAt(0));
     }
 
-    private static boolean firstLineBracketsNotClosed(String firstLine, String secondLine) {
+    private boolean firstLineBracketsNotClosed(String firstLine, String secondLine) {
         return firstLine.contains("(") && !firstLine.contains(")") && secondLine.contains(")");
     }
 
-    private static String cleanLine(String line) {
+    private String cleanLine(String line) {
         line = removeUnusedSpace(line);
 
         String[] words = line.split("\\s+");
 
+        String invalidCharsContain = "«#$^*;%_!?";
         String invalidCharRegex = ".*[" + invalidCharsContain + "].*";
 
         line = Arrays.stream(words)
@@ -52,14 +54,14 @@ public class ExtractedTextCleaner {
         return line;
     }
 
-    private static String removeUnusedSpace(String text) {
+    private String removeUnusedSpace(String text) {
         text = text.trim();
         text = text.replaceAll("/\\s+", "/");
         text = text.replaceAll("\\s+/", "/");
         return text;
     }
 
-    private static void appendLines(StringBuilder builder, String lastLines, String currentLines) {
+    private void appendLines(StringBuilder builder, String lastLines, String currentLines) {
         if (lastLines.endsWith("/"))
             builder.append(lastLines).append(currentLines);
         else
