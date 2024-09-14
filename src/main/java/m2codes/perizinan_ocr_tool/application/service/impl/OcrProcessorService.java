@@ -3,6 +3,7 @@ package m2codes.perizinan_ocr_tool.application.service.impl;
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import m2codes.perizinan_ocr_tool.application.util.TaskManager;
 import m2codes.perizinan_ocr_tool.domain.model.RequestStatus;
 import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.dto.DataEntriDto;
 import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
@@ -40,6 +41,8 @@ public class OcrProcessorService extends TextProcessorService {
 
     private final EntityManager entityManager;
 
+    private final TaskManager taskManager;
+
     public OcrProcessorService(
             OcrRequestService ocrRequestService,
             OcrResultService ocrResultService,
@@ -48,7 +51,8 @@ public class OcrProcessorService extends TextProcessorService {
             DataEntriService dataEntriService,
             ExtractedTextCleaner extractedTextCleaner,
             ExtractedTextMapper extractedTextMapper,
-            EntityManager entityManager
+            EntityManager entityManager,
+            TaskManager taskManager
     ) {
         super(ocrRequestService, ocrResultService, extractedTextService);
         this.textExtractionService = textExtractionService;
@@ -58,6 +62,8 @@ public class OcrProcessorService extends TextProcessorService {
         this.extractedTextMapper = extractedTextMapper;
 
         this.entityManager = entityManager;
+
+        this.taskManager = taskManager;
     }
 
     @Async
@@ -134,6 +140,11 @@ public class OcrProcessorService extends TextProcessorService {
                 .errorMessage(errorMessage)
                 .data(response)
                 .build();
+    }
+
+    @Override
+    protected boolean isPoolAvailable() {
+        return taskManager.isPoolAvailable();
     }
 
 }

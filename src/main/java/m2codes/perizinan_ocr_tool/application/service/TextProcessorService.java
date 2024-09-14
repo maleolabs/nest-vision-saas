@@ -37,7 +37,8 @@ public abstract class TextProcessorService {
 
     @Transactional
     public final WebResponse<?> processOcrRequest(OcrDataRequest request) {
-        OcrRequest ocrRequest = saveOcrRequest(request, RequestStatus.PROCESSING);
+        var status = isPoolAvailable() ? RequestStatus.PROCESSING : RequestStatus.WAITING;
+        OcrRequest ocrRequest = saveOcrRequest(request, status);
 
         processingExtractionText(request, ocrRequest);
 
@@ -63,6 +64,8 @@ public abstract class TextProcessorService {
     protected abstract CompletableFuture<List<ExtractedTextDto>> processExtractedText(String extractedText, List<DataEntriDto> dataEntri);
 
     protected abstract void saveAllExtractedText(OcrResultDto ocrResultDto, List<DataEntriDto> dataEntri, OcrResult ocrResult);
+
+    protected abstract boolean isPoolAvailable();
 
     protected abstract WebResponse<?> buildWebResponse(boolean success, String errorMessage, OcrResponse response);
 
