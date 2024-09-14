@@ -30,8 +30,6 @@ public class ExtractedTextServiceImpl implements ExtractedTextService {
 
     @Override
     public void save(ExtractedTextDto extractedTextDto, @NonNull OcrResult ocrResult) {
-        log.info("EXTRACTED TEXT IN EXTRACTED TEXT SERVICE : {}", extractedTextDto);
-
         Long savedETId = extractedTextRepository.findFirstByOcrResultAndDataEntriId(ocrResult, extractedTextDto.getDataEntriId()).map(ExtractedText::getId).orElse(null);
 
         ExtractedText extractedText = ExtractedText.builder()

@@ -27,8 +27,6 @@ public class ImageUploadServiceImpl implements ImageUploadService {
 
     @Override
     public ImageUpload save(ImageUploadRequest request) {
-        log.info("IMAGE UPLOAD REQUEST IN IMAGE UPLOAD SERVICE : {}", request);
-
         Long savedImageUploadId = imageUploadRepository
                 .findFirstByIzinIdAndSyaratIzinId(request.getIzinId(), request.getSyaratIzinId())
                 .map(ImageUpload::getId).orElse(null);

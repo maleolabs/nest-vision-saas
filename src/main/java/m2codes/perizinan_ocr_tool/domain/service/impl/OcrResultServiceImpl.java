@@ -26,8 +26,6 @@ public class OcrResultServiceImpl implements OcrResultService {
 
     @Override
     public OcrResult save(OcrResultDto ocrResultDto, @NonNull ImageUpload imageUpload) {
-        log.info("OCR RESULT IN OCR RESULT SERVICE : {}", ocrResultDto);
-
         Long savedOcrResultId = ocrResultRepository.findFirstByImageUpload(imageUpload).map(OcrResult::getId).orElse(null);
         OcrResult ocrResult = OcrResult.builder()
                 .id(savedOcrResultId)
@@ -36,8 +34,6 @@ public class OcrResultServiceImpl implements OcrResultService {
                 .errorMessage(ocrResultDto.getErrorMessage())
                 .extractedAt(ocrResultDto.getExtractedAt())
                 .build();
-
-        log.info("OCR RESULT MODEL TO SAVE : {}", ocrResult);
 
         return ocrResultRepository.save(ocrResult);
     }

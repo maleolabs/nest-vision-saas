@@ -34,9 +34,7 @@ public class TesseractOcrService implements TextExtractionService {
 
         try {
             URL url = new URL(imageUrl);
-
             BufferedImage image = ImageIO.read(url);
-
             if (image == null) {
                 result.setSuccess(false);
                 result.setErrorMessage("image null");
@@ -54,8 +52,6 @@ public class TesseractOcrService implements TextExtractionService {
 
             log.error(exception.getMessage());
         }
-
-        log.info("OCR RESULT FROM TESSERACT OCR SERVICE : {}", result);
 
         return result;
     }
