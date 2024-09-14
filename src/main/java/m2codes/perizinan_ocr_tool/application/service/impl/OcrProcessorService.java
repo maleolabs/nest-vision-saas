@@ -70,11 +70,15 @@ public class OcrProcessorService extends TextProcessorService {
     @Transactional
     @Override
     protected void processingExtractionText(OcrDataRequest request, OcrRequest ocrRequest) {
-        OcrResultDto ocrResultDto = extractTextFromImage(request.getImageUrl());
+        ocrRequest = entityManager.merge(ocrRequest);
+        if (ocrRequest.getStatus().equals(RequestStatus.WAITING)) {
+            ocrRequestService.updateStatus(ocrRequest, RequestStatus.PROCESSING);
+        }
 
+        OcrResultDto ocrResultDto = extractTextFromImage(request.getImageUrl());
         if (!ocrResultDto.isSuccess()) return;
 
-        OcrResult ocrResult = saveOcrResult(ocrResultDto, entityManager.merge(ocrRequest));
+        OcrResult ocrResult = saveOcrResult(ocrResultDto, ocrRequest);
 
         List<DataEntriDto> dataEntri = List.of();
         try {
@@ -83,6 +87,8 @@ public class OcrProcessorService extends TextProcessorService {
             log.error(e.getMessage());
         }
         saveAllExtractedText(ocrResultDto, dataEntri, ocrResult);
+
+        ocrRequestService.updateStatus(ocrRequest, RequestStatus.DONE);
     }
 
     @Override

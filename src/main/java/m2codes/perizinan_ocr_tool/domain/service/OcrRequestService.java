@@ -15,8 +15,12 @@ public interface OcrRequestService {
 
     OcrRequest save(OcrDataRequest request, RequestStatus status);
 
+    Optional<OcrRequest> find(Long id);
+
     List<OcrRequest> findByIzinId(Long izinId);
 
     Optional<OcrRequest> findFirstByIzinIdAndSyaratIzinId(Long izinId, Long syaratIzinId);
+
+    void updateStatus(OcrRequest request, RequestStatus status);
 
 }

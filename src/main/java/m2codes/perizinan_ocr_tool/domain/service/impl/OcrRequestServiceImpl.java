@@ -46,6 +46,11 @@ public class OcrRequestServiceImpl implements OcrRequestService {
     }
 
     @Override
+    public Optional<OcrRequest> find(Long id) {
+        return ocrRequestRepository.findById(id);
+    }
+
+    @Override
     public List<OcrRequest> findByIzinId(Long izinId) {
         return ocrRequestRepository.findByIzinId(izinId);
     }
@@ -55,4 +60,9 @@ public class OcrRequestServiceImpl implements OcrRequestService {
         return ocrRequestRepository.findFirstByIzinIdAndSyaratIzinId(izinId, syaratIzinId);
     }
 
+    @Override
+    public void updateStatus(OcrRequest request, RequestStatus status) {
+        request.setStatus(status);
+        ocrRequestRepository.save(request);
+    }
 }

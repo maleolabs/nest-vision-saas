@@ -51,6 +51,11 @@ public class ExtractedTextQueryServiceImpl extends ExtractedTextQueryService {
     }
 
     @Override
+    protected OcrRequest findRequestById(Long requestId) {
+        return ocrRequestService.find(requestId).orElse(null);
+    }
+
+    @Override
     protected <T> WebResponse<T> buildWebResponse(T data, boolean success, String errorMessage) {
         WebResponse<T> webResponse = new WebResponse<>();
         webResponse.setData(data);

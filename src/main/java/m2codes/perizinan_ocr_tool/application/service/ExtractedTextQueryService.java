@@ -5,6 +5,7 @@ import m2codes.perizinan_ocr_tool.domain.model.OcrRequest;
 import m2codes.perizinan_ocr_tool.domain.service.ExtractedTextService;
 import m2codes.perizinan_ocr_tool.domain.service.OcrRequestService;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.ExtractedTextResponse;
+import m2codes.perizinan_ocr_tool.interfaces.dto.response.OcrResponse;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 
 import java.util.ArrayList;
@@ -59,6 +60,18 @@ public abstract class ExtractedTextQueryService {
             return buildWebResponse(responses, false, "Extracted text with izinId: " + izinId + " not found.");
     }
 
+    public final WebResponse<OcrResponse> checkStatus(Long requestId) {
+        OcrRequest request = findRequestById(requestId);
+        if (request == null) {
+            return buildWebResponse(null, false, "Request with id : " + requestId + " not found!");
+        }
+        OcrResponse response = OcrResponse.builder()
+                .requestId(requestId)
+                .status(request.getStatus())
+                .build();
+        return buildWebResponse(response, true, null);
+    }
+
     protected WebResponse<ExtractedTextResponse> handleTextKeyLookup(String textKey, Long izinId) {
         try {
             return findETByTextKeyAndIzinId(textKey, izinId)
@@ -87,5 +100,7 @@ public abstract class ExtractedTextQueryService {
     protected abstract List<ExtractedTextResponse> mapExtractedTextsToResponses(List<ExtractedText> extractedTexts);
 
     protected abstract <T> WebResponse<T> buildWebResponse(T data, boolean success, String errorMessage);
+
+    protected abstract OcrRequest findRequestById(Long requestId);
 
 }
