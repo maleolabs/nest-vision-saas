@@ -6,6 +6,7 @@ import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -20,35 +21,36 @@ public class ExtractedTextMapper {
     }
 
     public List<ExtractedTextDto> parseLinesByColon(String[] lines) {
-        List<ExtractedTextDto> mappedText = new ArrayList<>();
+        return Arrays.stream(lines)
+                .filter(line -> splitLine(line).length == 2)
+                .map(line -> {
+                    String[] parts = splitLine(line);
+                    String key = parts[0].trim().toLowerCase();
+                    String value = parts[1].trim();
+                    return ExtractedTextDto.builder()
+                            .textKey(key)
+                            .textValue(value)
+                            .build();
+                }).filter(textDto -> !textDto.getTextValue().isEmpty() && !textDto.getTextValue().isBlank())
+                .toList();
+    }
 
-        for (String line : lines) {
-            String[] parts = line.split(":", 2);
-
-            if (parts.length < 2) continue;
-
-            String key = parts[0].trim().toLowerCase();
-            String value = parts[1].trim();
-
-            if (value.isEmpty() || value.isBlank()) continue;
-
-            mappedText.add(ExtractedTextDto.builder()
-                    .textKey(key)
-                    .textValue(value)
-                    .build());
-        }
-
-        return mappedText;
+    private String[] splitLine(String line) {
+        return line.split(":", 2);
     }
 
     public List<ExtractedTextDto> detectAndAddMissingKeyValue(String[] lines, List<DataEntriDto> requiredKeys) {
         return requiredKeys.stream()
-                .filter(requiredKey -> customTextExtraction.findTextByCategory(requiredKey.getNama(), lines) != null)
+                .filter(requiredKey -> getCustomText(requiredKey.getNama(), lines) != null)
                 .map(requiredKeyFound -> ExtractedTextDto.builder()
                         .textKey(requiredKeyFound.getNama())
-                        .textValue(customTextExtraction.findTextByCategory(requiredKeyFound.getNama(), lines))
+                        .textValue(getCustomText(requiredKeyFound.getNama(), lines))
                         .build())
                 .toList();
+    }
+
+    private String getCustomText(String category, String[] lines) {
+        return customTextExtraction.findTextByCategory(category, lines);
     }
 
     public List<ExtractedTextDto> filterParsedDataByRequiredKeys(List<ExtractedTextDto> parsedData, List<DataEntriDto> requiredKeys) {

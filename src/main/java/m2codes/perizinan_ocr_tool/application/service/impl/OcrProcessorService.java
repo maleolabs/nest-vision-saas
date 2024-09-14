@@ -71,12 +71,10 @@ public class OcrProcessorService extends TextProcessorService {
 
     @Override
     protected List<ExtractedTextDto> processExtractedText(String extractedText, List<DataEntriDto> dataEntri) {
-        System.out.println("EXTRACTED TEXT : " + extractedText);
         String[] lines = extractedText.split("\\r?\\n");
         String[] cleanLines = extractedTextCleaner.linesCleaner(lines);
 
-        List<ExtractedTextDto> extractedTextDtos = new ArrayList<>();
-        extractedTextDtos.addAll(extractedTextMapper.parseLinesByColon(cleanLines));
+        List<ExtractedTextDto> extractedTextDtos = new ArrayList<>(extractedTextMapper.parseLinesByColon(cleanLines));
         extractedTextDtos.addAll(extractedTextMapper.detectAndAddMissingKeyValue(cleanLines, dataEntri));
 
         return extractedTextMapper.filterParsedDataByRequiredKeys(extractedTextDtos, dataEntri);

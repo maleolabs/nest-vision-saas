@@ -47,8 +47,9 @@ public abstract class TextProcessorService {
                 ocrResultDto.setErrorMessage(e.getMessage());
                 return buildWebResponse(ocrResultDto);
             }
-            List<ExtractedTextDto> extractedTextDtos = processExtractedText(ocrResultDto.getExtractedText(), dataEntri);
 
+            // cara agar ini dijalankan di thread berbeda
+            List<ExtractedTextDto> extractedTextDtos = processExtractedText(ocrResultDto.getExtractedText(), dataEntri);
             saveAllExtractedText(extractedTextDtos, ocrResult);
         }
 
