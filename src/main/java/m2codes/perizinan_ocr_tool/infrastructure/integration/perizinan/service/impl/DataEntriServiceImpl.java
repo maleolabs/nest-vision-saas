@@ -1,37 +1,30 @@
 package m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.service.impl;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-
-import m2codes.perizinan_ocr_tool.application.dto.DataEntriDto;
+import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.dto.DataEntriDto;
+import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.endpoint.DataEntriEndpoint;
 import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.service.DataEntriService;
-import reactor.core.publisher.Mono;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
 
-/**
- *
- * @author marij_mokoginta
- */
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+
 @Service
 public class DataEntriServiceImpl implements DataEntriService {
 
-    private final WebClient webClient;
+    private final DataEntriEndpoint dataEntriEndpoint;
 
-    public DataEntriServiceImpl(@Qualifier("perizinanWebClient") WebClient webClient) {
-        this.webClient = webClient;
+    public DataEntriServiceImpl(DataEntriEndpoint dataEntriEndpoint) {
+        this.dataEntriEndpoint = dataEntriEndpoint;
     }
 
+    @Async
     @Override
-    public Mono<List<DataEntriDto>> getByJenisPerizinanId(Long id) {
-        return webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                    .path("/data-entri/{id}")
-                    .build(id))
-                .retrieve()
-                .bodyToFlux(DataEntriDto.class)
-                .collectList();
+    public CompletableFuture<List<DataEntriDto>> getByJenisPerizinanId(Long id) {
+        List<DataEntriDto> dataEntriDtos = Optional.ofNullable(dataEntriEndpoint.getByJenisPerizinanId(id)
+                .block()).orElseThrow();
+        return CompletableFuture.completedFuture(dataEntriDtos);
     }
 
 }

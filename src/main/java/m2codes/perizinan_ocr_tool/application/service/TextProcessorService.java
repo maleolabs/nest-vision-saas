@@ -1,7 +1,7 @@
 package m2codes.perizinan_ocr_tool.application.service;
 
 import lombok.extern.slf4j.Slf4j;
-import m2codes.perizinan_ocr_tool.application.dto.DataEntriDto;
+import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.dto.DataEntriDto;
 import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
 import m2codes.perizinan_ocr_tool.application.dto.OcrResultDto;
 import m2codes.perizinan_ocr_tool.domain.model.ImageUpload;
@@ -14,6 +14,7 @@ import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public abstract class TextProcessorService {
@@ -33,25 +34,26 @@ public abstract class TextProcessorService {
     }
 
     public final WebResponse<?> processingExtractionText(ImageUploadRequest request) {
-        ImageUpload imageUpload = saveImageUpload(request);
         OcrResultDto ocrResultDto = extractTextFromImage(request.getImageUrl());
 
-        if (ocrResultDto.isSuccess()) {
-            OcrResult ocrResult = saveOcrResult(ocrResultDto, imageUpload);
-
-            List<DataEntriDto> dataEntri;
-            try {
-                dataEntri = getDataEntri(request.getJenisPerizinanId());
-            } catch (NoSuchElementException e) {
-                ocrResultDto.setSuccess(false);
-                ocrResultDto.setErrorMessage(e.getMessage());
-                return buildWebResponse(ocrResultDto);
-            }
-
-            // cara agar ini dijalankan di thread berbeda
-            List<ExtractedTextDto> extractedTextDtos = processExtractedText(ocrResultDto.getExtractedText(), dataEntri);
-            saveAllExtractedText(extractedTextDtos, ocrResult);
+        if (!ocrResultDto.isSuccess()) {
+            return buildWebResponse(ocrResultDto);
         }
+
+        ImageUpload imageUpload = saveImageUpload(request);
+        OcrResult ocrResult = saveOcrResult(ocrResultDto, imageUpload);
+
+        List<DataEntriDto> dataEntri;
+        try {
+            dataEntri = getDataEntri(request.getJenisPerizinanId());
+        } catch (NoSuchElementException e) {
+            ocrResultDto.setSuccess(false);
+            ocrResultDto.setErrorMessage(e.getMessage());
+            return buildWebResponse(ocrResultDto);
+        }
+
+        CompletableFuture<List<ExtractedTextDto>> future = processExtractedText(ocrResultDto.getExtractedText(), dataEntri);
+        future.thenAccept(extractedTextDtos -> saveAllExtractedText(extractedTextDtos, ocrResult));
 
         return buildWebResponse(ocrResultDto);
     }
@@ -64,7 +66,7 @@ public abstract class TextProcessorService {
 
     protected abstract List<DataEntriDto> getDataEntri(Long jenisPerizinanId);
 
-    protected abstract List<ExtractedTextDto> processExtractedText(String extractedText, List<DataEntriDto> dataEntri);
+    protected abstract CompletableFuture<List<ExtractedTextDto>> processExtractedText(String extractedText, List<DataEntriDto> dataEntri);
 
     protected abstract void saveAllExtractedText(List<ExtractedTextDto> extractedTextDtos, OcrResult ocrResult);
 

@@ -26,7 +26,6 @@ public class TesseractOcrServiceTest {
     @Test
     public void extractTextFromImageTest() {
         String imageUrl = perizinanApiBaseUrl + "/files/MTcyNTQzMzA1MDg1NS10ZXN0LmpwZw==";
-        OcrResultDto result = tesseractOcrService.extractTextFromImage(imageUrl);
 
     }
 

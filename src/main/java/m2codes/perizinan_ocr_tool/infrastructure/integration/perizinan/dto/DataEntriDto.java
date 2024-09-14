@@ -1,4 +1,4 @@
-package m2codes.perizinan_ocr_tool.application.dto;
+package m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

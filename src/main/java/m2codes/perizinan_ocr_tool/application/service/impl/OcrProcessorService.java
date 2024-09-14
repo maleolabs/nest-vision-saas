@@ -1,7 +1,7 @@
 package m2codes.perizinan_ocr_tool.application.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
-import m2codes.perizinan_ocr_tool.application.dto.DataEntriDto;
+import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.dto.DataEntriDto;
 import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
 import m2codes.perizinan_ocr_tool.application.dto.OcrResultDto;
 import m2codes.perizinan_ocr_tool.application.service.TextExtractionService;
@@ -16,11 +16,12 @@ import m2codes.perizinan_ocr_tool.domain.service.OcrResultService;
 import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.service.DataEntriService;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.ImageUploadRequest;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
@@ -56,7 +57,9 @@ public class OcrProcessorService extends TextProcessorService {
 
     @Override
     protected OcrResultDto extractTextFromImage(String imageUrl) {
-        return textExtractionService.extractTextFromImage(imageUrl);
+        return textExtractionService.extractTextFromImage(imageUrl)
+                .thenApply(ocrResultDto -> ocrResultDto)
+                .join();
     }
 
     @Override
@@ -66,18 +69,27 @@ public class OcrProcessorService extends TextProcessorService {
 
     @Override
     protected List<DataEntriDto> getDataEntri(Long jenisPerizinanId) {
-        return Optional.ofNullable(dataEntriService.getByJenisPerizinanId(jenisPerizinanId).block()).orElseThrow();
+        try {
+            return dataEntriService.getByJenisPerizinanId(jenisPerizinanId)
+                    .thenApply(result -> result.stream().toList())
+                    .join();
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return new ArrayList<>();
+        }
     }
 
+    @Async
     @Override
-    protected List<ExtractedTextDto> processExtractedText(String extractedText, List<DataEntriDto> dataEntri) {
+    protected CompletableFuture<List<ExtractedTextDto>> processExtractedText(String extractedText, List<DataEntriDto> dataEntri) {
         String[] lines = extractedText.split("\\r?\\n");
         String[] cleanLines = extractedTextCleaner.linesCleaner(lines);
 
         List<ExtractedTextDto> extractedTextDtos = new ArrayList<>(extractedTextMapper.parseLinesByColon(cleanLines));
         extractedTextDtos.addAll(extractedTextMapper.detectAndAddMissingKeyValue(cleanLines, dataEntri));
 
-        return extractedTextMapper.filterParsedDataByRequiredKeys(extractedTextDtos, dataEntri);
+        List<ExtractedTextDto> filteredData = extractedTextMapper.filterParsedDataByRequiredKeys(extractedTextDtos, dataEntri);
+        return CompletableFuture.completedFuture(filteredData);
     }
 
     @Override

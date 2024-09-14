@@ -1,11 +1,10 @@
 package m2codes.perizinan_ocr_tool.application.util;
 
 import lombok.extern.slf4j.Slf4j;
-import m2codes.perizinan_ocr_tool.application.dto.DataEntriDto;
+import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.dto.DataEntriDto;
 import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;

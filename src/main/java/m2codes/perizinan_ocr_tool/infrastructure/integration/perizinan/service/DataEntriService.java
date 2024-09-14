@@ -1,16 +1,12 @@
 package m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.service;
 
+import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.dto.DataEntriDto;
+
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
-import m2codes.perizinan_ocr_tool.application.dto.DataEntriDto;
-import reactor.core.publisher.Mono;
-
-/**
- *
- * @author marij_mokoginta
- */
 public interface DataEntriService {
 
-    Mono<List<DataEntriDto>> getByJenisPerizinanId(Long id);
+    CompletableFuture<List<DataEntriDto>> getByJenisPerizinanId(Long id);
 
 }
