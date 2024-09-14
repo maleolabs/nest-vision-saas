@@ -2,7 +2,7 @@ package m2codes.perizinan_ocr_tool.domain.service;
 
 import org.springframework.lang.NonNull;
 
-import m2codes.perizinan_ocr_tool.domain.model.ImageUpload;
+import m2codes.perizinan_ocr_tool.domain.model.OcrRequest;
 import m2codes.perizinan_ocr_tool.domain.model.OcrResult;
 import m2codes.perizinan_ocr_tool.application.dto.OcrResultDto;
 
@@ -12,6 +12,6 @@ import m2codes.perizinan_ocr_tool.application.dto.OcrResultDto;
  */
 public interface OcrResultService {
 
-    OcrResult save(OcrResultDto ocrResultDto, @NonNull ImageUpload imageUpload);
+    OcrResult save(OcrResultDto ocrResultDto, @NonNull OcrRequest ocrRequest);
 
 }

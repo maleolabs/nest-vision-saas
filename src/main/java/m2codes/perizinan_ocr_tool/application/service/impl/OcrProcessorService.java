@@ -8,13 +8,13 @@ import m2codes.perizinan_ocr_tool.application.service.TextExtractionService;
 import m2codes.perizinan_ocr_tool.application.service.TextProcessorService;
 import m2codes.perizinan_ocr_tool.application.util.ExtractedTextCleaner;
 import m2codes.perizinan_ocr_tool.application.util.ExtractedTextMapper;
-import m2codes.perizinan_ocr_tool.domain.model.ImageUpload;
+import m2codes.perizinan_ocr_tool.domain.model.OcrRequest;
 import m2codes.perizinan_ocr_tool.domain.model.OcrResult;
 import m2codes.perizinan_ocr_tool.domain.service.ExtractedTextService;
-import m2codes.perizinan_ocr_tool.domain.service.ImageUploadService;
+import m2codes.perizinan_ocr_tool.domain.service.OcrRequestService;
 import m2codes.perizinan_ocr_tool.domain.service.OcrResultService;
 import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.service.DataEntriService;
-import m2codes.perizinan_ocr_tool.interfaces.dto.request.ImageUploadRequest;
+import m2codes.perizinan_ocr_tool.interfaces.dto.request.OcrDataRequest;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -34,7 +34,7 @@ public class OcrProcessorService extends TextProcessorService {
     private final ExtractedTextMapper extractedTextMapper;
 
     public OcrProcessorService(
-            ImageUploadService imageUploadService,
+            OcrRequestService ocrRequestService,
             OcrResultService ocrResultService,
             ExtractedTextService extractedTextService,
             TextExtractionService textExtractionService,
@@ -42,7 +42,7 @@ public class OcrProcessorService extends TextProcessorService {
             ExtractedTextCleaner extractedTextCleaner,
             ExtractedTextMapper extractedTextMapper
     ) {
-        super(imageUploadService, ocrResultService, extractedTextService);
+        super(ocrRequestService, ocrResultService, extractedTextService);
         this.textExtractionService = textExtractionService;
         this.dataEntriService = dataEntriService;
 
@@ -51,8 +51,8 @@ public class OcrProcessorService extends TextProcessorService {
     }
 
     @Override
-    protected ImageUpload saveImageUpload(ImageUploadRequest request) {
-        return imageUploadService.save(request);
+    protected OcrRequest saveOcrRequest(OcrDataRequest request) {
+        return ocrRequestService.save(request);
     }
 
     @Override
@@ -63,8 +63,8 @@ public class OcrProcessorService extends TextProcessorService {
     }
 
     @Override
-    protected OcrResult saveOcrResult(OcrResultDto ocrResultDto, ImageUpload imageUpload) {
-        return ocrResultService.save(ocrResultDto, imageUpload);
+    protected OcrResult saveOcrResult(OcrResultDto ocrResultDto, OcrRequest ocrRequest) {
+        return ocrResultService.save(ocrResultDto, ocrRequest);
     }
 
     @Override

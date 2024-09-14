@@ -36,7 +36,7 @@ public class OcrResult {
             referencedColumnName = "id",
             nullable=false
     )
-    private ImageUpload imageUpload;
+    private OcrRequest ocrRequest;
 
     @Column(name="is_success", nullable=false)
     private boolean isSuccess;
@@ -58,7 +58,7 @@ public class OcrResult {
     public String toString() {
         return "OcrResult{" +
                 "id=" + id +
-                ", imageUpload=" + imageUpload +
+                ", imageUpload=" + ocrRequest +
                 ", isSuccess=" + isSuccess +
                 ", errorMessage=" + errorMessage +
                 ", extractedAt=" + extractedAt +

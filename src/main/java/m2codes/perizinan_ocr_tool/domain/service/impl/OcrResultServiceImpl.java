@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
-import m2codes.perizinan_ocr_tool.domain.model.ImageUpload;
+import m2codes.perizinan_ocr_tool.domain.model.OcrRequest;
 import m2codes.perizinan_ocr_tool.domain.model.OcrResult;
 import m2codes.perizinan_ocr_tool.domain.repository.OcrResultRepository;
 import m2codes.perizinan_ocr_tool.domain.service.OcrResultService;
@@ -25,11 +25,11 @@ public class OcrResultServiceImpl implements OcrResultService {
     }
 
     @Override
-    public OcrResult save(OcrResultDto ocrResultDto, @NonNull ImageUpload imageUpload) {
-        Long savedOcrResultId = ocrResultRepository.findFirstByImageUpload(imageUpload).map(OcrResult::getId).orElse(null);
+    public OcrResult save(OcrResultDto ocrResultDto, @NonNull OcrRequest ocrRequest) {
+        Long savedOcrResultId = ocrResultRepository.findFirstByImageUpload(ocrRequest).map(OcrResult::getId).orElse(null);
         OcrResult ocrResult = OcrResult.builder()
                 .id(savedOcrResultId)
-                .imageUpload(imageUpload)
+                .ocrRequest(ocrRequest)
                 .isSuccess(ocrResultDto.isSuccess())
                 .errorMessage(ocrResultDto.getErrorMessage())
                 .extractedAt(ocrResultDto.getExtractedAt())

@@ -4,12 +4,12 @@ import lombok.extern.slf4j.Slf4j;
 import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.dto.DataEntriDto;
 import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
 import m2codes.perizinan_ocr_tool.application.dto.OcrResultDto;
-import m2codes.perizinan_ocr_tool.domain.model.ImageUpload;
+import m2codes.perizinan_ocr_tool.domain.model.OcrRequest;
 import m2codes.perizinan_ocr_tool.domain.model.OcrResult;
 import m2codes.perizinan_ocr_tool.domain.service.ExtractedTextService;
-import m2codes.perizinan_ocr_tool.domain.service.ImageUploadService;
+import m2codes.perizinan_ocr_tool.domain.service.OcrRequestService;
 import m2codes.perizinan_ocr_tool.domain.service.OcrResultService;
-import m2codes.perizinan_ocr_tool.interfaces.dto.request.ImageUploadRequest;
+import m2codes.perizinan_ocr_tool.interfaces.dto.request.OcrDataRequest;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 
 import java.util.List;
@@ -19,29 +19,29 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public abstract class TextProcessorService {
 
-    protected final ImageUploadService imageUploadService;
+    protected final OcrRequestService ocrRequestService;
     protected  final OcrResultService ocrResultService;
     protected  final ExtractedTextService extractedTextService;
 
     public TextProcessorService(
-            ImageUploadService imageUploadService,
+            OcrRequestService ocrRequestService,
             OcrResultService ocrResultService,
             ExtractedTextService extractedTextService
     ) {
-        this.imageUploadService = imageUploadService;
+        this.ocrRequestService = ocrRequestService;
         this.ocrResultService = ocrResultService;
         this.extractedTextService = extractedTextService;
     }
 
-    public final WebResponse<?> processingExtractionText(ImageUploadRequest request) {
+    public final WebResponse<?> processingExtractionText(OcrDataRequest request) {
         OcrResultDto ocrResultDto = extractTextFromImage(request.getImageUrl());
 
         if (!ocrResultDto.isSuccess()) {
             return buildWebResponse(ocrResultDto);
         }
 
-        ImageUpload imageUpload = saveImageUpload(request);
-        OcrResult ocrResult = saveOcrResult(ocrResultDto, imageUpload);
+        OcrRequest ocrRequest = saveOcrRequest(request);
+        OcrResult ocrResult = saveOcrResult(ocrResultDto, ocrRequest);
 
         List<DataEntriDto> dataEntri;
         try {
@@ -58,11 +58,11 @@ public abstract class TextProcessorService {
         return buildWebResponse(ocrResultDto);
     }
 
-    protected abstract ImageUpload saveImageUpload(ImageUploadRequest request);
+    protected abstract OcrRequest saveOcrRequest(OcrDataRequest request);
 
     protected abstract OcrResultDto extractTextFromImage(String imageUrl);
 
-    protected abstract OcrResult saveOcrResult(OcrResultDto ocrResultDto, ImageUpload imageUpload);
+    protected abstract OcrResult saveOcrResult(OcrResultDto ocrResultDto, OcrRequest ocrRequest);
 
     protected abstract List<DataEntriDto> getDataEntri(Long jenisPerizinanId);
 

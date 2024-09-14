@@ -2,7 +2,7 @@ package m2codes.perizinan_ocr_tool.interfaces.controller;
 
 import m2codes.perizinan_ocr_tool.application.service.impl.ExtractedTextQueryServiceImpl;
 import m2codes.perizinan_ocr_tool.application.service.impl.OcrProcessorService;
-import m2codes.perizinan_ocr_tool.interfaces.dto.request.ImageUploadRequest;
+import m2codes.perizinan_ocr_tool.interfaces.dto.request.OcrDataRequest;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.ExtractedTextResponse;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 import org.springframework.http.MediaType;
@@ -32,7 +32,7 @@ public class OcrController {
             consumes = MediaType.APPLICATION_JSON_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<WebResponse<?>> doOcr(@RequestBody ImageUploadRequest request) {
+    public ResponseEntity<WebResponse<?>> doOcr(@RequestBody OcrDataRequest request) {
         WebResponse<?> response = ocrProcessorService.processingExtractionText(request);
 
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);

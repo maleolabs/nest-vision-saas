@@ -2,9 +2,9 @@ package m2codes.perizinan_ocr_tool.application.service.impl;
 
 import m2codes.perizinan_ocr_tool.application.service.ExtractedTextQueryService;
 import m2codes.perizinan_ocr_tool.domain.model.ExtractedText;
-import m2codes.perizinan_ocr_tool.domain.model.ImageUpload;
+import m2codes.perizinan_ocr_tool.domain.model.OcrRequest;
 import m2codes.perizinan_ocr_tool.domain.service.ExtractedTextService;
-import m2codes.perizinan_ocr_tool.domain.service.ImageUploadService;
+import m2codes.perizinan_ocr_tool.domain.service.OcrRequestService;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.ExtractedTextResponse;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 import org.springframework.stereotype.Service;
@@ -18,9 +18,9 @@ public class ExtractedTextQueryServiceImpl extends ExtractedTextQueryService {
 
     public ExtractedTextQueryServiceImpl(
             ExtractedTextService extractedTextService,
-            ImageUploadService imageUploadService
+            OcrRequestService ocrRequestService
     ) {
-        super(extractedTextService, imageUploadService);
+        super(extractedTextService, ocrRequestService);
     }
 
     @Override
@@ -29,13 +29,13 @@ public class ExtractedTextQueryServiceImpl extends ExtractedTextQueryService {
     }
 
     @Override
-    protected Optional<ImageUpload> findIUByIzinIdAndSyaratIzinId(Long izinId, Long syaratIzinId) {
-        return imageUploadService.findFirstByIzinIdAndSyaratIzinId(izinId, syaratIzinId);
+    protected Optional<OcrRequest> findIUByIzinIdAndSyaratIzinId(Long izinId, Long syaratIzinId) {
+        return ocrRequestService.findFirstByIzinIdAndSyaratIzinId(izinId, syaratIzinId);
     }
 
     @Override
-    protected List<ImageUpload> findIUByIzinId(Long izinId) {
-        return imageUploadService.findByIzinId(izinId);
+    protected List<OcrRequest> findIUByIzinId(Long izinId) {
+        return ocrRequestService.findByIzinId(izinId);
     }
 
     @Override

@@ -2,12 +2,12 @@ package m2codes.perizinan_ocr_tool.application.service.impl;
 
 import m2codes.perizinan_ocr_tool.application.dto.OcrResultDto;
 import m2codes.perizinan_ocr_tool.application.service.TextExtractionService;
-import m2codes.perizinan_ocr_tool.domain.model.ImageUpload;
+import m2codes.perizinan_ocr_tool.domain.model.OcrRequest;
 import m2codes.perizinan_ocr_tool.domain.model.OcrResult;
 import m2codes.perizinan_ocr_tool.domain.service.ExtractedTextService;
-import m2codes.perizinan_ocr_tool.domain.service.ImageUploadService;
+import m2codes.perizinan_ocr_tool.domain.service.OcrRequestService;
 import m2codes.perizinan_ocr_tool.domain.service.OcrResultService;
-import m2codes.perizinan_ocr_tool.interfaces.dto.request.ImageUploadRequest;
+import m2codes.perizinan_ocr_tool.interfaces.dto.request.OcrDataRequest;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,7 +32,7 @@ class OcrProcessorServiceTest {
     private OcrProcessorService concreteOcrProcessor;
 
     @Mock
-    private ImageUploadService imageUploadService;
+    private OcrRequestService ocrRequestService;
 
     @Mock
     private OcrResultService ocrResultService;
@@ -51,14 +51,14 @@ class OcrProcessorServiceTest {
     @Test
     public void testProcessOcr_Success() {
         String imageUrl = perizinanApiBaseUrl + "/files/MTcyNjA3MzUyNDg1NC1zdXJhdC1wZW5lbGl0aWFuLnBuZw==";
-        ImageUploadRequest request = ImageUploadRequest.builder().imageUrl(imageUrl).izinId(4L).syaratIzinId(855L).jenisPerizinanId(167L).build();
+        OcrDataRequest request = OcrDataRequest.builder().imageUrl(imageUrl).izinId(4L).syaratIzinId(855L).jenisPerizinanId(167L).build();
         OcrResultDto ocrResultDto = OcrResultDto.builder().isSuccess(true).extractedText("").build();
-        ImageUpload imageUpload = new ImageUpload();
+        OcrRequest ocrRequest = new OcrRequest();
         OcrResult ocrResult = new OcrResult();
 
-        when(imageUploadService.save(request)).thenReturn(imageUpload);
+        when(ocrRequestService.save(request)).thenReturn(ocrRequest);
         when(textExtractionService.extractTextFromImage(request.getImageUrl())).thenReturn(ocrResultDto);
-        when(ocrResultService.save(ocrResultDto, imageUpload)).thenReturn(ocrResult);
+        when(ocrResultService.save(ocrResultDto, ocrRequest)).thenReturn(ocrResult);
         doNothing().when(extractedTextService).save(any(), any());
 
         WebResponse<?> response = concreteOcrProcessor.processingExtractionText(request);

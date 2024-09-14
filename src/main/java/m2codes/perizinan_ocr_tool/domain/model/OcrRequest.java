@@ -18,7 +18,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @Entity
 @Table(name = "image_upload")
-public class ImageUpload {
+public class OcrRequest {
 
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)

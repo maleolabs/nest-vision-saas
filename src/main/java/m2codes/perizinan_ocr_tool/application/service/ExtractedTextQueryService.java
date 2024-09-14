@@ -1,9 +1,9 @@
 package m2codes.perizinan_ocr_tool.application.service;
 
 import m2codes.perizinan_ocr_tool.domain.model.ExtractedText;
-import m2codes.perizinan_ocr_tool.domain.model.ImageUpload;
+import m2codes.perizinan_ocr_tool.domain.model.OcrRequest;
 import m2codes.perizinan_ocr_tool.domain.service.ExtractedTextService;
-import m2codes.perizinan_ocr_tool.domain.service.ImageUploadService;
+import m2codes.perizinan_ocr_tool.domain.service.OcrRequestService;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.ExtractedTextResponse;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 
@@ -15,14 +15,14 @@ public abstract class ExtractedTextQueryService {
 
     protected final ExtractedTextService extractedTextService;
 
-    protected final ImageUploadService imageUploadService;
+    protected final OcrRequestService ocrRequestService;
 
     public ExtractedTextQueryService(
             ExtractedTextService extractedTextService,
-            ImageUploadService imageUploadService
+            OcrRequestService ocrRequestService
     ) {
         this.extractedTextService = extractedTextService;
-        this.imageUploadService = imageUploadService;
+        this.ocrRequestService = ocrRequestService;
     }
 
     public final WebResponse<ExtractedTextResponse> findByTextKey(String textKey, Long izinId) {
@@ -80,9 +80,9 @@ public abstract class ExtractedTextQueryService {
 
     protected abstract Optional<ExtractedText> findETByTextKeyAndIzinId(String textKey, Long izinId);
 
-    protected abstract Optional<ImageUpload> findIUByIzinIdAndSyaratIzinId(Long izinId, Long syaratIzinId);
+    protected abstract Optional<OcrRequest> findIUByIzinIdAndSyaratIzinId(Long izinId, Long syaratIzinId);
 
-    protected abstract List<ImageUpload> findIUByIzinId(Long izinId);
+    protected abstract List<OcrRequest> findIUByIzinId(Long izinId);
 
     protected abstract List<ExtractedTextResponse> mapExtractedTextsToResponses(List<ExtractedText> extractedTexts);
 

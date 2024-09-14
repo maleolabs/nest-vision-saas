@@ -13,7 +13,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class ImageUploadRequest {
+public class OcrDataRequest {
 
     @NotNull
     @NotEmpty
