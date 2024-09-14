@@ -13,6 +13,6 @@ import java.util.Optional;
  */
 public interface OcrResultRepository extends JpaRepository<OcrResult, Long> {
 
-    Optional<OcrResult> findFirstByImageUpload(OcrRequest ocrRequest);
+    Optional<OcrResult> findFirstByOcrRequest(OcrRequest ocrRequest);
 
 }

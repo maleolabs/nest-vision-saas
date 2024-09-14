@@ -1,6 +1,8 @@
 package m2codes.perizinan_ocr_tool.application.service;
 
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import m2codes.perizinan_ocr_tool.domain.model.RequestStatus;
 import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.dto.DataEntriDto;
 import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
 import m2codes.perizinan_ocr_tool.application.dto.OcrResultDto;
@@ -10,10 +12,10 @@ import m2codes.perizinan_ocr_tool.domain.service.ExtractedTextService;
 import m2codes.perizinan_ocr_tool.domain.service.OcrRequestService;
 import m2codes.perizinan_ocr_tool.domain.service.OcrResultService;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.OcrDataRequest;
+import m2codes.perizinan_ocr_tool.interfaces.dto.response.OcrResponse;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -33,32 +35,24 @@ public abstract class TextProcessorService {
         this.extractedTextService = extractedTextService;
     }
 
-    public final WebResponse<?> processingExtractionText(OcrDataRequest request) {
-        OcrResultDto ocrResultDto = extractTextFromImage(request.getImageUrl());
+    @Transactional
+    public final WebResponse<?> processOcrRequest(OcrDataRequest request) {
+        OcrRequest ocrRequest = saveOcrRequest(request, RequestStatus.PROCESSING);
 
-        if (!ocrResultDto.isSuccess()) {
-            return buildWebResponse(ocrResultDto);
-        }
+        processingExtractionText(request, ocrRequest);
 
-        OcrRequest ocrRequest = saveOcrRequest(request);
-        OcrResult ocrResult = saveOcrResult(ocrResultDto, ocrRequest);
-
-        List<DataEntriDto> dataEntri;
-        try {
-            dataEntri = getDataEntri(request.getJenisPerizinanId());
-        } catch (NoSuchElementException e) {
-            ocrResultDto.setSuccess(false);
-            ocrResultDto.setErrorMessage(e.getMessage());
-            return buildWebResponse(ocrResultDto);
-        }
-
-        CompletableFuture<List<ExtractedTextDto>> future = processExtractedText(ocrResultDto.getExtractedText(), dataEntri);
-        future.thenAccept(extractedTextDtos -> saveAllExtractedText(extractedTextDtos, ocrResult));
-
-        return buildWebResponse(ocrResultDto);
+        return buildWebResponse(
+                true,
+                null,
+                OcrResponse.builder()
+                        .requestId(ocrRequest.getId())
+                        .status(ocrRequest.getStatus())
+                        .build());
     }
 
-    protected abstract OcrRequest saveOcrRequest(OcrDataRequest request);
+    protected abstract void processingExtractionText(OcrDataRequest request, OcrRequest ocrRequest);
+
+    protected abstract OcrRequest saveOcrRequest(OcrDataRequest request, RequestStatus status);
 
     protected abstract OcrResultDto extractTextFromImage(String imageUrl);
 
@@ -68,8 +62,8 @@ public abstract class TextProcessorService {
 
     protected abstract CompletableFuture<List<ExtractedTextDto>> processExtractedText(String extractedText, List<DataEntriDto> dataEntri);
 
-    protected abstract void saveAllExtractedText(List<ExtractedTextDto> extractedTextDtos, OcrResult ocrResult);
+    protected abstract void saveAllExtractedText(OcrResultDto ocrResultDto, List<DataEntriDto> dataEntri, OcrResult ocrResult);
 
-    protected abstract WebResponse<?> buildWebResponse(OcrResultDto ocrResultDto);
+    protected abstract WebResponse<?> buildWebResponse(boolean success, String errorMessage, OcrResponse response);
 
 }

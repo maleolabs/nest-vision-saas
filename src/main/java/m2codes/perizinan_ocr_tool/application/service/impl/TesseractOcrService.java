@@ -8,6 +8,8 @@ import java.util.concurrent.CompletableFuture;
 import javax.imageio.ImageIO;
 
 import m2codes.perizinan_ocr_tool.application.service.TextExtractionService;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -24,11 +26,8 @@ import net.sourceforge.tess4j.TesseractException;
 @Slf4j
 public class TesseractOcrService implements TextExtractionService {
 
-    private final Tesseract tesseract;
-
-    public TesseractOcrService(Tesseract tesseract) {
-        this.tesseract = tesseract;
-    }
+    @Value("classpath:static/tessdata")
+    private Resource tessdataDirectory;
 
     @Async
     @Override
@@ -36,8 +35,9 @@ public class TesseractOcrService implements TextExtractionService {
         OcrResultDto result = new OcrResultDto();
 
         try {
-            URL url = new URL(imageUrl);
-            BufferedImage image = ImageIO.read(url);
+            Tesseract tesseract = getTesseractInstance();
+
+            BufferedImage image = getBufferedImage(imageUrl);
             if (image == null) {
                 result.setSuccess(false);
                 result.setErrorMessage("image null");
@@ -56,6 +56,19 @@ public class TesseractOcrService implements TextExtractionService {
         }
 
         return CompletableFuture.completedFuture(result);
+    }
+
+    private Tesseract getTesseractInstance() throws IOException{
+        Tesseract tesseract = new Tesseract();
+        String tessdataPath = tessdataDirectory.getFile().getAbsolutePath();
+        tesseract.setDatapath(tessdataPath);
+        tesseract.setLanguage("ind");
+        return tesseract;
+    }
+
+    private BufferedImage getBufferedImage(String imageUrl) throws IOException {
+        URL url = new URL(imageUrl);
+        return ImageIO.read(url);
     }
 
 }

@@ -32,7 +32,7 @@ public class OcrResult {
             cascade = CascadeType.ALL
     )
     @JoinColumn(
-            name="image_upload_id",
+            name="ocr_request_id",
             referencedColumnName = "id",
             nullable=false
     )
@@ -58,7 +58,7 @@ public class OcrResult {
     public String toString() {
         return "OcrResult{" +
                 "id=" + id +
-                ", imageUpload=" + ocrRequest +
+                ", ocrRequest=" + ocrRequest +
                 ", isSuccess=" + isSuccess +
                 ", errorMessage=" + errorMessage +
                 ", extractedAt=" + extractedAt +

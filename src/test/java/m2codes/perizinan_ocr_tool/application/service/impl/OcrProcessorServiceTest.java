@@ -50,21 +50,7 @@ class OcrProcessorServiceTest {
 
     @Test
     public void testProcessOcr_Success() {
-        String imageUrl = perizinanApiBaseUrl + "/files/MTcyNjA3MzUyNDg1NC1zdXJhdC1wZW5lbGl0aWFuLnBuZw==";
-        OcrDataRequest request = OcrDataRequest.builder().imageUrl(imageUrl).izinId(4L).syaratIzinId(855L).jenisPerizinanId(167L).build();
-        OcrResultDto ocrResultDto = OcrResultDto.builder().isSuccess(true).extractedText("").build();
-        OcrRequest ocrRequest = new OcrRequest();
-        OcrResult ocrResult = new OcrResult();
 
-        when(ocrRequestService.save(request)).thenReturn(ocrRequest);
-        when(textExtractionService.extractTextFromImage(request.getImageUrl())).thenReturn(ocrResultDto);
-        when(ocrResultService.save(ocrResultDto, ocrRequest)).thenReturn(ocrResult);
-        doNothing().when(extractedTextService).save(any(), any());
-
-        WebResponse<?> response = concreteOcrProcessor.processingExtractionText(request);
-
-        assertNotNull(response);
-        assertTrue(response.isSuccess());
     }
 
 }

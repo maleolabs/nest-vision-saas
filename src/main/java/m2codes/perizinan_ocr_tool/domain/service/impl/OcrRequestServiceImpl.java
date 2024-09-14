@@ -1,6 +1,7 @@
 package m2codes.perizinan_ocr_tool.domain.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import m2codes.perizinan_ocr_tool.domain.model.RequestStatus;
 import org.springframework.stereotype.Service;
 
 import m2codes.perizinan_ocr_tool.domain.model.OcrRequest;
@@ -26,7 +27,7 @@ public class OcrRequestServiceImpl implements OcrRequestService {
     }
 
     @Override
-    public OcrRequest save(OcrDataRequest request) {
+    public OcrRequest save(OcrDataRequest request, RequestStatus status) {
         Long savedImageUploadId = ocrRequestRepository
                 .findFirstByIzinIdAndSyaratIzinId(request.getIzinId(), request.getSyaratIzinId())
                 .map(OcrRequest::getId).orElse(null);
@@ -38,6 +39,7 @@ public class OcrRequestServiceImpl implements OcrRequestService {
                 .syaratIzinId(request.getSyaratIzinId())
                 .imageUrl(request.getImageUrl())
                 .uploadedAt(System.currentTimeMillis())
+                .status(status)
                 .build();
 
         return ocrRequestRepository.save(ocrRequest);

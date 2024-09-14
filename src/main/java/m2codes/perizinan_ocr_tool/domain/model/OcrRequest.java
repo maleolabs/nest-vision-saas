@@ -17,7 +17,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "image_upload")
+@Table(name = "ocr_request")
 public class OcrRequest {
 
     @Id
@@ -40,8 +40,12 @@ public class OcrRequest {
     @Column(name="uploaded_at", nullable=false)
     private Long uploadedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status")
+    private RequestStatus status;
+
     @OneToOne(
-            mappedBy="imageUpload",
+            mappedBy="ocrRequest",
             cascade=CascadeType.ALL,
             fetch=FetchType.LAZY
     )

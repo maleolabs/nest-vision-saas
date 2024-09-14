@@ -33,7 +33,7 @@ public class OcrController {
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<WebResponse<?>> doOcr(@RequestBody OcrDataRequest request) {
-        WebResponse<?> response = ocrProcessorService.processingExtractionText(request);
+        WebResponse<?> response = ocrProcessorService.processOcrRequest(request);
 
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }

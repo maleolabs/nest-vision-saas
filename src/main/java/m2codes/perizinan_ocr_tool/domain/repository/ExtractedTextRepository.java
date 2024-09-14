@@ -17,9 +17,9 @@ public interface ExtractedTextRepository extends JpaRepository<ExtractedText, Lo
 
     @Query(
             "SELECT et FROM ExtractedText et " +
-            "JOIN  et.ocrResult or " +
-            "JOIN or.imageUpload iu " +
-            "WHERE iu.izinId = :izinId " +
+            "JOIN  et.ocrResult ors " +
+            "JOIN ors.ocrRequest orq " +
+            "WHERE orq.izinId = :izinId " +
             "AND et.textKey = :textKey"
     )
     Optional<ExtractedText> findFirstByTextKeyAndIzinId(@Param("textKey") String textKey, @Param("izinId") Long izinId);
