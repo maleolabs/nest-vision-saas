@@ -1,28 +1,11 @@
 package m2codes.perizinan_ocr_tool.application.util.data_extractor;
 
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-public class OrganizationNameExtractor implements TextDataExtractor {
+public class OrganizationNameExtractor extends DataExtractorTemplate implements TextDataExtractor {
 
     @Override
-    public String extract(String ocrText) {
-        var matcher = textMatcher(ocrText);
-        return matcher.find() ? matcher.group(0) : null;
-    }
-
-    @Override
-    public boolean textExist(String ocrText) {
-        return textMatcher(ocrText).find();
-    }
-
-    private Matcher textMatcher(String text) {
-        Pattern pattern = Pattern.compile(regexPattern());
-        return pattern.matcher(text);
-    }
-
-    private String regexPattern() {
+    protected String regexPattern() {
         StringBuilder regexBuilder = new StringBuilder();
         for (String organization : listOfOrganization()) {
             regexBuilder.append(organization).append("|");
