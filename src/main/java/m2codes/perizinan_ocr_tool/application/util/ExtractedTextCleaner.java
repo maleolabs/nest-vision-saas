@@ -15,7 +15,7 @@ public class ExtractedTextCleaner {
         StringBuilder builder = new StringBuilder();
 
         for (int i=0; i<lines.length; i++) {
-            lines[i] = cleanLine(lines[i]);
+            lines[i] = removeNoise(lines[i]);
             int lastIndex = i - 1;
             if (i > 0 && (startsWithLowerCase(lines[i]) || firstLineBracketsNotClosed(lines[lastIndex], lines[i]))) {
                 appendLines(builder, lines[lastIndex], lines[i]);
@@ -38,7 +38,7 @@ public class ExtractedTextCleaner {
         return firstLine.contains("(") && !firstLine.contains(")") && secondLine.contains(")");
     }
 
-    private String cleanLine(String line) {
+    private String removeNoise(String line) {
         line = removeUnusedSpace(line);
 
         String validRegex = ".*[^A-Za-z0-9:/.\s()'].*";
