@@ -99,9 +99,7 @@ public class OcrProcessorService extends TextProcessorService {
 
     @Override
     protected OcrResultDto extractTextFromImage(String imageUrl) {
-        return textExtractionService.extractTextFromImage(imageUrl)
-                .thenApply(ocrResultDto -> ocrResultDto)
-                .join();
+        return textExtractionService.extractTextFromImage(imageUrl);
     }
 
     @Override

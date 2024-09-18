@@ -3,14 +3,12 @@ package m2codes.perizinan_ocr_tool.application.service.impl;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
-import java.util.concurrent.CompletableFuture;
 
 import javax.imageio.ImageIO;
 
 import m2codes.perizinan_ocr_tool.application.service.TextExtractionService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
@@ -29,9 +27,8 @@ public class TesseractOcrService implements TextExtractionService {
     @Value("classpath:static/tessdata")
     private Resource tessdataDirectory;
 
-    @Async
     @Override
-    public CompletableFuture<OcrResultDto> extractTextFromImage(String imageUrl) {
+    public OcrResultDto extractTextFromImage(String imageUrl) {
         OcrResultDto result = new OcrResultDto();
 
         try {
@@ -41,7 +38,7 @@ public class TesseractOcrService implements TextExtractionService {
             if (image == null) {
                 result.setSuccess(false);
                 result.setErrorMessage("image null");
-                return CompletableFuture.completedFuture(result);
+                return result;
             }
 
             String text = tesseract.doOCR(image);
@@ -55,7 +52,7 @@ public class TesseractOcrService implements TextExtractionService {
             log.error(exception.getMessage());
         }
 
-        return CompletableFuture.completedFuture(result);
+        return result;
     }
 
     private Tesseract getTesseractInstance() throws IOException{
