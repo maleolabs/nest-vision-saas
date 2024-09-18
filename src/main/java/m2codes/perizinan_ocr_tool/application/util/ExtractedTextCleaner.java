@@ -13,13 +13,32 @@ public class ExtractedTextCleaner {
             return lines;
 
         StringBuilder builder = new StringBuilder();
+        int openQuoteIndex = 0;
+        boolean isQuoteNotClosed = false;
 
-        for (int i=0; i<lines.length; i++) {
+        for (int i = 0; i < lines.length; i++) {
+            int previousIndex = i - 1;
+            lines[i] = cleanQuotes(lines[i]);
+
+            if (i > 0 && lines[previousIndex].contains("\"")) {
+                lines[previousIndex] = combineLinesWithQuotes(lines[previousIndex], lines[i]);
+                if (!lines[previousIndex].contains("\"")) {
+                    isQuoteNotClosed = true;
+                    openQuoteIndex = previousIndex;
+                }
+            }
+
+            if (isQuoteNotClosed && lines[i].contains("\"")) {
+                lines[openQuoteIndex] = closeOpenQuotes(lines[openQuoteIndex], lines[i]);
+                lines[i] = "";
+                isQuoteNotClosed = false;
+            }
+
             lines[i] = removeNoise(lines[i]);
-            int lastIndex = i - 1;
-            if (i > 0 && (startsWithLowerCase(lines[i]) || firstLineBracketsNotClosed(lines[lastIndex], lines[i]))) {
-                appendLines(builder, lines[lastIndex], lines[i]);
-                lines[lastIndex] = builder.toString();
+
+            if (i > 0 && !isQuoteNotClosed && isSentenceContinuation(lines[previousIndex], lines[i])) {
+                appendLines(builder, lines[previousIndex], lines[i]);
+                lines[previousIndex] = builder.toString();
                 lines[i] = "";
                 builder.setLength(0);
             }
@@ -30,12 +49,23 @@ public class ExtractedTextCleaner {
                 .toArray(String[]::new);
     }
 
+    private String cleanQuotes(String text) {
+        if (!text.contains("\""))
+            return text;
+        String quoptrn = "(\"[a-zA-Z0-9]+\")|(\"[a-zA-Z0-9]+)|([a-zA-Z0-9]+\")";
+        return text.matches(quoptrn) ? text : "";
+    }
+
+    private boolean isSentenceContinuation(String previousLine, String currentLine) {
+        return startsWithLowerCase(previousLine) || areLinesRelated(previousLine, currentLine);
+    }
+
     private boolean startsWithLowerCase(String text) {
         return !text.isEmpty() && Character.isLowerCase(text.charAt(0));
     }
 
-    private boolean firstLineBracketsNotClosed(String firstLine, String secondLine) {
-        return firstLine.contains("(") && !firstLine.contains(")") && secondLine.contains(")");
+    private boolean areLinesRelated(String previousLine, String currentLine) {
+        return previousLine.contains("(") && !previousLine.contains(")") && currentLine.contains(")");
     }
 
     private String removeNoise(String line) {
@@ -45,27 +75,35 @@ public class ExtractedTextCleaner {
 
         String[] words = line.split("\\s+");
         return Arrays.stream(words)
-                .filter(word -> !word.matches(validRegex) && wordValid(word))
+                .filter(word -> !word.matches(validRegex) && isValidWord(word))
                 .map(String::trim)
                 .collect(Collectors.joining(" "));
     }
 
-    private boolean wordValid(String word) {
+    private boolean isValidWord(String word) {
         return word.contains(":") || word.length() > 2;
     }
 
     private String removeUnusedSpace(String text) {
-        text = text.trim();
-        text = text.replaceAll("/\\s+", "/");
-        text = text.replaceAll("\\s+/", "/");
-        return text;
+        return text.trim().replaceAll("/\\s+", "/").replaceAll("\\s+/", "/");
     }
 
-    private void appendLines(StringBuilder builder, String lastLines, String currentLines) {
-        if (lastLines.endsWith("/"))
-            builder.append(lastLines).append(currentLines);
+    private void appendLines(StringBuilder builder, String lastLine, String currentLine) {
+        if (lastLine.endsWith("/"))
+            builder.append(lastLine).append(currentLine);
         else
-            builder.append(lastLines).append(" ").append(currentLines);
+            builder.append(lastLine).append(" ").append(currentLine);
+    }
+
+    private String combineLinesWithQuotes(String previousLine, String currentLine) {
+        String[] prevLineParts = previousLine.split("\"");
+        String[] currentLineParts = currentLine.split("\"");
+        return prevLineParts[1] + (currentLine.contains("\"") ? currentLineParts[0] : "");
+    }
+
+    private String closeOpenQuotes(String openQuoteLine, String currentLine) {
+        String[] currentLineParts = currentLine.split("\"");
+        return openQuoteLine + currentLineParts[0];
     }
 
 }
