@@ -43,8 +43,6 @@ public abstract class TextProcessorService {
         processingExtractionText(request, ocrRequest);
 
         return buildWebResponse(
-                true,
-                null,
                 OcrResponse.builder()
                         .requestId(ocrRequest.getId())
                         .status(ocrRequest.getStatus())
@@ -67,6 +65,6 @@ public abstract class TextProcessorService {
 
     protected abstract boolean isPoolAvailable();
 
-    protected abstract WebResponse<?> buildWebResponse(boolean success, String errorMessage, OcrResponse response);
+    protected abstract WebResponse<?> buildWebResponse(OcrResponse response);
 
 }
