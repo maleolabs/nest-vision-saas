@@ -41,11 +41,16 @@ public class TesseractOcrService implements TextExtractionService {
                 return result;
             }
 
+            long startTime = System.currentTimeMillis();
             String text = tesseract.doOCR(image);
+            long endTime = System.currentTimeMillis();
+
+            long duration = endTime - startTime;
 
             result.setExtractedText(text);
             result.setSuccess(true);
-            result.setExtractedAt(System.currentTimeMillis());
+            result.setDuration(duration);
+            result.setExtractedAt(endTime);
         } catch (IOException | TesseractException exception) {
             result.setSuccess(false);
             result.setErrorMessage(exception.getMessage());

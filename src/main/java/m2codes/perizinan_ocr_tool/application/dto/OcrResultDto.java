@@ -23,6 +23,8 @@ public class OcrResultDto {
 
     private String errorMessage;
 
+    private Long duration;
+
     private Long extractedAt;
 
     @Override
@@ -31,6 +33,7 @@ public class OcrResultDto {
                 "extractedText=" + (extractedText.length() > 25 ? extractedText.substring(0,25) : extractedText) +
                 ", isSuccess=" + isSuccess +
                 ", errorMessage=" + errorMessage +
+                ", duration=" + duration +
                 ", extractedAt=" + extractedAt +
                 "}";
     }

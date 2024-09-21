@@ -41,8 +41,11 @@ public class OcrResult {
     @Column(name="is_success", nullable=false)
     private boolean isSuccess;
 
-    @Column(name="error_message", nullable=true, length=255)
+    @Column(name="error_message")
     private String errorMessage;
+
+    @Column(name = "duration", nullable = false)
+    private Long duration;
 
     @Column(name="extracted_at", nullable=false)
     private Long extractedAt;
@@ -61,6 +64,7 @@ public class OcrResult {
                 ", ocrRequest=" + ocrRequest +
                 ", isSuccess=" + isSuccess +
                 ", errorMessage=" + errorMessage +
+                ", duration=" + duration +
                 ", extractedAt=" + extractedAt +
                 "}";
     }

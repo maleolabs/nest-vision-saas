@@ -14,4 +14,6 @@ public class OcrResponse {
 
     private RequestStatus status;
 
+    private Float duration;
+
 }

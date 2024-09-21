@@ -69,6 +69,9 @@ public abstract class ExtractedTextQueryService {
                 .requestId(requestId)
                 .status(request.getStatus())
                 .build();
+        if (request.getOcrResults() != null) {
+            response.setDuration((float) (request.getOcrResults().getDuration() / 1000));
+        }
         return buildWebResponse(response, true, null);
     }
 
