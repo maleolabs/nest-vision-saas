@@ -1,8 +1,10 @@
 package m2codes.perizinan_ocr_tool.application.service.impl;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import m2codes.perizinan_ocr_tool.application.event.OcrRequestEventPublisher;
 import m2codes.perizinan_ocr_tool.application.util.TaskManager;
 import m2codes.perizinan_ocr_tool.domain.model.RequestStatus;
 import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.dto.DataEntriDto;
@@ -23,11 +25,12 @@ import m2codes.perizinan_ocr_tool.interfaces.dto.response.OcrResponse;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
@@ -40,9 +43,12 @@ public class OcrProcessorService extends TextProcessorService {
     private final ExtractedTextCleaner extractedTextCleaner;
     private final ExtractedTextMapper extractedTextMapper;
 
-    private final EntityManager entityManager;
+    private final OcrRequestEventPublisher ocrRequestEventPublisher;
 
     private final TaskManager taskManager;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public OcrProcessorService(
             OcrRequestService ocrRequestService,
@@ -52,7 +58,7 @@ public class OcrProcessorService extends TextProcessorService {
             DataEntriService dataEntriService,
             ExtractedTextCleaner extractedTextCleaner,
             ExtractedTextMapper extractedTextMapper,
-            EntityManager entityManager,
+            OcrRequestEventPublisher ocrRequestEventPublisher,
             TaskManager taskManager
     ) {
         super(ocrRequestService, ocrResultService, extractedTextService);
@@ -62,7 +68,7 @@ public class OcrProcessorService extends TextProcessorService {
         this.extractedTextCleaner = extractedTextCleaner;
         this.extractedTextMapper = extractedTextMapper;
 
-        this.entityManager = entityManager;
+        this.ocrRequestEventPublisher = ocrRequestEventPublisher;
 
         this.taskManager = taskManager;
     }
@@ -72,24 +78,16 @@ public class OcrProcessorService extends TextProcessorService {
     @Override
     protected void processingExtractionText(OcrDataRequest request, OcrRequest ocrRequest) {
         ocrRequest = entityManager.merge(ocrRequest);
-        if (ocrRequest.getStatus().equals(RequestStatus.WAITING)) {
-            ocrRequestService.updateStatus(ocrRequest, RequestStatus.PROCESSING);
-        }
 
         OcrResultDto ocrResultDto = extractTextFromImage(request.getImageUrl());
         if (!ocrResultDto.isSuccess()) return;
 
         OcrResult ocrResult = saveOcrResult(ocrResultDto, ocrRequest);
-
-        List<DataEntriDto> dataEntri = List.of();
-        try {
-            dataEntri = getDataEntri(request.getJenisPerizinanId());
-        } catch (NoSuchElementException e) {
-            log.error(e.getMessage());
-        }
-        saveAllExtractedText(ocrResultDto, dataEntri, ocrResult);
-
+        saveAllExtractedText(ocrResultDto, getDataEntri(request.getJenisPerizinanId()), ocrResult);
         ocrRequestService.updateStatus(ocrRequest, RequestStatus.DONE);
+
+        entityManager.flush();
+        publishRequestEvent(request);
     }
 
     @Override
@@ -115,7 +113,7 @@ public class OcrProcessorService extends TextProcessorService {
                     .join();
         } catch (Exception e) {
             log.error(e.getMessage());
-            return new ArrayList<>();
+            return List.of();
         }
     }
 
@@ -141,10 +139,10 @@ public class OcrProcessorService extends TextProcessorService {
     }
 
     @Override
-    protected WebResponse<?> buildWebResponse(boolean success, String errorMessage, OcrResponse response) {
+    protected WebResponse<?> buildWebResponse(OcrResponse response) {
         return WebResponse.builder()
-                .success(success)
-                .errorMessage(errorMessage)
+                .success(true)
+                .errorMessage(null)
                 .data(response)
                 .build();
     }
@@ -152,6 +150,16 @@ public class OcrProcessorService extends TextProcessorService {
     @Override
     protected boolean isPoolAvailable() {
         return taskManager.isPoolAvailable();
+    }
+
+    private void publishRequestEvent(OcrDataRequest request) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                entityManager.clear();
+                ocrRequestEventPublisher.publish(request);
+            }
+        });
     }
 
 }
