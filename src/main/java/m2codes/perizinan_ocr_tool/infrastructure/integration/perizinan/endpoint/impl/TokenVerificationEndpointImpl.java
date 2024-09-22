@@ -4,6 +4,7 @@ import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.dto.UserR
 import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.endpoint.TokenVerificationEndpoint;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -20,6 +21,12 @@ public class TokenVerificationEndpointImpl implements TokenVerificationEndpoint 
     }
 
     @Override
+    @Cacheable(
+            value = "tokenCache",
+            key = "#token",
+            unless = "#result == null",
+            cacheManager = "cacheManager"
+    )
     public UserResponse getCurrentUser(String token) {
         return client.get()
                 .uri(currentUserApiPath)

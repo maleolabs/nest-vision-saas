@@ -4,6 +4,7 @@ import java.util.List;
 
 import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.endpoint.DataEntriEndpoint;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -24,6 +25,12 @@ public class DataEntriEndpointImpl implements DataEntriEndpoint {
     }
 
     @Override
+    @Cacheable(
+            value = "entriDataCache",
+            key = "#id",
+            unless = "#result == null || #result.size() == 0",
+            cacheManager = "cacheManager"
+    )
     public Mono<List<DataEntriDto>> getByJenisPerizinanId(Long id) {
         return webClient.get()
                 .uri(uriBuilder -> uriBuilder
