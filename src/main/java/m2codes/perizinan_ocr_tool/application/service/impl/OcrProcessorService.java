@@ -80,7 +80,11 @@ public class OcrProcessorService extends TextProcessorService {
         ocrRequest = entityManager.merge(ocrRequest);
 
         OcrResultDto ocrResultDto = extractTextFromImage(request.getImageUrl());
-        if (!ocrResultDto.isSuccess()) return;
+        if (!ocrResultDto.isSuccess()) {
+            saveOcrRequest(request, RequestStatus.FAILURE);
+            entityManager.flush();
+            return;
+        }
 
         OcrResult ocrResult = saveOcrResult(ocrResultDto, ocrRequest);
         saveAllExtractedText(ocrResultDto, getDataEntri(request.getJenisPerizinanId()), ocrResult);
