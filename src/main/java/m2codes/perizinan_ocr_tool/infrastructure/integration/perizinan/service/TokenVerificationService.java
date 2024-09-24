@@ -8,4 +8,6 @@ public interface TokenVerificationService {
 
     CompletableFuture<UserResponse> getCurrentUser(String token);
 
+    CompletableFuture<Boolean> isClientTokenValid(String token);
+
 }

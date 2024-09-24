@@ -47,7 +47,9 @@ public class AppConfig {
                 Caffeine.newBuilder().expireAfterWrite(30, TimeUnit.DAYS).build());
         CaffeineCache tokenCache = new CaffeineCache("tokenCache",
                 Caffeine.newBuilder().expireAfterWrite(2, TimeUnit.HOURS).build());
-        return new ConcurrentMapCacheManager(entriDataCache.getName(), tokenCache.getName());
+        CaffeineCache clientTokenCache = new CaffeineCache("clientTokenCache",
+                Caffeine.newBuilder().expireAfterWrite(1, TimeUnit.DAYS).build());
+        return new ConcurrentMapCacheManager(entriDataCache.getName(), tokenCache.getName(), clientTokenCache.getName());
     }
 
 }

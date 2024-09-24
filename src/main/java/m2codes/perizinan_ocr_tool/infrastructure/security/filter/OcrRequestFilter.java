@@ -23,16 +23,19 @@ public class OcrRequestFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
-        if (!request.getServletPath().equals("/api/ocr/do-ocr")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        String token = request.getHeader("Authorization");
-        if (token != null) {
+        String authToken = request.getHeader("Authorization");
+        String clientToken = request.getHeader("X-API-KEY");
+        if (authToken != null || clientToken != null) {
             try {
-                UserResponse userResponse = tokenVerificationService.getCurrentUser(token).join();
-                boolean isValid = userResponse != null;
+                boolean isValid;
+
+                if (authToken != null) {
+                    UserResponse userResponse = tokenVerificationService.getCurrentUser(authToken).join();
+                    isValid = userResponse != null;
+                } else {
+                    isValid = tokenVerificationService.isClientTokenValid(clientToken).join();
+                }
+
                 if (!isValid) {
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.getWriter().write("Invalid Token");
@@ -50,5 +53,4 @@ public class OcrRequestFilter extends OncePerRequestFilter {
         }
         filterChain.doFilter(request, response);
     }
-
 }

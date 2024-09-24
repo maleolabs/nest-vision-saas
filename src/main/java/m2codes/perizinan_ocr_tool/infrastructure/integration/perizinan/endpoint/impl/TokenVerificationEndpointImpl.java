@@ -1,5 +1,6 @@
 package m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.endpoint.impl;
 
+import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.dto.ClientTokenResponse;
 import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.dto.UserResponse;
 import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.endpoint.TokenVerificationEndpoint;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -13,6 +14,9 @@ public class TokenVerificationEndpointImpl implements TokenVerificationEndpoint 
 
     @Value("${perizinan-dpmptsp.api.current-user-path}")
     private String currentUserApiPath;
+
+    @Value("${perizinan-dpmptsp.api.validating-client-token-path}")
+    private String validatingClientTokenPath;
 
     private final WebClient client;
 
@@ -36,4 +40,21 @@ public class TokenVerificationEndpointImpl implements TokenVerificationEndpoint 
                 .block();
     }
 
+    @Override
+//    @Cacheable(
+//            value = "clientTokenCache",
+//            key = "#clientToken",
+//            unless = "#result == null || #result.isValid() == false",
+//            cacheManager = "cacheManager"
+//    )
+    public ClientTokenResponse verifyClientToken(String clientToken) {
+        return client.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path(validatingClientTokenPath)
+                        .build(clientToken)
+                )
+                .retrieve()
+                .bodyToMono(ClientTokenResponse.class)
+                .block();
+    }
 }
