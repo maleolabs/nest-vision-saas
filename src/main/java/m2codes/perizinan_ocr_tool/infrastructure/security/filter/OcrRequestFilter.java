@@ -23,6 +23,11 @@ public class OcrRequestFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
+        if (!request.getRequestURI().startsWith("api")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String authToken = request.getHeader("Authorization");
         String clientToken = request.getHeader("X-API-KEY");
         if (authToken != null || clientToken != null) {
