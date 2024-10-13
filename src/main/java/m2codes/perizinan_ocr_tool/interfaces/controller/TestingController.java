@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/testing")
 public class TestingController {
 
-    @GetMapping(path = "/")
+    @GetMapping(path = "/welcome")
     public String showTestingPage() {
         return "ocr-testing";
     }

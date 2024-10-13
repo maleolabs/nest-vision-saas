@@ -23,7 +23,7 @@ public class OcrRequestFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
-        if (!request.getRequestURI().startsWith("api")) {
+        if (!request.getRequestURI().startsWith("/api")) {
             filterChain.doFilter(request, response);
             return;
         }

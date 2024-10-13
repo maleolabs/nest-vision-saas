@@ -31,8 +31,6 @@ public class OcrRequestEventListener {
         ObjectMapper mapper = new ObjectMapper();
         String dataJson = mapper.writeValueAsString(ocrResponse);
         handler.sendOcrResult(dataJson);
-
-        log.info("MESSAGE SEND : {}", dataJson);
     }
 
 }

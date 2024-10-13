@@ -127,8 +127,6 @@ public class OcrProcessorService extends TextProcessorService {
         String[] lines = extractedText.split("\\r?\\n");
         String[] cleanLines = extractedTextCleaner.linesCleaner(lines);
 
-        Arrays.stream(cleanLines).forEach(System.out::println);
-
         List<ExtractedTextDto> extractedTextDtos = new ArrayList<>(extractedTextMapper.parseLinesByColon(cleanLines));
         extractedTextDtos.addAll(extractedTextMapper.detectAndAddMissingKeyValue(cleanLines, dataEntri));
 
