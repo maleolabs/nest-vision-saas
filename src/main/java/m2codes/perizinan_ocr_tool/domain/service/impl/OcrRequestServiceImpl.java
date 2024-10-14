@@ -34,7 +34,7 @@ public class OcrRequestServiceImpl implements OcrRequestService {
         var imageUrl = request != null ? request.getImageUrl() : null;
 
         Long savedImageUploadId = ocrRequestRepository
-                .findFirstByIzinIdAndSyaratIzinId(izinId, syaratIzinId)
+                .findFirstByIzinIdAndSyaratIzinIdAndImageUrl(izinId, syaratIzinId, imageUrl)
                 .map(OcrRequest::getId).orElse(null);
 
         OcrRequest ocrRequest = OcrRequest.builder()

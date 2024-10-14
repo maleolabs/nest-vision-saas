@@ -1,6 +1,7 @@
 package m2codes.perizinan_ocr_tool.interfaces.controller;
 
 import m2codes.perizinan_ocr_tool.application.service.impl.ExtractedTextQueryServiceImpl;
+import m2codes.perizinan_ocr_tool.interfaces.dto.response.OcrResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +25,11 @@ public class TestingController {
 
     @GetMapping(path = "/result/{requestId}")
     public String showTestingResultPage(@PathVariable("requestId") Long requestId, Model model) {
-        model.addAttribute("ocrResult", extractedTextQueryService.findByRequestId(requestId));
+        OcrResponse ocrResponse = extractedTextQueryService.findByRequestId(requestId);
+        if (ocrResponse == null) {
+            return "not-found";
+        }
+        model.addAttribute("ocrResult", ocrResponse);
         return "ocr-testing-result";
     }
 

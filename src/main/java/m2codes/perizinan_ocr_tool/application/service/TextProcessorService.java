@@ -14,9 +14,11 @@ import m2codes.perizinan_ocr_tool.domain.service.OcrResultService;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.OcrDataRequest;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.OcrResponse;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -41,9 +43,7 @@ public abstract class TextProcessorService {
     public final WebResponse<?> processOcrRequest(OcrDataRequest request) {
         var status = isPoolAvailable() ? RequestStatus.PROCESSING : RequestStatus.WAITING;
         OcrRequest ocrRequest = saveOcrRequest(request, status);
-
         processingExtractionText(request, ocrRequest);
-
         return buildWebResponse(
                 OcrResponse.builder()
                         .requestId(ocrRequest.getId())
@@ -57,8 +57,16 @@ public abstract class TextProcessorService {
     @Transactional
     public final WebResponse<?> processOcrRequest(MultipartFile file) {
         var status = isPoolAvailable() ? RequestStatus.PROCESSING : RequestStatus.WAITING;
-        OcrRequest ocrRequest = saveOcrRequest(null, status);
-
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isEmpty()) {
+            return buildWebResponse(
+                    OcrResponse.builder().build(),
+                    false,
+                    "File name is not valid!"
+            );
+        }
+        var filename = System.currentTimeMillis() + "." + FilenameUtils.getExtension(originalFilename);
+        OcrRequest ocrRequest = saveOcrRequest(OcrDataRequest.builder().imageUrl(filename).build(), status);
         processingExtractionText(file, ocrRequest);
 
         return buildWebResponse(

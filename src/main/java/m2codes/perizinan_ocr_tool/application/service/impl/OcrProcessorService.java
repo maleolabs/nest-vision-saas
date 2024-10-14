@@ -109,7 +109,7 @@ public class OcrProcessorService extends TextProcessorService {
         ocrRequest = entityManager.merge(ocrRequest);
 
         try {
-            File tempFile = saveUploadedFile(file);
+            File tempFile = saveUploadedFile(file, ocrRequest.getImageUrl());
             OcrResultDto ocrResultDto = extractTextFromImage(tempFile);
             if (!ocrResultDto.isSuccess()) {
                 saveOcrRequest(null, RequestStatus.FAILURE);
@@ -217,7 +217,7 @@ public class OcrProcessorService extends TextProcessorService {
         });
     }
 
-    private File saveUploadedFile(MultipartFile file) throws IOException {
+    private File saveUploadedFile(MultipartFile file, String filename) throws IOException {
         File uploadDir = new File(UPLOAD_DIR);
         if (!uploadDir.exists()) {
             boolean isDirCreated = uploadDir.mkdirs();
@@ -225,13 +225,6 @@ public class OcrProcessorService extends TextProcessorService {
                 throw new IOException("Can't create upload directory!");
             }
         }
-
-        String originalFilename = file.getOriginalFilename();
-        if (originalFilename == null || originalFilename.isEmpty()) {
-            throw new IOException("File name not valid!");
-        }
-
-        var filename = System.currentTimeMillis() + "." + FilenameUtils.getExtension(originalFilename);
         Path filePath = Paths.get(uploadDir.getAbsolutePath(), filename);
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 

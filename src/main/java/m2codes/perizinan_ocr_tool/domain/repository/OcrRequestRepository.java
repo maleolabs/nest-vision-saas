@@ -17,4 +17,6 @@ public interface OcrRequestRepository extends  JpaRepository<OcrRequest, Long> {
 
     Optional<OcrRequest> findFirstByIzinIdAndSyaratIzinId(Long izinId, Long syaratIzinId);
 
+    Optional<OcrRequest> findFirstByIzinIdAndSyaratIzinIdAndImageUrl(Long izinId, Long syaratIzinId, String imageUrl);
+
 }
