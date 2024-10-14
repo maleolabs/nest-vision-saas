@@ -1,6 +1,7 @@
 package m2codes.perizinan_ocr_tool.application.service.impl;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
@@ -43,6 +44,32 @@ public class TesseractOcrService implements TextExtractionService {
 
             long startTime = System.currentTimeMillis();
             String text = tesseract.doOCR(image);
+            long endTime = System.currentTimeMillis();
+
+            long duration = endTime - startTime;
+
+            result.setExtractedText(text);
+            result.setSuccess(true);
+            result.setDuration(duration);
+            result.setExtractedAt(endTime);
+        } catch (IOException | TesseractException exception) {
+            result.setSuccess(false);
+            result.setErrorMessage(exception.getMessage());
+            log.error(exception.getMessage());
+        }
+
+        return result;
+    }
+
+    @Override
+    public OcrResultDto extractTextFromImage(File file) {
+        OcrResultDto result = new OcrResultDto();
+
+        try {
+            Tesseract tesseract = getTesseractInstance();
+
+            long startTime = System.currentTimeMillis();
+            String text = tesseract.doOCR(file);
             long endTime = System.currentTimeMillis();
 
             long duration = endTime - startTime;

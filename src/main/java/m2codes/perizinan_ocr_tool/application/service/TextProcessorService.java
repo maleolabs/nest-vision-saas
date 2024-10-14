@@ -14,7 +14,10 @@ import m2codes.perizinan_ocr_tool.domain.service.OcrResultService;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.OcrDataRequest;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.OcrResponse;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -46,14 +49,42 @@ public abstract class TextProcessorService {
                 OcrResponse.builder()
                         .requestId(ocrRequest.getId())
                         .status(ocrRequest.getStatus())
-                        .build());
+                        .build(),
+                true,
+                null
+        );
+    }
+
+    @Transactional
+    public final WebResponse<?> processOcrRequest(MultipartFile file) {
+        var status = isPoolAvailable() ? RequestStatus.PROCESSING : RequestStatus.WAITING;
+        OcrRequest ocrRequest = saveOcrRequest(null, status);
+
+        try {
+            processingExtractionText(file, ocrRequest);
+        } catch (IOException e) {
+            return buildWebResponse(null, false, "There is an error! Please try again later.");
+        }
+
+        return buildWebResponse(
+                OcrResponse.builder()
+                        .requestId(ocrRequest.getId())
+                        .status(ocrRequest.getStatus())
+                        .build(),
+                true,
+                null
+        );
     }
 
     protected abstract void processingExtractionText(OcrDataRequest request, OcrRequest ocrRequest);
 
+    protected abstract void processingExtractionText(MultipartFile file, OcrRequest ocrRequest) throws IOException;
+
     protected abstract OcrRequest saveOcrRequest(OcrDataRequest request, RequestStatus status);
 
     protected abstract OcrResultDto extractTextFromImage(String imageUrl);
+
+    protected abstract OcrResultDto extractTextFromImage(File file);
 
     protected abstract OcrResult saveOcrResult(OcrResultDto ocrResultDto, OcrRequest ocrRequest);
 
@@ -65,6 +96,6 @@ public abstract class TextProcessorService {
 
     protected abstract boolean isPoolAvailable();
 
-    protected abstract WebResponse<?> buildWebResponse(OcrResponse response);
+    protected abstract <T> WebResponse<T> buildWebResponse(T data, boolean success, String errorMessage);
 
 }

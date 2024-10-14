@@ -28,17 +28,22 @@ public class OcrRequestServiceImpl implements OcrRequestService {
 
     @Override
     public OcrRequest save(OcrDataRequest request, RequestStatus status) {
+        var izinId = request != null ? request.getIzinId() : null;
+        var syaratIzinId = request != null ? request.getSyaratIzinId() : null;
+        var jenisPerizinanId = request != null ? request.getJenisPerizinanId() : null;
+        var imageUrl = request != null ? request.getImageUrl() : null;
+
         Long savedImageUploadId = ocrRequestRepository
-                .findFirstByIzinIdAndSyaratIzinId(request.getIzinId(), request.getSyaratIzinId())
+                .findFirstByIzinIdAndSyaratIzinId(izinId, syaratIzinId)
                 .map(OcrRequest::getId).orElse(null);
 
         OcrRequest ocrRequest = OcrRequest.builder()
                 .id(savedImageUploadId)
-                .izinId(request.getIzinId())
-                .jenisPerizinanId(request.getJenisPerizinanId())
-                .syaratIzinId(request.getSyaratIzinId())
-                .imageUrl(request.getImageUrl())
-                .uploadedAt(System.currentTimeMillis())
+                .izinId(izinId)
+                .jenisPerizinanId(jenisPerizinanId)
+                .syaratIzinId(syaratIzinId)
+                .imageUrl(imageUrl)
+                .requestedAt(System.currentTimeMillis())
                 .status(status)
                 .build();
 

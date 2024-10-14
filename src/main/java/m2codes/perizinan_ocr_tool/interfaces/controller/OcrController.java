@@ -9,6 +9,7 @@ import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -35,6 +36,16 @@ public class OcrController {
     )
     public ResponseEntity<WebResponse<?>> doOcr(@RequestBody OcrDataRequest request) {
         WebResponse<?> response = ocrProcessorService.processOcrRequest(request);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+    }
+
+    @PostMapping(
+            path = "/do-ocr-with-direct-image",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<WebResponse<?>> doOcr(@RequestParam("file")MultipartFile file) {
+        WebResponse<?> response = ocrProcessorService.processOcrRequest(file);
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
 

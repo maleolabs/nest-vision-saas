@@ -25,20 +25,20 @@ public class OcrRequest {
     @Column(name="id")
     private Long id;
 
-    @Column(name="izin_id", nullable=false)
+    @Column(name="izin_id")
     private Long izinId;
 
-    @Column(name="jenis_perizinan_id", nullable=false)
+    @Column(name="jenis_perizinan_id")
     private Long jenisPerizinanId;
 
-    @Column(name="syarat_izin_id", nullable=false)
+    @Column(name="syarat_izin_id")
     private Long syaratIzinId;
 
-    @Column(name="image_url", nullable=false)
+    @Column(name="image_url")
     private String imageUrl;
 
-    @Column(name="uploaded_at", nullable=false)
-    private Long uploadedAt;
+    @Column(name="requested_at")
+    private Long requestedAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")

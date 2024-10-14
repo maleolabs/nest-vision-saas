@@ -23,11 +23,18 @@ import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.service.D
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.OcrDataRequest;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.OcrResponse;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,6 +53,8 @@ public class OcrProcessorService extends TextProcessorService {
     private final OcrRequestEventPublisher ocrRequestEventPublisher;
 
     private final TaskManager taskManager;
+
+    private static final String UPLOAD_DIR = "src/main/resources/static/uploads/";
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -94,6 +103,21 @@ public class OcrProcessorService extends TextProcessorService {
         publishRequestEvent(request);
     }
 
+    @Async
+    @Transactional
+    @Override
+    protected void processingExtractionText(MultipartFile file, OcrRequest ocrRequest) throws IOException {
+        ocrRequest = entityManager.merge(ocrRequest);
+
+        File tempFile = saveUploadedFile(file);
+        OcrResultDto ocrResultDto = extractTextFromImage(tempFile);
+        if (!ocrResultDto.isSuccess()) {
+            saveOcrRequest(null, RequestStatus.FAILURE);
+            entityManager.flush();
+        }
+        saveOcrResult(ocrResultDto, ocrRequest);
+    }
+
     @Override
     protected OcrRequest saveOcrRequest(OcrDataRequest request, RequestStatus status) {
         return ocrRequestService.save(request, status);
@@ -102,6 +126,11 @@ public class OcrProcessorService extends TextProcessorService {
     @Override
     protected OcrResultDto extractTextFromImage(String imageUrl) {
         return textExtractionService.extractTextFromImage(imageUrl);
+    }
+
+    @Override
+    protected OcrResultDto extractTextFromImage(File file) {
+        return textExtractionService.extractTextFromImage(file);
     }
 
     @Override
@@ -141,12 +170,12 @@ public class OcrProcessorService extends TextProcessorService {
     }
 
     @Override
-    protected WebResponse<?> buildWebResponse(OcrResponse response) {
-        return WebResponse.builder()
-                .success(true)
-                .errorMessage(null)
-                .data(response)
-                .build();
+    protected <T> WebResponse<T> buildWebResponse(T data, boolean success, String errorMessage) {
+        WebResponse<T> webResponse = new WebResponse<>();
+        webResponse.setData(data);
+        webResponse.setSuccess(success);
+        webResponse.setErrorMessage(errorMessage);
+        return webResponse;
     }
 
     @Override
@@ -162,6 +191,27 @@ public class OcrProcessorService extends TextProcessorService {
                 ocrRequestEventPublisher.publish(request);
             }
         });
+    }
+
+    private File saveUploadedFile(MultipartFile file) throws IOException {
+        File uploadDir = new File(UPLOAD_DIR);
+        if (!uploadDir.exists()) {
+            boolean isDirCreated = uploadDir.mkdirs();
+            if (!isDirCreated) {
+                throw new IOException("Can't create upload directory!");
+            }
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isEmpty()) {
+            throw new IOException("File name not valid!");
+        }
+
+        var filename = System.currentTimeMillis() + "." + FilenameUtils.getExtension(originalFilename);
+        Path filePath = Paths.get(UPLOAD_DIR + filename);
+        Files.copy(file.getInputStream(), filePath);
+
+        return filePath.toFile();
     }
 
 }
