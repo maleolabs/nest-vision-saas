@@ -106,16 +106,26 @@ public class OcrProcessorService extends TextProcessorService {
     @Async
     @Transactional
     @Override
-    protected void processingExtractionText(MultipartFile file, OcrRequest ocrRequest) throws IOException {
+    protected void processingExtractionText(MultipartFile file, OcrRequest ocrRequest) {
         ocrRequest = entityManager.merge(ocrRequest);
 
-        File tempFile = saveUploadedFile(file);
-        OcrResultDto ocrResultDto = extractTextFromImage(tempFile);
-        if (!ocrResultDto.isSuccess()) {
+        try {
+            File tempFile = saveUploadedFile(file);
+            OcrResultDto ocrResultDto = extractTextFromImage(tempFile);
+            log.info("Extracted Text : {}", ocrResultDto.getExtractedText());
+            if (!ocrResultDto.isSuccess()) {
+                saveOcrRequest(null, RequestStatus.FAILURE);
+                entityManager.flush();
+            }
+            OcrResult ocrResult = saveOcrResult(ocrResultDto, ocrRequest);
+            saveAllExtractedText(ocrResultDto, ocrResult);
+            ocrRequestService.updateStatus(ocrRequest, RequestStatus.DONE);
+            entityManager.flush();
+        } catch (IOException e) {
+            log.error("IOException Error : {}", e.getMessage());
             saveOcrRequest(null, RequestStatus.FAILURE);
             entityManager.flush();
         }
-        saveOcrResult(ocrResultDto, ocrRequest);
     }
 
     @Override
@@ -163,9 +173,25 @@ public class OcrProcessorService extends TextProcessorService {
         return CompletableFuture.completedFuture(filteredData);
     }
 
+    @Async
+    @Override
+    protected CompletableFuture<List<ExtractedTextDto>> processExtractedText(String extractedText) {
+        String[] lines = extractedText.split("\\r?\\n");
+        String[] cleanLines = extractedTextCleaner.linesCleaner(lines);
+
+        List<ExtractedTextDto> extractedTextDtos = new ArrayList<>(extractedTextMapper.parseLinesByColon(cleanLines));
+        return CompletableFuture.completedFuture(extractedTextDtos);
+    }
+
     @Override
     protected void saveAllExtractedText(OcrResultDto ocrResultDto, List<DataEntriDto> dataEntri, OcrResult ocrResult) {
         CompletableFuture<List<ExtractedTextDto>> future = processExtractedText(ocrResultDto.getExtractedText(), dataEntri);
+        future.thenAccept(extractedTextDtos -> extractedTextService.saveAll(extractedTextDtos, ocrResult));
+    }
+
+    @Override
+    protected void saveAllExtractedText(OcrResultDto ocrResultDto, OcrResult ocrResult) {
+        CompletableFuture<List<ExtractedTextDto>> future = processExtractedText(ocrResultDto.getExtractedText());
         future.thenAccept(extractedTextDtos -> extractedTextService.saveAll(extractedTextDtos, ocrResult));
     }
 

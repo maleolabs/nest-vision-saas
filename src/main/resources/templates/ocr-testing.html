@@ -49,71 +49,109 @@
 
     <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
 
-    <script>
-        const ocrForm = document.getElementById('ocr-form');
-        const dropzoneFileInput = document.getElementById('dropzone-file');
-        const previewImage = document.getElementById('preview-image');
-        const uploadArea = document.getElementById('upload-area');
-        const loadingSpinner = document.getElementById('loading-spinner');
-        const extractButton = document.getElementById('extract-button');
-        const extractionLoading = document.getElementById('extraction-loading');
-        const extractionLoadingMessage = document.getElementById('extraction-loading-message');
+</body>
+</html>
 
-        dropzoneFileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
 
-                loadingSpinner.classList.remove('hidden');
 
-                reader.onload = function(e) {
-                    loadingSpinner.classList.add('hidden');
 
-                    previewImage.src = e.target.result;
-                    previewImage.classList.remove('hidden');
 
-                    uploadArea.classList.add('hidden');
-                    extractButton.classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
+
+
+<script>
+    const ocrForm = document.getElementById('ocr-form');
+    const dropzoneFileInput = document.getElementById('dropzone-file');
+    const previewImage = document.getElementById('preview-image');
+    const uploadArea = document.getElementById('upload-area');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const extractButton = document.getElementById('extract-button');
+    const extractionLoading = document.getElementById('extraction-loading');
+    const extractionLoadingMessage = document.getElementById('extraction-loading-message');
+
+    dropzoneFileInput.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+
+            loadingSpinner.classList.remove('hidden');
+
+            reader.onload = function(e) {
+                loadingSpinner.classList.add('hidden');
+
+                previewImage.src = e.target.result;
+                previewImage.classList.remove('hidden');
+
+                uploadArea.classList.add('hidden');
+                extractButton.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    extractButton.addEventListener('click', () => {
+        const file = dropzoneFileInput.files[0];
+
+        if (!file) {
+            alert("Harap pilih file terlebih dahulu!");
+            return;
+        }
+
+        extractionLoading.classList.remove('hidden');
+        extractionLoadingMessage.innerText = 'Mengunggah gambar...';
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        fetch('/api/ocr/do-ocr-with-direct-image', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-API-KEY': 'aa95014e7e56d57b30cfc80c16040ad73002d7078be6244b851e8ccb14b896d3'
             }
+        })
+        .then(response => response.json())
+        .then(responseData => {
+            if (responseData.success) {
+                extractionLoadingMessage.innerText = 'Memulai ekstraksi gambar...';
+                checkExtractionStatus(responseData.data.requestId);
+            } else {
+                extractionLoading.classList.add('hidden');
+                alert('Ekstraksi gagal: ' + data.errorMessage);
+            }
+        })
+        .catch(error => {
+            extractionLoading.classList.add('hidden');
+            alert('Terjadi kesalahan: ' + error.message);
         });
+    });
 
-        extractButton.addEventListener('click', () => {
-            const file = dropzoneFileInput.files[0];
-
-            if (!file) {
-                alert("Harap pilih file terlebih dahulu!");
-                return;
-            }
-
-            extractionLoading.classList.remove('hidden');
-            extractionLoadingMessage.innerText = 'Mengunggah gambar...';
-
-            const formData = new FormData();
-            formData.append('file', file);
-
-            fetch('/api/ocr/do-ocr-with-direct-image', {
-                method: 'POST',
-                body: formData,
+    function checkExtractionStatus(requestId) {
+        const intervalId = setInterval(() => {
+            fetch('/api/ocr/check-status/' + requestId, {
+                method: 'GET',
                 headers: {
                     'X-API-KEY': 'aa95014e7e56d57b30cfc80c16040ad73002d7078be6244b851e8ccb14b896d3'
                 }
             })
             .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    extractionLoadingMessage.innerText = 'Mengekstrak gambar...';
-                } else {
+            .then(responseData => {
+                if (responseData.data.status == 'DONE') {
                     extractionLoading.classList.add('hidden');
-                    alert('Ekstraksi gagal: ' + data.error);
+                    extractionLoadingMessage.innerText = 'Ekstraksi selesai!';
+                    clearInterval(intervalId);
+                } else if (responseData.data.status == 'WAITING') {
+                    extractionLoadingMessage.innerText = 'Menunggu hasil ekstraksi!';
+                } else if (responseData.data.status == 'FAILURE') {
+                    extractionLoading.classList.add('hidden');
+                    extractionLoadingMessage.innerText = 'Gagal!';
+                    clearInterval(intervalId);
                 }
             })
             .catch(error => {
+                clearInterval(intervalId);
                 extractionLoading.classList.add('hidden');
                 alert('Terjadi kesalahan: ' + error.message);
             });
-        });
-    </script>
-</body>
-</html>
+        }, 2000);
+    }
+</script>

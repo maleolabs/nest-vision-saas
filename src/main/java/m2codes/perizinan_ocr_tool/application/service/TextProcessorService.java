@@ -17,7 +17,6 @@ import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -60,11 +59,7 @@ public abstract class TextProcessorService {
         var status = isPoolAvailable() ? RequestStatus.PROCESSING : RequestStatus.WAITING;
         OcrRequest ocrRequest = saveOcrRequest(null, status);
 
-        try {
-            processingExtractionText(file, ocrRequest);
-        } catch (IOException e) {
-            return buildWebResponse(null, false, "There is an error! Please try again later.");
-        }
+        processingExtractionText(file, ocrRequest);
 
         return buildWebResponse(
                 OcrResponse.builder()
@@ -78,7 +73,7 @@ public abstract class TextProcessorService {
 
     protected abstract void processingExtractionText(OcrDataRequest request, OcrRequest ocrRequest);
 
-    protected abstract void processingExtractionText(MultipartFile file, OcrRequest ocrRequest) throws IOException;
+    protected abstract void processingExtractionText(MultipartFile file, OcrRequest ocrRequest);
 
     protected abstract OcrRequest saveOcrRequest(OcrDataRequest request, RequestStatus status);
 
@@ -92,7 +87,11 @@ public abstract class TextProcessorService {
 
     protected abstract CompletableFuture<List<ExtractedTextDto>> processExtractedText(String extractedText, List<DataEntriDto> dataEntri);
 
+    protected abstract CompletableFuture<List<ExtractedTextDto>> processExtractedText(String extractedText);
+
     protected abstract void saveAllExtractedText(OcrResultDto ocrResultDto, List<DataEntriDto> dataEntri, OcrResult ocrResult);
+
+    protected abstract void saveAllExtractedText(OcrResultDto ocrResultDto, OcrResult ocrResult);
 
     protected abstract boolean isPoolAvailable();
 
