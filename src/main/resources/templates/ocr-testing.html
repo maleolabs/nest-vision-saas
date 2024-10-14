@@ -47,111 +47,130 @@
         </div>
     </div>
 
+    <button id="modal-button" data-modal-target="popup-modal" data-modal-toggle="popup-modal" class="hidden" type="button"></button>
+
+    <div id="popup-modal" tabindex="-1" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
+        <div class="relative p-4 w-full max-w-md max-h-full">
+            <div class="relative bg-white rounded-lg shadow">
+                <div class="p-4 md:p-5 text-center">
+                    <svg class="mx-auto mb-4 text-gray-400 w-12 h-12" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                    </svg>
+                    <h3 class="mb-5 text-lg font-normal text-gray-500" id="modal-message"></h3>
+                    <button data-modal-hide="popup-modal" type="button" class="py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
 
-</body>
-</html>
+    <script>
+        const ocrForm = document.getElementById('ocr-form');
+        const dropzoneFileInput = document.getElementById('dropzone-file');
+        const previewImage = document.getElementById('preview-image');
+        const uploadArea = document.getElementById('upload-area');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const extractButton = document.getElementById('extract-button');
+        const extractionLoading = document.getElementById('extraction-loading');
+        const extractionLoadingMessage = document.getElementById('extraction-loading-message');
 
+        const modalButton = document.getElementById('modal-button');
+        const modalMessage = document.getElementById('modal-message');
 
+        dropzoneFileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
 
+                loadingSpinner.classList.remove('hidden');
 
+                reader.onload = function(e) {
+                    loadingSpinner.classList.add('hidden');
 
+                    previewImage.src = e.target.result;
+                    previewImage.classList.remove('hidden');
 
-
-<script>
-    const ocrForm = document.getElementById('ocr-form');
-    const dropzoneFileInput = document.getElementById('dropzone-file');
-    const previewImage = document.getElementById('preview-image');
-    const uploadArea = document.getElementById('upload-area');
-    const loadingSpinner = document.getElementById('loading-spinner');
-    const extractButton = document.getElementById('extract-button');
-    const extractionLoading = document.getElementById('extraction-loading');
-    const extractionLoadingMessage = document.getElementById('extraction-loading-message');
-
-    dropzoneFileInput.addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-
-            loadingSpinner.classList.remove('hidden');
-
-            reader.onload = function(e) {
-                loadingSpinner.classList.add('hidden');
-
-                previewImage.src = e.target.result;
-                previewImage.classList.remove('hidden');
-
-                uploadArea.classList.add('hidden');
-                extractButton.classList.remove('hidden');
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    extractButton.addEventListener('click', () => {
-        const file = dropzoneFileInput.files[0];
-
-        if (!file) {
-            alert("Harap pilih file terlebih dahulu!");
-            return;
-        }
-
-        extractionLoading.classList.remove('hidden');
-        extractionLoadingMessage.innerText = 'Mengunggah gambar...';
-
-        const formData = new FormData();
-        formData.append('file', file);
-
-        fetch('/api/ocr/do-ocr-with-direct-image', {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-API-KEY': 'aa95014e7e56d57b30cfc80c16040ad73002d7078be6244b851e8ccb14b896d3'
+                    uploadArea.classList.add('hidden');
+                    extractButton.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
             }
-        })
-        .then(response => response.json())
-        .then(responseData => {
-            if (responseData.success) {
-                extractionLoadingMessage.innerText = 'Memulai ekstraksi gambar...';
-                checkExtractionStatus(responseData.data.requestId);
-            } else {
-                extractionLoading.classList.add('hidden');
-                alert('Ekstraksi gagal: ' + data.errorMessage);
-            }
-        })
-        .catch(error => {
-            extractionLoading.classList.add('hidden');
-            alert('Terjadi kesalahan: ' + error.message);
         });
-    });
 
-    function checkExtractionStatus(requestId) {
-        const intervalId = setInterval(() => {
-            fetch('/api/ocr/check-status/' + requestId, {
-                method: 'GET',
+        extractButton.addEventListener('click', () => {
+            const file = dropzoneFileInput.files[0];
+
+            if (!file) {
+                modalMessage.innerText = 'Harap pilih file terlebih dahulu!';
+                modalButton.click();
+                return;
+            }
+
+            extractionLoading.classList.remove('hidden');
+            extractionLoadingMessage.innerText = 'Mengunggah gambar...';
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/api/ocr/do-ocr-with-direct-image', {
+                method: 'POST',
+                body: formData,
                 headers: {
                     'X-API-KEY': 'aa95014e7e56d57b30cfc80c16040ad73002d7078be6244b851e8ccb14b896d3'
                 }
             })
             .then(response => response.json())
             .then(responseData => {
-                if (responseData.data.status == 'DONE') {
+                if (responseData.success) {
+                    extractionLoadingMessage.innerText = 'Memulai ekstraksi gambar...';
+                    checkExtractionStatus(responseData.data.requestId);
+                } else {
                     extractionLoading.classList.add('hidden');
-                    extractionLoadingMessage.innerText = 'Ekstraksi selesai!';
-                    clearInterval(intervalId);
-                } else if (responseData.data.status == 'WAITING') {
-                    extractionLoadingMessage.innerText = 'Menunggu hasil ekstraksi!';
-                } else if (responseData.data.status == 'FAILURE') {
-                    extractionLoading.classList.add('hidden');
-                    extractionLoadingMessage.innerText = 'Gagal!';
-                    clearInterval(intervalId);
+                    modalMessage.innerText = 'Ekstraksi gagal: ' + data.errorMessage;
+                    modalButton.click();
                 }
             })
             .catch(error => {
-                clearInterval(intervalId);
                 extractionLoading.classList.add('hidden');
-                alert('Terjadi kesalahan: ' + error.message);
+                modalMessage.innerText = 'Terjadi kesalahan: ' + error.message;
+                modalButton.click();
             });
-        }, 2000);
-    }
-</script>
+        });
+
+        function checkExtractionStatus(requestId) {
+            const intervalId = setInterval(() => {
+                fetch('/api/ocr/check-status/' + requestId, {
+                    method: 'GET',
+                    headers: {
+                        'X-API-KEY': 'aa95014e7e56d57b30cfc80c16040ad73002d7078be6244b851e8ccb14b896d3'
+                    }
+                })
+                .then(response => response.json())
+                .then(responseData => {
+                    if (responseData.data.status == 'DONE') {
+                        extractionLoading.classList.add('hidden');
+                        extractionLoadingMessage.innerText = 'Ekstraksi selesai!';
+                        clearInterval(intervalId);
+                        window.location.replace('/testing/result/' + responseData.data.requestId);
+                    } else if (responseData.data.status == 'WAITING') {
+                        extractionLoadingMessage.innerText = 'Menunggu hasil ekstraksi!';
+                    } else if (responseData.data.status == 'FAILURE') {
+                        extractionLoading.classList.add('hidden');
+                        clearInterval(intervalId);
+                        modalMessage.innerText = 'Gagal!';
+                        modalButton.click();
+                    }
+                })
+                .catch(error => {
+                    clearInterval(intervalId);
+                    extractionLoading.classList.add('hidden');
+                    modalMessage.innerText = 'Terjadi kesalahan: ' + error.message;
+                    modalButton.click();
+                });
+            }, 2000);
+        }
+    </script>
+
+</body>
+</html>

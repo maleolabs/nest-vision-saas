@@ -21,7 +21,6 @@ import m2codes.perizinan_ocr_tool.domain.service.OcrRequestService;
 import m2codes.perizinan_ocr_tool.domain.service.OcrResultService;
 import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.service.DataEntriService;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.OcrDataRequest;
-import m2codes.perizinan_ocr_tool.interfaces.dto.response.OcrResponse;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.scheduling.annotation.Async;
@@ -37,7 +36,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
