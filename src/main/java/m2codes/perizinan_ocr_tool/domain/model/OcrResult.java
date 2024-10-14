@@ -50,6 +50,9 @@ public class OcrResult {
     @Column(name="extracted_at", nullable=false)
     private Long extractedAt;
 
+    @Column(name = "original_extracted_text", columnDefinition = "TEXT", nullable = false)
+    private String originalExtractedText;
+
     @OneToMany(
             mappedBy="ocrResult",
             cascade=CascadeType.ALL,

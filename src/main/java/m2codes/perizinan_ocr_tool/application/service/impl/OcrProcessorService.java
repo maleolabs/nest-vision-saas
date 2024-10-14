@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -112,7 +113,6 @@ public class OcrProcessorService extends TextProcessorService {
         try {
             File tempFile = saveUploadedFile(file);
             OcrResultDto ocrResultDto = extractTextFromImage(tempFile);
-            log.info("Extracted Text : {}", ocrResultDto.getExtractedText());
             if (!ocrResultDto.isSuccess()) {
                 saveOcrRequest(null, RequestStatus.FAILURE);
                 entityManager.flush();
@@ -234,8 +234,8 @@ public class OcrProcessorService extends TextProcessorService {
         }
 
         var filename = System.currentTimeMillis() + "." + FilenameUtils.getExtension(originalFilename);
-        Path filePath = Paths.get(UPLOAD_DIR + filename);
-        Files.copy(file.getInputStream(), filePath);
+        Path filePath = Paths.get(uploadDir.getAbsolutePath(), filename);
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
         return filePath.toFile();
     }
