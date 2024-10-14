@@ -75,6 +75,33 @@ public abstract class ExtractedTextQueryService {
         return buildWebResponse(response, true, null);
     }
 
+    public final OcrResponse findByRequestId(Long requestId) {
+        OcrRequest request = findRequestById(requestId);
+        if (request == null) {
+            return null;
+        }
+        var ocrResponse = OcrResponse.builder()
+                .requestId(request.getId())
+                .status(request.getStatus())
+                .build();
+        if (request.getOcrResults() != null) {
+            var ocrResult = request.getOcrResults();
+            ocrResponse.setDuration((float) (ocrResult.getDuration() / 1000));
+            ocrResponse.setOriginalExtractedText(ocrResult.getOriginalExtractedText());
+
+            List<ExtractedTextResponse> extractedTexts = new ArrayList<>();
+            for (ExtractedText extractedText : ocrResult.getExtractedText()) {
+                var extractedTextRes = ExtractedTextResponse.builder()
+                        .textKey(extractedText.getTextKey())
+                        .textValue(extractedText.getTextValue())
+                        .build();
+                extractedTexts.add(extractedTextRes);
+            }
+            ocrResponse.setExtractedTexts(extractedTexts);
+        }
+        return ocrResponse;
+    }
+
     protected WebResponse<ExtractedTextResponse> handleTextKeyLookup(String textKey, Long izinId) {
         try {
             return findETByTextKeyAndIzinId(textKey, izinId)

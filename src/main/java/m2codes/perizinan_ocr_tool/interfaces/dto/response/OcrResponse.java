@@ -3,6 +3,9 @@ package m2codes.perizinan_ocr_tool.interfaces.dto.response;
 import lombok.*;
 import m2codes.perizinan_ocr_tool.domain.model.RequestStatus;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
 @Builder
@@ -15,5 +18,9 @@ public class OcrResponse {
     private RequestStatus status;
 
     private Float duration;
+
+    private String originalExtractedText;
+
+    private List<ExtractedTextResponse> extractedTexts = new ArrayList<>();
 
 }

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
     <title>OCR Testing Result</title>
@@ -14,21 +14,20 @@
         <div class="p-6 bg-white border border-gray-200 rounded-lg shadow flex flex-col">
             <h4 class="text-xl font-extrabold mb-3">Hasil Ekstraksi</h4>
             <h6 class="text-lg font-bold mb-3">Original Teks</h6>
-            <p>
-                Track work across the enterprise through an open, collaborative platform. Link issues across Jira and ingest data from other software development tools, so your IT support and operations teams have richer contextual information to rapidly respond to requests, incidents, and changes.
-            </p>
+            <p th:text="${ocrResult.getOriginalExtractedText()}"></p>
             <hr class="h-px my-8 bg-gray-200 border-0">
             <h6 class="text-lg font-bold mb-3">Informasi yang dapat diambil dari teks</h6>
             <ol class="space-y-1 list-decimal list-inside">
-                <li>You might feel like you are being really "organized" o</li>
-                <li>Nested navigation in UIs is a bad idea too, keep things as flat as possible.</li>
-                <li>Nesting tons of folders in your source code is also not helpful.</li>
+                <li th:each="et : ${ocrResult.getExtractedTexts()}">
+                    <span th:text="${et.getTextKey()}"></span>
+                    <span th:text="${et.getTextValue()}"></span>
+                </li>
             </ol>
             <hr class="h-px my-8 bg-gray-200 border-0">
             <h6 class="text-lg font-bold mb-3">Detail ekstraksi</h6>
             <ul class="space-y-1 list-disc list-inside">
                 <li>
-                    Waktu ekstraksi : 30s
+                    Waktu ekstraksi : <span th:text="${ocrResult.getDuration()}+s"></span>
                 </li>
                 <li>
                     Besar file : 3mb
