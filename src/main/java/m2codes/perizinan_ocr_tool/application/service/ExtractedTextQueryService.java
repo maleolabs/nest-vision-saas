@@ -6,11 +6,10 @@ import m2codes.perizinan_ocr_tool.domain.service.ExtractedTextService;
 import m2codes.perizinan_ocr_tool.domain.service.OcrRequestService;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.ExtractedTextResponse;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.OcrResponse;
+import m2codes.perizinan_ocr_tool.interfaces.dto.response.OcrResponse2;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public abstract class ExtractedTextQueryService {
 
@@ -73,6 +72,28 @@ public abstract class ExtractedTextQueryService {
             response.setDuration((float) (request.getOcrResults().getDuration() / 1000));
         }
         return buildWebResponse(response, true, null);
+    }
+
+    public final WebResponse<OcrResponse2> getByRequestId(Long requestId) {
+        OcrRequest request = findRequestById(requestId);
+        if (request == null) {
+            return buildWebResponse(null, false, "Request ID not found");
+        }
+        var ocrResponse = OcrResponse2.builder()
+                .requestId(request.getId())
+                .status(request.getStatus())
+                .build();
+
+        if (request.getOcrResults() != null) {
+            var ocrResult = request.getOcrResults();
+            ocrResponse.setDuration((float) (ocrResult.getDuration() / 1000));
+            Map<String, String> extractedTexts = new HashMap<>();
+            for (ExtractedText extractedText : ocrResult.getExtractedText()) {
+                extractedTexts.put(extractedText.getTextKey(), extractedText.getTextValue());
+            }
+            ocrResponse.setExtractedTexts(extractedTexts);
+        }
+        return buildWebResponse(ocrResponse, true, null);
     }
 
     public final OcrResponse findByRequestId(Long requestId) {

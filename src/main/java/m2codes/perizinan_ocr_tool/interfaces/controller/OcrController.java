@@ -77,6 +77,15 @@ public class OcrController {
     }
 
     @GetMapping(
+            path = "/get-by-request/{requestId}",
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<WebResponse<?>> getByRequestId(@PathVariable(name = "requestId") Long requestId) {
+        var response = extractedTextQueryService.getByRequestId(requestId);
+        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+    }
+
+    @GetMapping(
             path = "/check-status/{requestId}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
