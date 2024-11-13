@@ -44,13 +44,13 @@ public class OcrResult {
     @Column(name="error_message")
     private String errorMessage;
 
-    @Column(name = "duration", nullable = false)
+    @Column(name = "duration")
     private Long duration;
 
-    @Column(name="extracted_at", nullable=false)
+    @Column(name="extracted_at")
     private Long extractedAt;
 
-    @Column(name = "original_extracted_text", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "original_extracted_text", columnDefinition = "TEXT")
     private String originalExtractedText;
 
     @OneToMany(
