@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import m2codes.perizinan_ocr_tool.application.event.OcrRequestEventPublisher;
 import m2codes.perizinan_ocr_tool.application.util.TaskManager;
 import m2codes.perizinan_ocr_tool.domain.model.RequestStatus;
+import m2codes.perizinan_ocr_tool.infrastructure.filemanager.service.FileManagerService;
 import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.dto.DataEntriDto;
 import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
 import m2codes.perizinan_ocr_tool.application.dto.OcrResultDto;
@@ -22,7 +23,6 @@ import m2codes.perizinan_ocr_tool.domain.service.OcrResultService;
 import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.service.DataEntriService;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.OcrDataRequest;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
-import org.apache.commons.io.FilenameUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -30,11 +30,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -45,15 +41,11 @@ public class OcrProcessorService extends TextProcessorService {
 
     private final TextExtractionService textExtractionService;
     private final DataEntriService dataEntriService;
-
     private final ExtractedTextCleaner extractedTextCleaner;
     private final ExtractedTextMapper extractedTextMapper;
-
     private final OcrRequestEventPublisher ocrRequestEventPublisher;
-
     private final TaskManager taskManager;
-
-    private static final String UPLOAD_DIR = "src/main/resources/static/uploads/";
+    private final FileManagerService fileManagerService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -67,7 +59,8 @@ public class OcrProcessorService extends TextProcessorService {
             ExtractedTextCleaner extractedTextCleaner,
             ExtractedTextMapper extractedTextMapper,
             OcrRequestEventPublisher ocrRequestEventPublisher,
-            TaskManager taskManager
+            TaskManager taskManager,
+            FileManagerService fileManagerService
     ) {
         super(ocrRequestService, ocrResultService, extractedTextService);
         this.textExtractionService = textExtractionService;
@@ -79,6 +72,8 @@ public class OcrProcessorService extends TextProcessorService {
         this.ocrRequestEventPublisher = ocrRequestEventPublisher;
 
         this.taskManager = taskManager;
+
+        this.fileManagerService = fileManagerService;
     }
 
     @Async
@@ -105,23 +100,22 @@ public class OcrProcessorService extends TextProcessorService {
     @Async
     @Transactional
     @Override
-    protected void processingExtractionText(MultipartFile file, OcrRequest ocrRequest) {
+    protected void processingExtractionText(File file, OcrRequest ocrRequest, OcrDataRequest dataRequest) {
         ocrRequest = entityManager.merge(ocrRequest);
 
         try {
-            File tempFile = saveUploadedFile(file, ocrRequest.getImageUrl());
-            OcrResultDto ocrResultDto = extractTextFromImage(tempFile);
+            OcrResultDto ocrResultDto = extractTextFromImage(file);
             if (!ocrResultDto.isSuccess()) {
-                saveOcrRequest(null, RequestStatus.FAILURE);
+                saveOcrRequest(dataRequest, RequestStatus.FAILURE);
                 entityManager.flush();
             }
             OcrResult ocrResult = saveOcrResult(ocrResultDto, ocrRequest);
             saveAllExtractedText(ocrResultDto, ocrResult);
             ocrRequestService.updateStatus(ocrRequest, RequestStatus.DONE);
             entityManager.flush();
-        } catch (IOException e) {
-            log.error("IOException Error : {}", e.getMessage());
-            saveOcrRequest(null, RequestStatus.FAILURE);
+        } catch (Exception e) {
+            log.error("Exception Error : {}", e.getMessage());
+            saveOcrRequest(dataRequest, RequestStatus.FAILURE);
             entityManager.flush();
         }
     }
@@ -203,6 +197,17 @@ public class OcrProcessorService extends TextProcessorService {
     }
 
     @Override
+    protected String uploadFile(MultipartFile file) throws Exception {
+        return fileManagerService.uploadFile(file);
+    }
+
+    @Override
+    protected File retrieveFile(String fileName) throws Exception {
+        InputStream fileInputStream = fileManagerService.retrieveFile(fileName);
+        return fileManagerService.createTempFileFromInputStream(fileInputStream, fileName);
+    }
+
+    @Override
     protected boolean isPoolAvailable() {
         return taskManager.isPoolAvailable();
     }
@@ -215,20 +220,6 @@ public class OcrProcessorService extends TextProcessorService {
                 ocrRequestEventPublisher.publish(request);
             }
         });
-    }
-
-    private File saveUploadedFile(MultipartFile file, String filename) throws IOException {
-        File uploadDir = new File(UPLOAD_DIR);
-        if (!uploadDir.exists()) {
-            boolean isDirCreated = uploadDir.mkdirs();
-            if (!isDirCreated) {
-                throw new IOException("Can't create upload directory!");
-            }
-        }
-        Path filePath = Paths.get(uploadDir.getAbsolutePath(), filename);
-        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-        return filePath.toFile();
     }
 
 }
