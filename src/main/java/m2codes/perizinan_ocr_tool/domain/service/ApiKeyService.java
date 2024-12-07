@@ -8,12 +8,10 @@ import java.util.Optional;
 
 public interface ApiKeyService {
 
-    ApiKey save(String clientId, String apiKey, Instant expiresAt);
+    String create(String clientId);
 
-    Optional<ApiKey> findByApiKey(String apiKey);
+    boolean verify(String apiKey);
 
-    Optional<ApiKey> findByClientId(String clientId);
-
-    void deleteByClientId(String clientId);
+    void delete(String apiKey);
 
 }

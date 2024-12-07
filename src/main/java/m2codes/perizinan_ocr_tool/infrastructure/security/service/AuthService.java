@@ -1,6 +1,5 @@
 package m2codes.perizinan_ocr_tool.infrastructure.security.service;
 
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import m2codes.perizinan_ocr_tool.domain.model.Client;
 import m2codes.perizinan_ocr_tool.domain.model.Role;
@@ -12,6 +11,9 @@ import m2codes.perizinan_ocr_tool.interfaces.dto.request.UserDataRequest;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.UserResponse;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +26,6 @@ public class AuthService {
     private final ClientService clientService;
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
-    private final HttpSession session;
 
     public WebResponse<UserResponse> register(UserDataRequest request) {
         if (userService.existsByUsername(request.getUsername())) {
@@ -57,10 +58,30 @@ public class AuthService {
             return WebResponse.error("unauthorized", HttpStatus.UNAUTHORIZED);
         }
 
-        UserResponse userResponse = UserResponse.fromModel(user);
-        session.setAttribute("USER", userResponse);
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(request.getCredential(), null, user.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        return WebResponse.success(userResponse, HttpStatus.OK);
+        return WebResponse.success(UserResponse.fromModel(user), HttpStatus.OK);
+    }
+
+    public UserResponse getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null
+                && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof String principal) {
+
+            Optional<User> userOpt = userService.findByUsername(principal);
+            Optional<Client> clientOpt = clientService.findByEmail(principal);
+
+            if (userOpt.isEmpty() && clientOpt.isEmpty()) {
+                throw new IllegalStateException("failed get current user");
+            }
+
+            User user = userOpt.orElseGet(() -> clientOpt.get().getUser());
+            return UserResponse.fromModel(user);
+        }
+        throw new IllegalStateException("no user is currently logged in");
     }
 
 }

@@ -2,8 +2,11 @@ package m2codes.perizinan_ocr_tool.domain.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.time.Instant;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.UUID;
 
 @Getter
@@ -53,6 +56,10 @@ public class User {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = Instant.now();
+    }
+
+    public Collection<SimpleGrantedAuthority> getAuthorities() {
+        return Collections.singletonList(new SimpleGrantedAuthority(this.role.name()));
     }
 
 }
