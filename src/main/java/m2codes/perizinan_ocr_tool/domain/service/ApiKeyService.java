@@ -2,9 +2,11 @@ package m2codes.perizinan_ocr_tool.domain.service;
 
 import m2codes.perizinan_ocr_tool.domain.model.ApiKey;
 
+import java.time.Instant;
+
 public interface ApiKeyService {
 
-    ApiKey save(String clientId, String apiKey, Long expiresAt);
+    ApiKey save(String clientId, String apiKey, Instant expiresAt);
 
     ApiKey findByApiKey(String apiKey);
 

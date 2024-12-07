@@ -5,6 +5,8 @@ import m2codes.perizinan_ocr_tool.domain.repository.ApiKeyRepository;
 import m2codes.perizinan_ocr_tool.domain.service.ApiKeyService;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+
 @Service
 public class ApiKeyServiceImpl implements ApiKeyService {
 
@@ -15,7 +17,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     }
 
     @Override
-    public ApiKey save(String clientId, String apiKey, Long expiresAt) {
+    public ApiKey save(String clientId, String apiKey, Instant expiresAt) {
         var apiKeyData = apiKeyRepository.findFirstByClientId(clientId).orElse(null);
         if (apiKeyData != null) {
             apiKeyData.setApiKey(apiKey);

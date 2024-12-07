@@ -8,7 +8,9 @@ import m2codes.perizinan_ocr_tool.interfaces.dto.request.UserDataRequest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 @Service
@@ -21,7 +23,8 @@ public class UserServiceImpl implements UserService {
     public User save(UserDataRequest request) {
         String encryptedPassword = bCryptPasswordEncoder.encode(request.getPassword());
 
-        var user = userRepository.findById(request.getId()).orElse(null);
+        UUID userId = UUID.fromString(request.getId());
+        var user = userRepository.findById(userId).orElse(null);
         if (user != null) {
             user.setUsername(request.getUsername());
             user.setPassword(encryptedPassword);
@@ -50,17 +53,18 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updateLastLoginById(String id) {
-        var user = userRepository.findById(id).orElse(null);
+        UUID userId = UUID.fromString(id);
+        var user = userRepository.findById(userId).orElse(null);
         if (user == null) {
             return;
         }
 
-        user.setLastLogin(System.currentTimeMillis());
+        user.setLastLogin(Instant.now());
         userRepository.save(user);
     }
 
     @Override
     public void deleteById(String id) {
-        userRepository.deleteById(id);
+        userRepository.deleteById(UUID.fromString(id));
     }
 }

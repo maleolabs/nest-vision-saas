@@ -1,8 +1,10 @@
 package m2codes.perizinan_ocr_tool.domain.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Getter
@@ -15,18 +17,38 @@ import java.util.UUID;
 public class User {
 
     @Id
-    private String id = UUID.randomUUID().toString();
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private UUID id;
 
     @Column(nullable = false, unique = true)
+    @Size(min = 3, max = 50)
     private String username;
 
     @Column(nullable = false)
+    @Size(min = 6)
     private String password;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
     @Column(name = "last_login")
-    private Long lastLogin;
+    private Instant lastLogin;
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private Long createdAt = System.currentTimeMillis();
+    private Instant createdAt;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = Instant.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = Instant.now();
+    }
 
 }

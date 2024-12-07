@@ -3,6 +3,7 @@ package m2codes.perizinan_ocr_tool.domain.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -28,9 +29,19 @@ public class Client {
     private String clientId = UUID.randomUUID().toString();
 
     @Column(name = "created_at", nullable = false, updatable = false)
-    private Long createdAt = System.currentTimeMillis();
+    private Instant createdAt;
 
     @Column(name = "updated_at")
-    private Long updatedAt = System.currentTimeMillis();
+    private Instant updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = Instant.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = Instant.now();
+    }
 
 }
