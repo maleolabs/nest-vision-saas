@@ -1,5 +1,6 @@
 package m2codes.perizinan_ocr_tool.domain.service;
 
+import m2codes.perizinan_ocr_tool.domain.model.Role;
 import m2codes.perizinan_ocr_tool.domain.model.User;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.UserDataRequest;
 
@@ -7,7 +8,7 @@ import java.util.List;
 
 public interface UserService {
 
-    User save(UserDataRequest request);
+    User save(UserDataRequest request, Role role);
 
     User findByUsername(String username);
 

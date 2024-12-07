@@ -1,6 +1,7 @@
 package m2codes.perizinan_ocr_tool.domain.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import m2codes.perizinan_ocr_tool.domain.model.Role;
 import m2codes.perizinan_ocr_tool.domain.model.User;
 import m2codes.perizinan_ocr_tool.domain.repository.UserRepository;
 import m2codes.perizinan_ocr_tool.domain.service.UserService;
@@ -20,7 +21,7 @@ public class UserServiceImpl implements UserService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Override
-    public User save(UserDataRequest request) {
+    public User save(UserDataRequest request, Role role) {
         String encryptedPassword = bCryptPasswordEncoder.encode(request.getPassword());
 
         UUID userId = UUID.fromString(request.getId());
@@ -28,6 +29,7 @@ public class UserServiceImpl implements UserService {
         if (user != null) {
             user.setUsername(request.getUsername());
             user.setPassword(encryptedPassword);
+            user.setRole(role);
             return userRepository.save(user);
         }
 
@@ -35,6 +37,7 @@ public class UserServiceImpl implements UserService {
             User.builder()
                 .username(request.getUsername())
                 .password(encryptedPassword)
+                .role(role)
                 .build()
         );
 
