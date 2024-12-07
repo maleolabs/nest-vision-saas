@@ -1,9 +1,12 @@
 package m2codes.perizinan_ocr_tool.domain.service.impl;
 
 import m2codes.perizinan_ocr_tool.domain.model.Client;
+import m2codes.perizinan_ocr_tool.domain.model.User;
 import m2codes.perizinan_ocr_tool.domain.repository.ClientRepository;
 import m2codes.perizinan_ocr_tool.domain.service.ClientService;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class ClientServiceImpl implements ClientService {
@@ -15,7 +18,7 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public Client save(String email) {
+    public Client save(String email, User user) {
         var client = clientRepository.findFirstByEmail(email).orElse(null);
         if (client != null) {
             return client;
@@ -23,6 +26,7 @@ public class ClientServiceImpl implements ClientService {
         client = clientRepository.save(
             Client.builder()
                 .email(email)
+                .user(user)
                 .build()
         );
 
@@ -30,13 +34,13 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public Client findByClientId(String clientId) {
-        return clientRepository.findFirstByClientId(clientId).orElse(null);
+    public Optional<Client> findByClientId(String clientId) {
+        return clientRepository.findFirstByClientId(clientId);
     }
 
     @Override
-    public Client findByEmail(String email) {
-        return clientRepository.findFirstByEmail(email).orElse(null);
+    public Optional<Client> findByEmail(String email) {
+        return clientRepository.findFirstByEmail(email);
     }
 
     @Override

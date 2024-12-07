@@ -19,14 +19,15 @@ public class Client {
     @GeneratedValue(strategy= GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
-    private String userId;
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
+    private User user;
 
     @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false, unique = true)
-    private String clientId = UUID.randomUUID().toString();
+    private String clientId;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -36,6 +37,7 @@ public class Client {
 
     @PrePersist
     protected void onCreate() {
+        this.clientId = UUID.randomUUID().toString();
         this.createdAt = Instant.now();
     }
 

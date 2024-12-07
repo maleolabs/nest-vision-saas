@@ -4,13 +4,15 @@ import lombok.RequiredArgsConstructor;
 import m2codes.perizinan_ocr_tool.domain.model.Role;
 import m2codes.perizinan_ocr_tool.domain.model.User;
 import m2codes.perizinan_ocr_tool.domain.repository.UserRepository;
+import m2codes.perizinan_ocr_tool.domain.service.ClientService;
 import m2codes.perizinan_ocr_tool.domain.service.UserService;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.UserDataRequest;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -18,11 +20,12 @@ import java.util.UUID;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final PasswordEncoder passwordEncoder;
+    private final ClientService clientService;
 
     @Override
     public User save(UserDataRequest request, Role role) {
-        String encryptedPassword = bCryptPasswordEncoder.encode(request.getPassword());
+        String encryptedPassword = passwordEncoder.encode(request.getPassword());
 
         UUID userId = UUID.fromString(request.getId());
         var user = userRepository.findById(userId).orElse(null);
@@ -41,12 +44,21 @@ public class UserServiceImpl implements UserService {
                 .build()
         );
 
+        if (role == Role.CLIENT) {
+            clientService.save(request.getEmail(), user);
+        }
+
         return user;
     }
 
     @Override
-    public User findByUsername(String username) {
-        return userRepository.findByUsername(username).orElse(null);
+    public boolean existsByUsername(String username) {
+        return userRepository.existsByUsername(username);
+    }
+
+    @Override
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
     }
 
     @Override

@@ -1,14 +1,17 @@
 package m2codes.perizinan_ocr_tool.domain.service;
 
 import m2codes.perizinan_ocr_tool.domain.model.Client;
+import m2codes.perizinan_ocr_tool.domain.model.User;
+
+import java.util.Optional;
 
 public interface ClientService {
 
-    Client save(String email);
+    Client save(String email, User user);
 
-    Client findByClientId(String clientId);
+    Optional<Client> findByClientId(String clientId);
 
-    Client findByEmail(String email);
+    Optional<Client> findByEmail(String email);
 
     void deleteByClientId(String clientId);
 

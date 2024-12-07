@@ -5,12 +5,15 @@ import m2codes.perizinan_ocr_tool.domain.model.User;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.UserDataRequest;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UserService {
 
     User save(UserDataRequest request, Role role);
 
-    User findByUsername(String username);
+    boolean existsByUsername(String username);
+
+    Optional<User> findByUsername(String username);
 
     List<User> getUsers();
 

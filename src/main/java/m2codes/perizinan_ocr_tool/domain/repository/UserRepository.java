@@ -18,4 +18,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     @Query("UPDATE User u SET u.lastLogin = :lastLogin WHERE u.id = :id")
     void updateLastLoginById(Long lastLogin, String id);
 
+    boolean existsByUsername(String username);
+
 }

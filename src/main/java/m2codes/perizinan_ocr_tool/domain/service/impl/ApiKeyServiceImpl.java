@@ -6,6 +6,7 @@ import m2codes.perizinan_ocr_tool.domain.service.ApiKeyService;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Optional;
 
 @Service
 public class ApiKeyServiceImpl implements ApiKeyService {
@@ -37,13 +38,13 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     }
 
     @Override
-    public ApiKey findByApiKey(String apiKey) {
-        return apiKeyRepository.findFirstByApiKey(apiKey).orElse(null);
+    public Optional<ApiKey> findByApiKey(String apiKey) {
+        return apiKeyRepository.findFirstByApiKey(apiKey);
     }
 
     @Override
-    public ApiKey findByClientId(String clientId) {
-        return apiKeyRepository.findFirstByClientId(clientId).orElse(null);
+    public Optional<ApiKey> findByClientId(String clientId) {
+        return apiKeyRepository.findFirstByClientId(clientId);
     }
 
     @Override

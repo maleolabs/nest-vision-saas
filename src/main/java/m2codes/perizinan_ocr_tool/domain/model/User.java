@@ -1,7 +1,6 @@
 package m2codes.perizinan_ocr_tool.domain.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.Instant;
@@ -21,11 +20,9 @@ public class User {
     private UUID id;
 
     @Column(nullable = false, unique = true)
-    @Size(min = 3, max = 50)
     private String username;
 
     @Column(nullable = false)
-    @Size(min = 6)
     private String password;
 
     @Enumerated(EnumType.STRING)
@@ -40,6 +37,13 @@ public class User {
 
     @Column(name = "updated_at")
     private Instant updatedAt;
+
+    @OneToOne(
+        mappedBy = "user",
+        cascade = CascadeType.ALL,
+        fetch = FetchType.LAZY
+    )
+    private Client client;
 
     @PrePersist
     protected void onCreate() {
