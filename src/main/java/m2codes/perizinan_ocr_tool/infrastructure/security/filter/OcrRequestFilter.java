@@ -17,9 +17,10 @@ public class OcrRequestFilter extends OncePerRequestFilter {
     private final ApiKeyService apiKeyService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain chain) throws ServletException, IOException {
+
         if (!request.getRequestURI().startsWith("/api")) {
-            filterChain.doFilter(request, response);
+            chain.doFilter(request, response);
             return;
         }
 
@@ -50,6 +51,6 @@ public class OcrRequestFilter extends OncePerRequestFilter {
             response.getWriter().write("Missing or Invalid Authorization Header");
             return;
         }
-        filterChain.doFilter(request, response);
+        chain.doFilter(request, response);
     }
 }

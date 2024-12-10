@@ -27,13 +27,16 @@ public class UserServiceImpl implements UserService {
     public User save(UserDataRequest request, Role role) {
         String encryptedPassword = passwordEncoder.encode(request.getPassword());
 
-        UUID userId = UUID.fromString(request.getId());
-        var user = userRepository.findById(userId).orElse(null);
-        if (user != null) {
-            user.setUsername(request.getUsername());
-            user.setPassword(encryptedPassword);
-            user.setRole(role);
-            return userRepository.save(user);
+        User user;
+        if (request.getId() != null) {
+            UUID userId = UUID.fromString(request.getId());
+            user = userRepository.findById(userId).orElse(null);
+            if (user != null) {
+                user.setUsername(request.getUsername());
+                user.setPassword(encryptedPassword);
+                user.setRole(role);
+                return userRepository.save(user);
+            }
         }
 
         user = userRepository.save(
