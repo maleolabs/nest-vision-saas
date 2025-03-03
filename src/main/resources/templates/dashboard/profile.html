@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml" class="h-full bg-white">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ocr Tool | Profile</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tw-elements/css/tw-elements.min.css" />
+    <script src="https://cdn.tailwindcss.com/3.3.0"></script>
+</head>
+<body class="h-full">
+
+<aside id="default-sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
+    <div class="h-full px-3 py-4 overflow-y-auto bg-gray-50 dark:bg-gray-800">
+        <ul class="space-y-2 font-medium">
+            <li>
+                <a href="/dashboard" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                    <svg class="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 22 21">
+                        <path d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z"/>
+                        <path d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z"/>
+                    </svg>
+                    <span class="ms-3">Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="/dashboard/docs" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                    <svg class="w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.35709 16V5.78571c0-.43393.34822-.78571.77777-.78571H18.5793c.4296 0 .7778.35178.7778.78571V16M5.35709 16h-1c-.55229 0-1 .4477-1 1v1c0 .5523.44771 1 1 1H20.3571c.5523 0 1-.4477 1-1v-1c0-.5523-.4477-1-1-1h-1M5.35709 16H19.3571M9.35709 8l2.62501 2.5L9.35709 13m4.00001 0h2"/>
+                    </svg>
+                    <span class="flex-1 ms-3 whitespace-nowrap">Dokumentasi</span>
+                </a>
+            </li>
+            <li>
+                <a href="/dashboard/profile" class="flex items-center p-2 text-gray-900 bg-gray-200 rounded-lg dark:text-white dark:bg-gray-700 group">
+                    <svg class="w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M12 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4h-4Z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="flex-1 ms-3 whitespace-nowrap">Profil</span>
+                </a>
+            </li>
+            <li>
+                <a href="/auth/logout" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                    <svg class="w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H8m12 0-4 4m4-4-4-4M9 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h2"/>
+                    </svg>
+                    <span class="flex-1 ms-3 whitespace-nowrap">Keluar</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+</aside>
+
+<div class="p-4 sm:ml-64">
+    <div class="w-full px-20 py-10 bg-gray-600 rounded">
+        <div class="flex justify-between items-start">
+            <div>
+                <h5 class="mb-2 text-3xl font-bold text-white">
+                    Profil Pengguna & Pengaturan Akun
+                </h5>
+                <p class="mb-5 text-base text-gray-500 sm:text-lg dark:text-gray-400">
+                    Kelola profil pengguna Anda, ubah informasi akun, perbarui kredensial API, dan pantau aktivitas terbaru dalam sistem.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <ol class="relative text-gray-500 mt-5">
+        <li class="mb-5 border border-gray-200 rounded px-20 py-10">
+            <h3 class="mb-3 font-bold tracking-tight text-gray-900">Informasi Akun</h3>
+            <div class="mb-6">
+                <label class="block text-gray-600 text-sm font-semibold">Username</label>
+                <p class="text-gray-800 font-medium" th:text="${user.getUsername()}"></p>
+            </div>
+            <div class="mb-6">
+                <label class="block text-gray-600 text-sm font-semibold">Email</label>
+                <p class="text-gray-800 font-medium" th:text="${user.getClient().getEmail()}"></p>
+            </div>
+        </li>
+        <li class="mb-5 border border-gray-200 rounded px-20 py-10">
+            <form th:action="@{/profile/update}" method="post" class="mb-6">
+                <h3 class="mb-3 font-bold tracking-tight text-gray-900">Ubah Username & Email</h3>
+                <div class="mb-4">
+                    <label class="block text-gray-600 text-sm font-semibold">Username Baru</label>
+                    <input type="text" name="username" placeholder="johndoe"
+                           class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-600 text-sm font-semibold">Email Baru</label>
+                    <input type="email" name="email" placeholder="johndoe@email.com"
+                           class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" required>
+                </div>
+                <button type="submit"
+                        class="flex justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold
+                text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+                focus-visible:outline-indigo-600"
+                >Simpan Perubahan</button>
+            </form>
+        </li>
+        <li class="mb-5 border border-gray-200 rounded px-20 py-10">
+            <form th:action="@{/profile/change-password}" method="post">
+                <h3 class="mb-3 font-bold tracking-tight text-gray-900">Ganti Password</h3>
+                <div class="mb-4">
+                    <label class="block text-gray-600 text-sm font-semibold">Password Lama</label>
+                    <input type="password" name="oldPassword" placeholder="masukkan password lama anda"
+                           class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-600 text-sm font-semibold">Password Baru</label>
+                    <input type="password" name="newPassword" placeholder="masukkan password baru anda"
+                           class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-600 text-sm font-semibold">Konfirmasi Password Baru</label>
+                    <input type="password" name="confirmPassword" placeholder="masukkan konfirmasi password baru anda"
+                           class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" required>
+                </div>
+                <button type="submit"
+                        class="flex justify-center rounded-md bg-stone-600 px-3 py-1.5 text-sm/6 font-semibold
+                text-white shadow-sm hover:bg-stone-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+                focus-visible:outline-stone-600"
+                >Ubah Password</button>
+            </form>
+        </li>
+    </ol>
+
+    <hr class="mb-6 border-gray-200 sm:mx-auto lg:my-8" />
+    <span class="block text-sm text-gray-500 sm:text-center dark:text-gray-400">© 2025 <a href="https://marijmokoginta.com/" class="hover:underline">marijmokoginta™</a>. All Rights Reserved.</span>
+
+</div>
+
+</body>
+</html>
