@@ -7,8 +7,6 @@ import m2codes.perizinan_ocr_tool.infrastructure.security.service.AuthService;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.LoginRequest;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.UserDataRequest;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.WebAttributes;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -50,10 +48,12 @@ public class AuthController {
 
     @GetMapping(path = "/login")
     public String login(HttpSession session, Model model) {
-        Object error = session.getAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
-        if (error instanceof AuthenticationException) {
-            model.addAttribute("error", ((AuthenticationException) error).getMessage());
+        String errorMessage = (String) session.getAttribute("loginError");
+        if (errorMessage != null) {
+            model.addAttribute("errorMessage", errorMessage);
+            session.removeAttribute("loginError");
         }
+
         model.addAttribute("loginRequest", new LoginRequest());
         return "auth/login";
     }

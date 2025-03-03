@@ -11,7 +11,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
@@ -22,6 +21,7 @@ public class SecurityConfig {
     private final PasswordEncoder passwordEncoder;
     private final UserDetailsServiceImpl userDetailsService;
     private final ApiKeyService apiKeyService;
+    private final AuthenticationFailureHandlerImpl failureHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -36,8 +36,8 @@ public class SecurityConfig {
                 .formLogin(login -> login
                         .loginPage("/auth/login")
                         .defaultSuccessUrl("/dashboard", true)
+                        .failureHandler(failureHandler)
                         .permitAll()
-                        .failureHandler(authenticationFailureHandler())
                 )
                 .logout(logout -> logout
                         .logoutRequestMatcher(new AntPathRequestMatcher("/auth/logout"))
@@ -45,11 +45,6 @@ public class SecurityConfig {
                         .permitAll()
                 )
                 .build();
-    }
-
-    @Bean
-    public AuthenticationFailureHandler authenticationFailureHandler() {
-        return new AuthenticationFailureHandlerImpl();
     }
 
 }
