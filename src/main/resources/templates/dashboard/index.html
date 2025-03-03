@@ -7,6 +7,57 @@
 
     <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tw-elements/css/tw-elements.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script th:inline="javascript">
+        document.addEventListener("DOMContentLoaded", function () {
+            const ctxLine = document.getElementById("lineChart").getContext("2d");
+            const ctxBar = document.getElementById("barChart").getContext("2d");
+            const ctxPie = document.getElementById("pieChart").getContext("2d");
+
+            /*<![CDATA[*/
+            const apiRequests = /*[[${apiRequests}]]*/ [];
+            const endpointUsage = /*[[${endpointUsage}]]*/ [];
+            const successRate = /*[[${successRate}]]*/ [];
+            /*]]>*/
+
+            new Chart(ctxLine, {
+                type: "line",
+                data: {
+                    labels: apiRequests.map(d => d.month),
+                    datasets: [{
+                        label: "Jumlah Request",
+                        data: apiRequests.map(d => d.count),
+                        borderColor: "rgb(75, 192, 192)",
+                        backgroundColor: "rgba(75, 192, 192, 0.2)"
+                    }]
+                }
+            });
+
+            new Chart(ctxBar, {
+                type: "bar",
+                data: {
+                    labels: endpointUsage.map(d => d.endpoint),
+                    datasets: [{
+                        label: "Penggunaan",
+                        data: endpointUsage.map(d => d.count),
+                        backgroundColor: ["#3b82f6", "#f97316", "#10b981"]
+                    }]
+                }
+            });
+
+            new Chart(ctxPie, {
+                type: "pie",
+                data: {
+                    labels: successRate.map(d => d.type),
+                    datasets: [{
+                        data: successRate.map(d => d.value),
+                        backgroundColor: ["#22c55e", "#ef4444"]
+                    }]
+                }
+            });
+        });
+    </script>
     <script src="https://cdn.tailwindcss.com/3.3.0"></script>
 </head>
 <body class="h-full">
@@ -66,7 +117,23 @@
     </div>
 
     <div class="p-10">
+        <!-- Grafik Line -->
+        <div class="bg-white p-4 rounded-lg shadow mb-5">
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">Request API per Bulan</h3>
+            <canvas id="lineChart"></canvas>
+        </div>
 
+        <!-- Grafik Bar -->
+        <div class="bg-white p-4 rounded-lg shadow mb-5">
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">Penggunaan Tiap Endpoint</h3>
+            <canvas id="barChart"></canvas>
+        </div>
+
+        <!-- Grafik Pie (Lebih Kecil) -->
+        <div class="bg-white p-4 rounded-lg shadow">
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">Persentase Sukses vs Gagal</h3>
+            <canvas id="pieChart"></canvas>
+        </div>
     </div>
 
     <hr class="mb-6 border-gray-200 sm:mx-auto lg:my-8" />
