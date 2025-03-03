@@ -10,162 +10,68 @@
     <script src="https://cdn.tailwindcss.com/3.3.0"></script>
 </head>
 <body class="h-full">
-<div class="w-full px-20 py-10 bg-gray-600">
-    <div class="flex justify-between items-start">
-        <div>
-            <h5 class="mb-2 text-3xl font-bold text-white">
-                Selamat Datang di Dashboard Integrasi OCR
-            </h5>
-            <p class="mb-5 text-base text-gray-500 sm:text-lg dark:text-gray-400">
-                Selamat datang di Dashboard Aplikasi OCR. Di sini, Anda dapat dengan mudah mengintegrasikan aplikasi Anda dengan layanan OCR kami untuk memaksimalkan efisiensi proses ekstraksi data dokumen.
-            </p>
-        </div>
-        <a href="/auth/logout" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-            logout
-            <svg class="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
-            </svg>
-        </a>
+
+<aside id="default-sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
+    <div class="h-full px-3 py-4 overflow-y-auto bg-gray-50 dark:bg-gray-800">
+        <ul class="space-y-2 font-medium">
+            <li>
+                <a href="/dashboard" class="flex items-center p-2 text-gray-900 bg-gray-200 rounded-lg dark:text-white dark:bg-gray-700 group">
+                    <svg class="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 22 21">
+                        <path d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z"/>
+                        <path d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z"/>
+                    </svg>
+                    <span class="ms-3">Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="/dashboard/docs" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                    <svg class="w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.35709 16V5.78571c0-.43393.34822-.78571.77777-.78571H18.5793c.4296 0 .7778.35178.7778.78571V16M5.35709 16h-1c-.55229 0-1 .4477-1 1v1c0 .5523.44771 1 1 1H20.3571c.5523 0 1-.4477 1-1v-1c0-.5523-.4477-1-1-1h-1M5.35709 16H19.3571M9.35709 8l2.62501 2.5L9.35709 13m4.00001 0h2"/>
+                    </svg>
+                    <span class="flex-1 ms-3 whitespace-nowrap">Dokumentasi</span>
+                </a>
+            </li>
+            <li>
+                <a href="/dashboard/profile" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                    <svg class="w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                        <path fill-rule="evenodd" d="M12 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4h-4Z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="flex-1 ms-3 whitespace-nowrap">Profil</span>
+                </a>
+            </li>
+            <li>
+                <a href="/auth/logout" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                    <svg class="w-6 h-6 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H8m12 0-4 4m4-4-4-4M9 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h2"/>
+                    </svg>
+                    <span class="flex-1 ms-3 whitespace-nowrap">Keluar</span>
+                </a>
+            </li>
+        </ul>
     </div>
-</div>
+</aside>
 
-<div class="px-20 py-10">
-    <ol class="relative text-gray-500 border-s-4 border-gray-200">
-        <li class="mb-10 ms-6">
-            <span class="absolute flex items-center justify-center w-8 h-8 bg-gray-200 rounded-full -start-4 ring-4 ring-gray-200">
-                🔑
-            </span>
-            <h3 class="ms-5 font-medium leading-tight mb-3">API Key Anda</h3>
-            <div class="ms-5 bg-gray-200 rounded-xl p-5 border border-gray-300">
-                <p>Semua permintaan ke API harus disertai dengan API key yang dikirimkan dalam header.</p>
-                <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">Authorization: Bearer {API_KEY}</pre>
+<div class="p-4 sm:ml-64">
+    <div class="w-full px-20 py-10 bg-gray-600 rounded">
+        <div class="flex justify-between items-start">
+            <div>
+                <h5 class="mb-2 text-3xl font-bold text-white">
+                    Selamat Datang di Dashboard Integrasi OCR
+                </h5>
+                <p class="mb-5 text-base text-gray-500 sm:text-lg dark:text-gray-400">
+                    Selamat datang di Dashboard Aplikasi OCR. Di sini, Anda dapat dengan mudah mengintegrasikan aplikasi Anda dengan layanan OCR kami untuk memaksimalkan efisiensi proses ekstraksi data dokumen.
+                </p>
             </div>
-        </li>
-        <li class="mb-10 ms-6">
-            <span class="absolute flex items-center justify-center w-8 h-8 bg-gray-200 rounded-full -start-4 ring-4 ring-gray-200">
-                📝
-            </span>
-            <h3 class="ms-5 font-medium leading-tight mb-3">Endpoint Ekstraksi Teks</h3>
-            <div class="ms-5 bg-gray-200 rounded-xl p-10 border border-gray-300">
-                <p><strong>Endpoint:</strong></p>
-                <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">GET /api/extract/status/{request_id}</pre>
-                <p class="mt-3"><strong>Deskripsi:</strong> Mengunggah dokumen untuk diproses oleh sistem OCR.</p>
-                <p class="mt-3"><strong>Header:</strong></p>
-                <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">
-Content-Type: multipart/form-data
-Authorization: Bearer {API_KEY}</pre>
+        </div>
+    </div>
 
-                <p class="mt-3"><strong>Body (Form-Data):</strong></p>
-                <table class="w-full border mt-2">
-                    <thead>
-                    <tr class="bg-gray-300">
-                        <th class="border px-4 py-2">Parameter</th>
-                        <th class="border px-4 py-2">Jenis</th>
-                        <th class="border px-4 py-2">Deskripsi</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td class="border px-4 py-2">file</td>
-                        <td class="border px-4 py-2">file</td>
-                        <td class="border px-4 py-2">File gambar dokumen (JPG, PNG, PDF)</td>
-                    </tr>
-                    <tr>
-                        <td class="border px-4 py-2">metadata</td>
-                        <td class="border px-4 py-2">string</td>
-                        <td class="border px-4 py-2">Data tambahan opsional dalam format JSON</td>
-                    </tr>
-                    </tbody>
-                </table>
-                <p class="mt-3"><strong>Response (200 OK):</strong></p>
-                <pre class="mt-3 bg-gray-800 text-white p-3 rounded text-sm">{
-  "request_id": "1234567890abcdef",
-  "status": "processing"
-}</pre>
-            </div>
-        </li>
-        <li class="mb-10 ms-6">
-            <span class="absolute flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full -start-6">
-                ⏳
-            </span>
-            <h3 class="ms-5 font-medium leading-tight mb-3">Mengecek status ekstraksi</h3>
-            <div class="ms-5 bg-gray-200 rounded-xl p-10 border border-gray-300">
-                <p><strong>Endpoint:</strong></p>
-                <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">GET /api/extract/status/{request_id}</pre>
-                <p class="mt-3"><strong>Deskripsi:</strong> Memeriksa apakah proses ekstraksi telah selesai.</p>
-                <p class="mt-3"><strong>Header:</strong></p>
-                <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">Authorization: Bearer {API_KEY}</pre>
-                <p class="mt-3"><strong>Response (200 OK):</strong></p>
-                <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">{
-  "request_id": "1234567890abcdef",
-  "status": "completed"
-}</pre>
-                <p class="mt-3">Jika masih diproses:</p>
-                <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">{
-  "request_id": "1234567890abcdef",
-  "status": "processing"
-}</pre>
-            </div>
-        </li>
+    <div class="p-10">
 
-        <li class="mb-10 ms-6">
-            <span class="absolute flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full -start-6">
-                ✅
-            </span>
-            <h3 class="ms-5 font-medium leading-tight mb-3">Mengambil hasil ekstraksi</h3>
-            <div class="ms-5 bg-gray-200 rounded-xl p-10 border border-gray-300">
-                <p><strong>Endpoint:</strong></p>
-                <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">GET /api/extract/result/{request_id}</pre>
-                <p class="mt-3"><strong>Deskripsi:</strong> Mengambil hasil ekstraksi teks setelah proses selesai.</p>
-                <p class="mt-3"><strong>Header:</strong></p>
-                <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">Authorization: Bearer {API_KEY}</pre>
-                <p class="mt-3"><strong>Response (200 OK):</strong></p>
-                <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">"request_id": "1234567890abcdef",
-  "status": "completed",
-  "extracted_text": "Ini adalah hasil ekstraksi teks dari dokumen."
-}</pre>
-                <p class="mt-3">Jika belum selesai:</p>
-                <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">{
-  "error": "Processing not completed"
-}</pre>
-            </div>
-        </li>
+    </div>
 
-        <li class="mb-10 ms-6">
-            <span class="absolute flex items-center justify-center w-10 h-10 bg-gray-200 rounded-full -start-6">
-                ⚠️
-            </span>
-            <h3 class="ms-5 font-medium leading-tight mb-3">Kesalahan umum</h3>
-            <div class="ms-5 bg-gray-200 rounded-xl p-10 border border-gray-300">
-                <table class="w-full border mt-2">
-                    <thead>
-                    <tr class="bg-gray-300">
-                        <th class="border px-4 py-2">Kode</th>
-                        <th class="border px-4 py-2">Deskripsi</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr>
-                        <td class="border px-4 py-2">400</td>
-                        <td class="border px-4 py-2">Permintaan tidak valid</td>
-                    </tr>
-                    <tr>
-                        <td class="border px-4 py-2">401</td>
-                        <td class="border px-4 py-2">API key tidak valid atau tidak diberikan</td>
-                    </tr>
-                    <tr>
-                        <td class="border px-4 py-2">404</td>
-                        <td class="border px-4 py-2">Data tidak ditemukan</td>
-                    </tr>
-                    <tr>
-                        <td class="border px-4 py-2">500</td>
-                        <td class="border px-4 py-2">Kesalahan server</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-        </li>
-    </ol>
+    <hr class="mb-6 border-gray-200 sm:mx-auto lg:my-8" />
+    <span class="block text-sm text-gray-500 sm:text-center dark:text-gray-400">© 2025 <a href="https://marijmokoginta.com/" class="hover:underline">marijmokoginta™</a>. All Rights Reserved.</span>
+
 </div>
 
 </body>

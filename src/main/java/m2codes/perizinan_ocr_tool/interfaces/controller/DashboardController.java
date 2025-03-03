@@ -13,4 +13,9 @@ public class DashboardController {
         return "dashboard/index";
     }
 
+    @GetMapping(path = "/docs")
+    public String docs() {
+        return "dashboard/docs";
+    }
+
 }
