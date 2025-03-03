@@ -48,6 +48,11 @@ public class DashboardController {
         return "dashboard/docs";
     }
 
+    @GetMapping(path = "/logs")
+    public String logs() {
+        return "dashboard/logs";
+    }
+
     @GetMapping(path = "/profile")
     public String profile(Model model, Principal principal) {
         log.info("user principal: {}", principal.getName());
