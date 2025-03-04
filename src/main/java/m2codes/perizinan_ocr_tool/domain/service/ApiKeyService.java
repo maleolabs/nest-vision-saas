@@ -1,16 +1,12 @@
 package m2codes.perizinan_ocr_tool.domain.service;
 
-import m2codes.perizinan_ocr_tool.domain.model.ApiKey;
-import m2codes.perizinan_ocr_tool.domain.model.Client;
-
-import java.time.Instant;
-import java.util.Optional;
-
 public interface ApiKeyService {
 
-    String create(String clientId);
+    void create(String clientId);
 
     boolean verify(String apiKey);
+
+    String findByClientId(String clientId);
 
     void delete(String apiKey);
 

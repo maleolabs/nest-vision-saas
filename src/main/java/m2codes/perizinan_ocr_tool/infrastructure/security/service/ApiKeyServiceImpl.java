@@ -24,13 +24,12 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     private int apiKeyLifetimeInDays;
 
     @Override
-    public String create(String clientId) {
+    public void create(String clientId) {
         String apiKey = generateRandomApiKey();
         Instant expiresAt = Instant.now().plus(apiKeyLifetimeInDays, ChronoUnit.DAYS);
 
         var savedApiKey = save(clientId, apiKey, expiresAt);
 
-        return savedApiKey.getApiKey();
     }
 
     @Override
@@ -43,6 +42,11 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     @Override
     public void delete(String apiKey) {
 
+    }
+
+    @Override
+    public String findByClientId(String clientId) {
+        return apiKeyRepository.findFirstByClientId(clientId).orElseThrow().getApiKey();
     }
 
     private ApiKey save(String clientId, String apiKey, Instant expiresAt) {

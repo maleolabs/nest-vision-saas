@@ -3,6 +3,7 @@ package m2codes.perizinan_ocr_tool.interfaces.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import m2codes.perizinan_ocr_tool.domain.model.User;
+import m2codes.perizinan_ocr_tool.domain.service.ApiKeyService;
 import m2codes.perizinan_ocr_tool.domain.service.UserService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,6 +21,7 @@ import java.util.Map;
 public class DashboardController {
 
     private final UserService userService;
+    private final ApiKeyService apiKeyService;
 
     @GetMapping(path = "")
     public String index(Model model) {
@@ -44,7 +46,13 @@ public class DashboardController {
     }
 
     @GetMapping(path = "/docs")
-    public String docs() {
+    public String docs(Model model, Principal principal) {
+        User user = userService.findByUsername(principal.getName()).orElse(null);
+        if (user != null) {
+            String apiKey = apiKeyService.findByClientId(user.getClient().getClientId());
+            model.addAttribute("apiKey", apiKey);
+        }
+
         return "dashboard/docs";
     }
 

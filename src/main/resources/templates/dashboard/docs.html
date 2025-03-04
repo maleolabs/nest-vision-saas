@@ -82,7 +82,7 @@
                 <h3 class="ms-5 font-medium leading-tight mb-3">API Key Anda</h3>
                 <div class="ms-5 bg-gray-200 rounded-xl p-10 border border-gray-300">
                     <p>Semua permintaan ke API harus disertai dengan API key yang dikirimkan dalam header.</p>
-                    <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">Authorization: Bearer {API_KEY}</pre>
+                    <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">X-API-KEY: <span th:text="${apiKey}"></span></pre>
                 </div>
             </li>
             <li class="mb-10 ms-6">
@@ -92,39 +92,62 @@
                 <h3 class="ms-5 font-medium leading-tight mb-3">Endpoint Ekstraksi Teks</h3>
                 <div class="ms-5 bg-gray-200 rounded-xl p-10 border border-gray-300">
                     <p><strong>Endpoint:</strong></p>
-                    <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">GET /api/extract/status/{request_id}</pre>
+                    <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">POST /api/ocr/do-ocr</pre>
                     <p class="mt-3"><strong>Deskripsi:</strong> Mengunggah dokumen untuk diproses oleh sistem OCR.</p>
                     <p class="mt-3"><strong>Header:</strong></p>
                     <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">
 Content-Type: multipart/form-data
-Authorization: Bearer {API_KEY}</pre>
+X-API-KEY: <span th:text="${apiKey}"></span></pre>
 
                     <p class="mt-3"><strong>Body (Form-Data):</strong></p>
                     <table class="w-full border mt-2">
                         <thead>
-                        <tr class="bg-gray-300">
-                            <th class="border px-4 py-2">Parameter</th>
-                            <th class="border px-4 py-2">Jenis</th>
-                            <th class="border px-4 py-2">Deskripsi</th>
-                        </tr>
+                            <tr class="bg-gray-300">
+                                <th class="border px-4 py-2">Nama</th>
+                                <th class="border px-4 py-2">Jenis</th>
+                                <th class="border px-4 py-2">Deskripsi</th>
+                            </tr>
                         </thead>
                         <tbody>
-                        <tr>
-                            <td class="border px-4 py-2">file</td>
-                            <td class="border px-4 py-2">file</td>
-                            <td class="border px-4 py-2">File gambar dokumen (JPG, PNG, PDF)</td>
-                        </tr>
-                        <tr>
-                            <td class="border px-4 py-2">metadata</td>
-                            <td class="border px-4 py-2">string</td>
-                            <td class="border px-4 py-2">Data tambahan opsional dalam format JSON</td>
-                        </tr>
+                            <tr>
+                                <td class="border px-4 py-2">image</td>
+                                <td class="border px-4 py-2">file</td>
+                                <td class="border px-4 py-2">File gambar dokumen (JPG atau PNG)</td>
+                            </tr>
+                            <tr>
+                                <td class="border px-4 py-2">imageUrl</td>
+                                <td class="border px-4 py-2">string</td>
+                                <td class="border px-4 py-2">Url gambar dokumen</td>
+                            </tr>
+                            <tr>
+                                <td class="border px-4 py-2">requiredKeys</td>
+                                <td class="border px-4 py-2">string array</td>
+                                <td class="border px-4 py-2">List kata kunci yang ingin diambil dari hasil ekstraksi gambar (Opsional)</td>
+                            </tr>
                         </tbody>
                     </table>
-                    <p class="mt-3"><strong>Response (200 OK):</strong></p>
+                    <p class="text-sm my-3 ms-5">* Catatan: untuk
+                        <span class="bg-gray-700 text-gray-300 text-xs font-medium px-2.5 py-0.5 rounded-sm">image</span>
+                        dan
+                        <span class="bg-gray-700 text-gray-300 text-xs font-medium px-2.5 py-0.5 rounded-sm">imageUrl</span>
+                        bisa dipilih antara salah satu.
+                    </p>
+                    <p class="mt-3"><strong>Response :</strong></p>
+                    <p>
+                        &bull;
+                        <span class="text-sm font-bold px-2.5 py-0.5 rounded-sm bg-green-200 text-green-800">200 OK</span>
+                    </p>
                     <pre class="mt-3 bg-gray-800 text-white p-3 rounded text-sm">{
-  "request_id": "1234567890abcdef",
-  "status": "processing"
+	"data": {
+		"requestId": 4,
+		"status": "WAITING",
+		"duration": null,
+		"originalExtractedText": null,
+		"extractedTexts": null
+	},
+	"success": true,
+	"errorMessage": null,
+	"statusCode": null
 }</pre>
                 </div>
             </li>
@@ -135,20 +158,76 @@ Authorization: Bearer {API_KEY}</pre>
                 <h3 class="ms-5 font-medium leading-tight mb-3">Mengecek status ekstraksi</h3>
                 <div class="ms-5 bg-gray-200 rounded-xl p-10 border border-gray-300">
                     <p><strong>Endpoint:</strong></p>
-                    <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">GET /api/extract/status/{request_id}</pre>
+                    <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">GET /api/ocr/check-status/{requestId}</pre>
                     <p class="mt-3"><strong>Deskripsi:</strong> Memeriksa apakah proses ekstraksi telah selesai.</p>
                     <p class="mt-3"><strong>Header:</strong></p>
-                    <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">Authorization: Bearer {API_KEY}</pre>
-                    <p class="mt-3"><strong>Response (200 OK):</strong></p>
+                    <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">X-API-KEY: <span th:text="${apiKey}"></span></pre>
+                    <p class="mt-3"><strong>Response :</strong></p>
+                    <p>
+                        &bull;
+                        <span class="text-sm font-bold px-2.5 py-0.5 rounded-sm bg-green-200 text-green-800">200 OK</span>
+                    </p>
                     <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">{
-  "request_id": "1234567890abcdef",
-  "status": "completed"
+	"data": {
+		"requestId": 2,
+		"status": "DONE",
+		"duration": 7.0,
+		"originalExtractedText": null,
+		"extractedTexts": null
+	},
+	"success": true,
+	"errorMessage": null,
+	"statusCode": null
 }</pre>
-                    <p class="mt-3">Jika masih diproses:</p>
+                    <p class="mt-5">
+                        &bull;
+                        <span class="text-sm font-bold px-2.5 py-0.5 rounded-sm bg-red-200 text-red-800">400 Bad Request</span>
+                    </p>
                     <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">{
-  "request_id": "1234567890abcdef",
-  "status": "processing"
+	"data": null,
+	"success": false,
+	"errorMessage": "Request with id : 2 not found!",
+	"statusCode": null
 }</pre>
+
+                    <table class="w-full border mt-5">
+                        <thead>
+                            <tr class="bg-gray-300">
+                                <th class="border px-4 py-2">Status Request</th>
+                                <th class="border px-4 py-2">Deskripsi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="border px-4 py-2">WAITING</td>
+                                <td class="border px-4 py-2">
+                                    Status ini menunjukkan bahwa permintaan OCR telah diterima tetapi belum diproses.
+                                    Biasanya terjadi ketika permintaan sedang dalam antrean sebelum dieksekusi oleh sistem.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="border px-4 py-2">PROCESSING</td>
+                                <td class="border px-4 py-2">
+                                    Status ini menandakan bahwa sistem sedang memproses dokumen OCR.
+                                    Proses ini melibatkan ekstraksi teks dari gambar atau dokumen yang diunggah pengguna.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="border px-4 py-2">DONE</td>
+                                <td class="border px-4 py-2">
+                                    Status ini berarti proses OCR telah selesai dan hasilnya sudah tersedia.
+                                    Teks yang diekstrak bisa langsung digunakan atau disimpan untuk keperluan selanjutnya.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="border px-4 py-2">FAILURE</td>
+                                <td class="border px-4 py-2">
+                                    Status ini menunjukkan bahwa proses OCR gagal.
+                                    Kegagalan bisa terjadi karena beberapa alasan, seperti format dokumen tidak didukung, gambar buram, atau kesalahan sistem.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </li>
 
@@ -159,18 +238,32 @@ Authorization: Bearer {API_KEY}</pre>
                 <h3 class="ms-5 font-medium leading-tight mb-3">Mengambil hasil ekstraksi</h3>
                 <div class="ms-5 bg-gray-200 rounded-xl p-10 border border-gray-300">
                     <p><strong>Endpoint:</strong></p>
-                    <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">GET /api/extract/result/{request_id}</pre>
+                    <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">GET /api/ocr/get-result/{requestId}</pre>
                     <p class="mt-3"><strong>Deskripsi:</strong> Mengambil hasil ekstraksi teks setelah proses selesai.</p>
                     <p class="mt-3"><strong>Header:</strong></p>
-                    <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">Authorization: Bearer {API_KEY}</pre>
-                    <p class="mt-3"><strong>Response (200 OK):</strong></p>
-                    <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">"request_id": "1234567890abcdef",
-  "status": "completed",
-  "extracted_text": "Ini adalah hasil ekstraksi teks dari dokumen."
-}</pre>
-                    <p class="mt-3">Jika belum selesai:</p>
-                    <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">{
-  "error": "Processing not completed"
+                    <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">X-API-KEY: <span th:text="${apiKey}"></span></pre>
+                    <p class="mt-3"><strong>Response :</strong></p>
+                    <p class="mt-5">
+                        &bull;
+                        <span class="text-sm font-bold px-2.5 py-0.5 rounded-sm bg-green-200 text-green-800">200 OK</span>
+                    </p>
+                    <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">"{
+	"data": {
+		"requestId": 4,
+		"status": "DONE",
+		"duration": 5.0,
+		"extractedTexts": {
+			"nik": "1234567890123",
+			"tempat/tgi lahir": "Gorontalo",
+			"status perkawinan": "KAWIN",
+			"jenis kelamin": "Laki-laki",
+			"nama": "John Doe",
+			"pekerjaan": "Mahasiswa"
+		}
+	},
+	"success": true,
+	"errorMessage": null,
+	"statusCode": null
 }</pre>
                 </div>
             </li>
