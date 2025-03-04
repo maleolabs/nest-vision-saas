@@ -1,5 +1,6 @@
 package m2codes.perizinan_ocr_tool.interfaces.controller;
 
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import m2codes.perizinan_ocr_tool.domain.model.User;
@@ -8,6 +9,7 @@ import m2codes.perizinan_ocr_tool.domain.service.UserService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.security.Principal;
@@ -46,14 +48,36 @@ public class DashboardController {
     }
 
     @GetMapping(path = "/docs")
-    public String docs(Model model, Principal principal) {
+    public String docs(Model model, Principal principal, HttpSession session) {
         User user = userService.findByUsername(principal.getName()).orElse(null);
         if (user != null) {
-            String apiKey = apiKeyService.findByClientId(user.getClient().getClientId());
-            model.addAttribute("apiKey", apiKey);
+            try {
+                String apiKey = apiKeyService.findByClientId(user.getClient().getClientId());
+                model.addAttribute("apiKey", apiKey);
+            } catch (Exception e) {
+                model.addAttribute("canGenerateApiKey", true);
+            }
+        }
+
+        String apiKeyError = (String) session.getAttribute("apiKeyError");
+        if (apiKeyError != null) {
+            model.addAttribute("apiKeyError", apiKeyError);
+            session.removeAttribute("apiKeyError");
         }
 
         return "dashboard/docs";
+    }
+
+    @PostMapping(path = "/docs/create-new-api-key")
+    public String createNewApiKey(HttpSession session, Principal principal) {
+        User user = userService.findByUsername(principal.getName()).orElse(null);
+        if (user == null || user.getClient() == null) {
+            session.setAttribute("apiKeyError",
+                    "Tidak dapat membuat API Key baru, data pengguna tidak ditemukan! Silahkan coba lagi nanti");
+            return "redirect:/dashboard/docs?failed";
+        }
+        apiKeyService.create(user.getClient().getClientId());
+        return "redirect:/dashboard/docs";
     }
 
     @GetMapping(path = "/logs")

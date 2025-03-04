@@ -18,6 +18,7 @@ import java.time.temporal.ChronoUnit;
 public class ApiKeyServiceImpl implements ApiKeyService {
 
     private final ApiKeyRepository apiKeyRepository;
+    private final ApiKeyGenerator apiKeyGenerator;
 
     @Value("${app.api-key.length}")
     private int apiKeyLength;
@@ -27,12 +28,12 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     @Override
     public void create(String clientId) {
         try {
-            String apiKey = ApiKeyGenerator.encrypt(clientId);
+            String apiKey = apiKeyGenerator.encrypt(clientId);
             Instant expiresAt = Instant.now().plus(apiKeyLifetimeInDays, ChronoUnit.DAYS);
 
             save(clientId, apiKey, expiresAt);
         } catch (Exception e) {
-            log.error("failed to create API Key, got error: {}", e.getMessage());
+            log.error("failed to create API Key, got error: {}, {}", e.getMessage(), e.toString());
         }
     }
 
@@ -52,15 +53,16 @@ public class ApiKeyServiceImpl implements ApiKeyService {
         return apiKeyRepository.findFirstByClientId(clientId).orElseThrow().getApiKey();
     }
 
-    private ApiKey save(String clientId, String apiKey, Instant expiresAt) {
+    private void save(String clientId, String apiKey, Instant expiresAt) {
         var apiKeyData = apiKeyRepository.findFirstByClientId(clientId).orElse(null);
         if (apiKeyData != null) {
             apiKeyData.setApiKey(apiKey);
             apiKeyData.setExpiresAt(expiresAt);
-            return apiKeyRepository.save(apiKeyData);
+            apiKeyRepository.save(apiKeyData);
+            return;
         }
 
-        apiKeyData = apiKeyRepository.save(
+        apiKeyRepository.save(
             ApiKey.builder()
                 .clientId(clientId)
                 .apiKey(apiKey)
@@ -69,7 +71,6 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                 .build()
         );
 
-        return apiKeyData;
     }
 
 }

@@ -83,6 +83,18 @@
                 <div class="ms-5 bg-gray-200 rounded-xl p-10 border border-gray-300">
                     <p>Semua permintaan ke API harus disertai dengan API key yang dikirimkan dalam header.</p>
                     <pre class="mt-2 bg-gray-800 text-white p-3 rounded text-sm">X-API-KEY: <span th:text="${apiKey}"></span></pre>
+
+                    <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50 mt-5" th:if="${apiKeyError}" role="alert">
+                        <span class="font-medium" th:text="${apiKeyError}"></span>
+                    </div>
+
+                    <form th:action="@{/dashboard/docs/create-new-api-key}" method="POST" th:if="${canGenerateApiKey}">
+                        <button type="submit"
+                                class="flex justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold
+                text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
+                focus-visible:outline-indigo-600 mt-8"
+                        >Buat API Key baru</button>
+                    </form>
                 </div>
             </li>
             <li class="mb-10 ms-6">
