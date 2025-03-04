@@ -1,10 +1,14 @@
 package m2codes.perizinan_ocr_tool.interfaces.dto.request;
 
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import m2codes.perizinan_ocr_tool.interfaces.validation.annotation.FileSize;
+import m2codes.perizinan_ocr_tool.interfaces.validation.annotation.FileType;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 /**
  *
@@ -15,29 +19,20 @@ import lombok.Setter;
 @Builder
 public class OcrDataRequest {
 
-    @NotNull
-    @NotEmpty
-    private Long izinId;
+    @FileSize(max = 3 * 1024 * 1024)
+    @FileType(allowed = {"image/png", "image/jpeg"})
+    private MultipartFile image;
 
-    @NotNull
-    @NotEmpty
-    private Long jenisPerizinanId;
-
-    @NotNull
-    @NotEmpty
-    private Long syaratIzinId;
-
-    @NotNull
-    @NotEmpty
+    @Pattern(regexp = "^(http|https)://.*$", message = "URL not valid")
     private String imageUrl;
 
-    @Override
-    public String toString() {
-        return "ImageUpload{" +
-                "izinId=" + izinId +
-                ", jenisPerizinanId=" + jenisPerizinanId +
-                ", syaratIzinId=" + syaratIzinId +
-                ", imageUrl='" + imageUrl + '\'' +
-                '}';
+    private List<String> requiredKeys;
+
+    public boolean isUsingUrl() {
+        return imageUrl != null && !imageUrl.isBlank();
+    }
+
+    public boolean isUsingFile() {
+        return image != null && !image.isEmpty();
     }
 }

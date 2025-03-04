@@ -1,17 +1,22 @@
 package m2codes.perizinan_ocr_tool.interfaces.controller;
 
+import jakarta.validation.Valid;
 import m2codes.perizinan_ocr_tool.application.service.impl.ExtractedTextQueryServiceImpl;
 import m2codes.perizinan_ocr_tool.application.service.impl.OcrProcessorService;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.OcrDataRequest;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.ExtractedTextResponse;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.OcrResponse;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = "/api/ocr")
@@ -31,53 +36,41 @@ public class OcrController {
 
     @PostMapping(
             path = "/do-ocr",
-            consumes = MediaType.APPLICATION_JSON_VALUE,
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<WebResponse<?>> doOcr(@RequestBody OcrDataRequest request) {
+    public ResponseEntity<WebResponse<?>> doOcr(
+            @ModelAttribute @Valid OcrDataRequest request,
+            BindingResult result
+            ) {
+        if (result.hasErrors()) {
+            List<String> errors = result.getAllErrors().stream()
+                    .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                    .toList();
+
+            return ResponseEntity.badRequest().body(WebResponse.builder()
+                    .success(false)
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
+                    .data(errors)
+                    .errorMessage("Validation Error")
+                    .build());
+        }
+
+        if (!(request.isUsingFile() || request.isUsingUrl())) {
+            return ResponseEntity.badRequest().body(WebResponse.builder()
+                    .success(false)
+                    .statusCode(HttpStatus.BAD_REQUEST.value())
+                    .data(null)
+                    .errorMessage("Must send image or imageUrl")
+                    .build());
+        }
+
         WebResponse<?> response = ocrProcessorService.processOcrRequest(request);
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
 
-    @PostMapping(
-            path = "/do-ocr-with-direct-image",
-            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public ResponseEntity<WebResponse<?>> doOcr(@RequestParam("file")MultipartFile file) {
-        WebResponse<?> response = ocrProcessorService.processOcrRequest(file);
-        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
-    }
-
     @GetMapping(
-            path = "/find-text/{izinId}/{textKey}",
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public ResponseEntity<WebResponse<ExtractedTextResponse>> findByTextKey(@PathVariable(name = "textKey") String textKey, @PathVariable(name = "izinId") Long izinId) {
-        WebResponse<ExtractedTextResponse> response = extractedTextQueryService.findByTextKey(textKey, izinId);
-        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
-    }
-
-    @GetMapping(
-            path = "/find/{izinId}",
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public ResponseEntity<WebResponse<List<ExtractedTextResponse>>> findByIzinId(@PathVariable(name = "izinId") Long izinId) {
-        WebResponse<List<ExtractedTextResponse>> response = extractedTextQueryService.findByIzinId(izinId);
-        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
-    }
-
-    @GetMapping(
-            path = "/find/{izinId}/{syaratIzinId}",
-            produces = MediaType.APPLICATION_JSON_VALUE
-    )
-    public ResponseEntity<WebResponse<List<ExtractedTextResponse>>> findByIzinIdAndSyaratIzinId(@PathVariable(name = "izinId") Long izinId, @PathVariable(name = "syaratIzinId") Long syaratIzinId) {
-        WebResponse<List<ExtractedTextResponse>> response = extractedTextQueryService.findByIzinIdAndSyaratIzinId(izinId, syaratIzinId);
-        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
-    }
-
-    @GetMapping(
-            path = "/get-by-request/{requestId}",
+            path = "/get-result/{requestId}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
     public ResponseEntity<WebResponse<?>> getByRequestId(@PathVariable(name = "requestId") Long requestId) {
