@@ -34,10 +34,13 @@ public class AuthService {
         }
 
         try {
-            User user = userService.save(request, Role.CLIENT);
-            if (user == null) {
-                return WebResponse.error("user registration failed", HttpStatus.BAD_REQUEST);
-            }
+            User user = Optional.ofNullable(userService.save(request, Role.CLIENT))
+                    .orElseThrow(() -> new RuntimeException("User registration failed"));
+
+            clientService.save(request.getEmail(), user);
+
+            // TODO: send verification code via email
+
             UserResponse userResponse = UserResponse.fromModel(user);
             return WebResponse.success(userResponse, HttpStatus.CREATED);
         } catch (Exception e) {

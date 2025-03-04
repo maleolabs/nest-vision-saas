@@ -1,7 +1,7 @@
 package m2codes.perizinan_ocr_tool.infrastructure.security.config;
 
 import lombok.RequiredArgsConstructor;
-import m2codes.perizinan_ocr_tool.domain.service.ApiKeyService;
+import m2codes.perizinan_ocr_tool.infrastructure.security.filter.AccountVerificationFilter;
 import m2codes.perizinan_ocr_tool.infrastructure.security.service.AuthenticationFailureHandlerImpl;
 import m2codes.perizinan_ocr_tool.infrastructure.security.service.UserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
@@ -11,26 +11,25 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-public class SecurityConfig {
+public class WebSecurityConfig {
 
     private final PasswordEncoder passwordEncoder;
     private final UserDetailsServiceImpl userDetailsService;
-    private final ApiKeyService apiKeyService;
     private final AuthenticationFailureHandlerImpl failureHandler;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain webSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
+                .securityMatcher("/dashboard/**")
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/api/ocr/**").authenticated()
-                        .requestMatchers("/dashboard/**").authenticated()
+                        .requestMatchers("/auth/**", "/account/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(login -> login

@@ -35,7 +35,9 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
     @Override
     public boolean verify(String apiKey) {
-        return false;
+        var apiKeyData = apiKeyRepository.findFirstByApiKey(apiKey).orElseThrow();
+
+        return !apiKeyData.getExpiresAt().isBefore(Instant.now());
     }
 
     @Override

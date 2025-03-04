@@ -32,6 +32,10 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AccountStatus status;
+
     @Column(name = "last_login")
     private Instant lastLogin;
 

@@ -21,4 +21,10 @@ public interface UserService {
 
     void deleteById(String id);
 
+    void activateUser(String username);
+
+    void disableUser(String username);
+
+    void lockUser(String username);
+
 }

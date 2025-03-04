@@ -1,12 +1,13 @@
 package m2codes.perizinan_ocr_tool.domain.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import m2codes.perizinan_ocr_tool.domain.model.AccountStatus;
 import m2codes.perizinan_ocr_tool.domain.model.Role;
 import m2codes.perizinan_ocr_tool.domain.model.User;
 import m2codes.perizinan_ocr_tool.domain.repository.UserRepository;
-import m2codes.perizinan_ocr_tool.domain.service.ClientService;
 import m2codes.perizinan_ocr_tool.domain.service.UserService;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.UserDataRequest;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +22,6 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final ClientService clientService;
 
     @Override
     public User save(UserDataRequest request, Role role) {
@@ -37,6 +37,7 @@ public class UserServiceImpl implements UserService {
                 user.setRole(role);
                 return userRepository.save(user);
             }
+            return null;
         }
 
         user = userRepository.save(
@@ -44,12 +45,9 @@ public class UserServiceImpl implements UserService {
                 .username(request.getUsername())
                 .password(encryptedPassword)
                 .role(role)
+                .status(AccountStatus.PENDING)
                 .build()
         );
-
-        if (role == Role.CLIENT) {
-            clientService.save(request.getEmail(), user);
-        }
 
         return user;
     }
@@ -85,4 +83,29 @@ public class UserServiceImpl implements UserService {
     public void deleteById(String id) {
         userRepository.deleteById(UUID.fromString(id));
     }
+
+    @Override
+    public void activateUser(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        user.setStatus(AccountStatus.ACTIVE);
+        userRepository.save(user);
+    }
+
+    @Override
+    public void disableUser(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        user.setStatus(AccountStatus.DISABLED);
+        userRepository.save(user);
+    }
+
+    @Override
+    public void lockUser(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        user.setStatus(AccountStatus.LOCKED);
+        userRepository.save(user);
+    }
+
 }

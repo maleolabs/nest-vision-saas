@@ -12,35 +12,20 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @RequiredArgsConstructor
-public class OcrRequestFilter extends OncePerRequestFilter {
+public class ApiKeyAuthFilter extends OncePerRequestFilter {
+
+    private static final String API_KEY_HEADER = "X-API-KEY";
 
     private final ApiKeyService apiKeyService;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain chain) throws ServletException, IOException {
-
-        if (!request.getRequestURI().startsWith("/api")) {
-            chain.doFilter(request, response);
-            return;
-        }
-
-        String apiKey = request.getHeader("X-API-KEY");
+        String apiKey = request.getHeader(API_KEY_HEADER);
         if (apiKey != null) {
             try {
-//                boolean isValid;
-//
-//                if (authToken != null) {
-//                    UserResponse userResponse = tokenVerificationService.getCurrentUser(authToken).join();
-//                    isValid = userResponse != null;
-//                } else {
-//                    isValid = tokenVerificationService.isClientTokenValid(clientToken).join();
-//                }
-//
-//                if (!isValid) {
-//                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//                    response.getWriter().write("Invalid Token");
-//                    return;
-//                }
+                if (apiKeyService.verify(apiKey)) {
+                    return;
+                }
             } catch (Exception e) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("Token Verification Failed " + e.getMessage());
