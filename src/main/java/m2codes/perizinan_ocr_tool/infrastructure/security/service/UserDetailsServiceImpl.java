@@ -46,15 +46,15 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         boolean isUser = userOpt.isPresent();
         User user = isUser ? userOpt.get() : clientOpt.get().getUser();
 
-        if (user.getStatus() == AccountStatus.LOCKED) {
+        if (user.getStatus().equals(AccountStatus.LOCKED)) {
             throw new LockedException("User account is locked");
         }
 
-        if (user.getStatus() == AccountStatus.DISABLED) {
+        if (user.getStatus().equals(AccountStatus.DISABLED)) {
             throw new DisabledException("User account is disabled");
         }
 
-        if (user.getStatus() == AccountStatus.EXPIRED) {
+        if (user.getStatus().equals(AccountStatus.EXPIRED)) {
             throw new CredentialsExpiredException("User credentials have expired");
         }
         return user;

@@ -43,7 +43,7 @@ public class AuthController {
             model.addAttribute("error", response.getErrorMessage());
             return "auth/register";
         }
-        return "redirect:/auth/login?registered";
+        return "redirect:/account/verify";
     }
 
     @GetMapping(path = "/login")

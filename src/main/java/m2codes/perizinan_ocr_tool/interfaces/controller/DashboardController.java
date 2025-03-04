@@ -55,7 +55,6 @@ public class DashboardController {
 
     @GetMapping(path = "/profile")
     public String profile(Model model, Principal principal) {
-        log.info("user principal: {}", principal.getName());
         User user = userService.findByUsername(principal.getName()).orElseThrow();
         model.addAttribute("user", user);
         return "dashboard/profile";
