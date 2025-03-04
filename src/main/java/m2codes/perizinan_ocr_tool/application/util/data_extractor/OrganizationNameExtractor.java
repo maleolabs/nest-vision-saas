@@ -16,7 +16,7 @@ public class OrganizationNameExtractor extends DataExtractorTemplate implements 
     private List<String> listOfOrganization() {
         return List.of(
             "UNIVERSITAS", "INSTITUT", "POLITEKNIK", "SEKOLAH",
-            "DINAS", "PUSKESMAS", "PEMERINTAH"
+            "DINAS", "PUSKESMAS", "PEMERINTAH", "PROVINSI", "KABUPATEN"
         );
     }
 

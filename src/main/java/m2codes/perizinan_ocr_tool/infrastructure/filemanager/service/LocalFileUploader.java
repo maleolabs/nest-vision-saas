@@ -39,8 +39,6 @@ public class LocalFileUploader implements FileUploader {
         Path filePath = uploadPath.resolve(fileName);
         file.transferTo(filePath);
 
-        log.info("file uploaded to : {}", filePath);
-
         return fileName;
     }
 

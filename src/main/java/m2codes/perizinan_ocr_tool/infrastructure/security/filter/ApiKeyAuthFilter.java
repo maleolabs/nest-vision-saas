@@ -23,7 +23,9 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
         String apiKey = request.getHeader(API_KEY_HEADER);
         if (apiKey != null) {
             try {
-                if (apiKeyService.verify(apiKey)) {
+                if (!apiKeyService.verify(apiKey)) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("Token is invalid");
                     return;
                 }
             } catch (Exception e) {

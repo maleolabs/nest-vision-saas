@@ -1,6 +1,7 @@
 package m2codes.perizinan_ocr_tool.interfaces.controller;
 
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import m2codes.perizinan_ocr_tool.application.service.impl.ExtractedTextQueryServiceImpl;
 import m2codes.perizinan_ocr_tool.application.service.impl.OcrProcessorService;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.OcrDataRequest;
@@ -17,6 +18,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = "/api/ocr")
+@Slf4j
 public class OcrController {
 
     private final OcrProcessorService ocrProcessorService;
