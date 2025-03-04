@@ -19,7 +19,7 @@
 
         <div th:if="${errorMessage}" th:text="${errorMessage}" class="p-4 my-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert"></div>
 
-        <form class="space-y-6" th:action="@{/account/verification}" th:object="${verificationRequest}" method="POST">
+        <form class="space-y-6" th:action="@{/account/verify}" method="POST">
             <div class="flex mb-2 space-x-2 rtl:space-x-reverse justify-center">
                 <div>
                     <label for="code-1" class="sr-only">First code</label>
@@ -45,6 +45,7 @@
                     <label for="code-6" class="sr-only">Sixth code</label>
                     <input type="text" maxlength="1" data-focus-input-init data-focus-input-prev="code-5" id="code-6" class="block w-9 h-9 py-3 text-sm font-extrabold text-center text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" required />
                 </div>
+                <input type="hidden" name="verificationCode" id="verificationCode" />
             </div>
             <p id="helper-text-explanation" class="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">Silahkan masukkan 6 digit kode yang telah dikirimkan lewat email.</p>
 
@@ -60,5 +61,53 @@
         </p>
     </div>
 </div>
+
+<script>
+    function focusNextInput(el, prevId, nextId) {
+        if (el.value.length === 0) {
+            if (prevId) {
+                document.getElementById(prevId).focus();
+            }
+        } else {
+            if (nextId) {
+                document.getElementById(nextId).focus();
+            }
+        }
+    }
+
+    document.querySelectorAll('[data-focus-input-init]').forEach(function(element) {
+        element.addEventListener('keyup', function() {
+            const prevId = this.getAttribute('data-focus-input-prev');
+            const nextId = this.getAttribute('data-focus-input-next');
+            focusNextInput(this, prevId, nextId);
+        });
+
+        element.addEventListener('paste', function(event) {
+            event.preventDefault();
+            const pasteData = (event.clipboardData || window.clipboardData).getData('text');
+            const digits = pasteData.replace(/\D/g, '');
+
+            const inputs = document.querySelectorAll('[data-focus-input-init]');
+
+            inputs.forEach((input, index) => {
+                if (digits[index]) {
+                    input.value = digits[index];
+                    const nextId = input.getAttribute('data-focus-input-next');
+                    if (nextId) {
+                        document.getElementById(nextId).focus();
+                    }
+                }
+            });
+        });
+    });
+
+    document.querySelector("form").addEventListener("submit", function(event) {
+        let code = "";
+        document.querySelectorAll("[data-focus-input-init]").forEach(input => {
+            code += input.value;
+        });
+        document.getElementById("verificationCode").value = code;
+    });
+</script>
 </body>
 </html>

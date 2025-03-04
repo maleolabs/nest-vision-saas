@@ -4,9 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import m2codes.perizinan_ocr_tool.domain.model.AccountStatus;
 import m2codes.perizinan_ocr_tool.domain.model.User;
 import m2codes.perizinan_ocr_tool.domain.service.UserService;
@@ -20,7 +18,6 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class AccountVerificationFilter extends OncePerRequestFilter {
 
     private final UserService userService;

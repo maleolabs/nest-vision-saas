@@ -27,6 +27,7 @@ public class AuthService {
     private final ClientService clientService;
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
+    private final AccountVerificationService accountVerificationService;
 
     public WebResponse<UserResponse> register(UserDataRequest request) {
         if (userService.existsByUsername(request.getUsername())) {
@@ -39,7 +40,7 @@ public class AuthService {
 
             clientService.save(request.getEmail(), user);
 
-            // TODO: send verification code via email
+            accountVerificationService.sendVerificationCode(user);
 
             UserResponse userResponse = UserResponse.fromModel(user);
             return WebResponse.success(userResponse, HttpStatus.CREATED);

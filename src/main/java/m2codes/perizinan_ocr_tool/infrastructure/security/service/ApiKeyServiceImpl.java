@@ -58,6 +58,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                 .clientId(clientId)
                 .apiKey(apiKey)
                 .expiresAt(expiresAt)
+                .isActive(true)
                 .build()
         );
 
