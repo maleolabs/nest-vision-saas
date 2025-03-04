@@ -1,17 +1,18 @@
 package m2codes.perizinan_ocr_tool.infrastructure.security.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import m2codes.perizinan_ocr_tool.domain.model.ApiKey;
 import m2codes.perizinan_ocr_tool.domain.repository.ApiKeyRepository;
 import m2codes.perizinan_ocr_tool.domain.service.ApiKeyService;
+import m2codes.perizinan_ocr_tool.infrastructure.security.util.ApiKeyGenerator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Base64;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class ApiKeyServiceImpl implements ApiKeyService {
@@ -25,17 +26,19 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
     @Override
     public void create(String clientId) {
-        String apiKey = generateRandomApiKey();
-        Instant expiresAt = Instant.now().plus(apiKeyLifetimeInDays, ChronoUnit.DAYS);
+        try {
+            String apiKey = ApiKeyGenerator.encrypt(clientId);
+            Instant expiresAt = Instant.now().plus(apiKeyLifetimeInDays, ChronoUnit.DAYS);
 
-        var savedApiKey = save(clientId, apiKey, expiresAt);
-
+            save(clientId, apiKey, expiresAt);
+        } catch (Exception e) {
+            log.error("failed to create API Key, got error: {}", e.getMessage());
+        }
     }
 
     @Override
     public boolean verify(String apiKey) {
         var apiKeyData = apiKeyRepository.findFirstByApiKey(apiKey).orElseThrow();
-
         return !apiKeyData.getExpiresAt().isBefore(Instant.now());
     }
 
@@ -67,13 +70,6 @@ public class ApiKeyServiceImpl implements ApiKeyService {
         );
 
         return apiKeyData;
-    }
-
-    private String generateRandomApiKey() {
-        SecureRandom random = new SecureRandom();
-        byte[] keyBytes = new byte[apiKeyLength];
-        random.nextBytes(keyBytes);
-        return "app_" + Base64.getUrlEncoder().withoutPadding().encodeToString(keyBytes);
     }
 
 }
