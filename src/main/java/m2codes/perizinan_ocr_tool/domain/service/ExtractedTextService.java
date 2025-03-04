@@ -18,6 +18,6 @@ public interface ExtractedTextService {
 
     void saveAll(List<ExtractedTextDto> extractedTextDtos, @NonNull OcrResult ocrResult);
 
-    Optional<ExtractedText> findByTextKey(String textKey, Long izinId);
+    Optional<ExtractedText> findByTextKey(String textKey);
 
 }

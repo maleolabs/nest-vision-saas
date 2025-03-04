@@ -9,7 +9,6 @@ import m2codes.perizinan_ocr_tool.domain.repository.OcrRequestRepository;
 import m2codes.perizinan_ocr_tool.domain.service.OcrRequestService;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.OcrDataRequest;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -28,20 +27,14 @@ public class OcrRequestServiceImpl implements OcrRequestService {
 
     @Override
     public OcrRequest save(OcrDataRequest request, RequestStatus status) {
-        var izinId = request != null ? request.getIzinId() : null;
-        var syaratIzinId = request != null ? request.getSyaratIzinId() : null;
-        var jenisPerizinanId = request != null ? request.getJenisPerizinanId() : null;
         var imageUrl = request != null ? request.getImageUrl() : null;
 
         Long savedImageUploadId = ocrRequestRepository
-                .findFirstByIzinIdAndSyaratIzinIdAndImageUrl(izinId, syaratIzinId, imageUrl)
+                .findFirstByImageUrl(imageUrl)
                 .map(OcrRequest::getId).orElse(null);
 
         OcrRequest ocrRequest = OcrRequest.builder()
                 .id(savedImageUploadId)
-                .izinId(izinId)
-                .jenisPerizinanId(jenisPerizinanId)
-                .syaratIzinId(syaratIzinId)
                 .imageUrl(imageUrl)
                 .requestedAt(System.currentTimeMillis())
                 .status(status)
@@ -53,16 +46,6 @@ public class OcrRequestServiceImpl implements OcrRequestService {
     @Override
     public Optional<OcrRequest> find(Long id) {
         return ocrRequestRepository.findById(id);
-    }
-
-    @Override
-    public List<OcrRequest> findByIzinId(Long izinId) {
-        return ocrRequestRepository.findByIzinId(izinId);
-    }
-
-    @Override
-    public Optional<OcrRequest> findFirstByIzinIdAndSyaratIzinId(Long izinId, Long syaratIzinId) {
-        return ocrRequestRepository.findFirstByIzinIdAndSyaratIzinId(izinId, syaratIzinId);
     }
 
     @Override

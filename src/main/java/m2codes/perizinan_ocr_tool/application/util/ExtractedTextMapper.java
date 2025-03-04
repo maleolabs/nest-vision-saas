@@ -1,7 +1,6 @@
 package m2codes.perizinan_ocr_tool.application.util;
 
 import lombok.extern.slf4j.Slf4j;
-import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.dto.DataEntriDto;
 import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
 import org.springframework.stereotype.Component;
 
@@ -38,12 +37,12 @@ public class ExtractedTextMapper {
         return line.split(":", 2);
     }
 
-    public List<ExtractedTextDto> detectAndAddMissingKeyValue(String[] lines, List<DataEntriDto> requiredKeys) {
+    public List<ExtractedTextDto> detectAndAddMissingKeyValue(String[] lines, List<String> requiredKeys) {
         return requiredKeys.stream()
-                .filter(requiredKey -> getCustomText(requiredKey.getNama(), lines) != null)
+                .filter(requiredKey -> getCustomText(requiredKey, lines) != null)
                 .map(requiredKeyFound -> ExtractedTextDto.builder()
-                        .textKey(requiredKeyFound.getNama())
-                        .textValue(getCustomText(requiredKeyFound.getNama(), lines))
+                        .textKey(requiredKeyFound)
+                        .textValue(getCustomText(requiredKeyFound, lines))
                         .build())
                 .toList();
     }
@@ -52,16 +51,15 @@ public class ExtractedTextMapper {
         return customTextExtraction.findTextByCategory(category, lines);
     }
 
-    public List<ExtractedTextDto> filterParsedDataByRequiredKeys(List<ExtractedTextDto> parsedData, List<DataEntriDto> requiredKeys) {
+    public List<ExtractedTextDto> filterParsedDataByRequiredKeys(List<ExtractedTextDto> parsedData, List<String> requiredKeys) {
         ListIterator<ExtractedTextDto> parsedDataIterator = parsedData.listIterator();
         while (parsedDataIterator.hasNext()) {
             var data = parsedDataIterator.next();
             requiredKeys.stream()
-                    .filter(dataEntri -> dataEntri.getNama().equals(data.getTextKey()))
+                    .filter(key -> key.equals(data.getTextKey()))
                     .findFirst()
                     .ifPresent(matchesKey -> {
-                        data.setDataEntriId(matchesKey.getId());
-                        data.setTextKey(matchesKey.getNama());
+                        data.setTextKey(matchesKey);
                         parsedDataIterator.set(data);
                     });
         }

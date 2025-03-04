@@ -4,7 +4,6 @@ import jakarta.validation.Valid;
 import m2codes.perizinan_ocr_tool.application.service.impl.ExtractedTextQueryServiceImpl;
 import m2codes.perizinan_ocr_tool.application.service.impl.OcrProcessorService;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.OcrDataRequest;
-import m2codes.perizinan_ocr_tool.interfaces.dto.response.ExtractedTextResponse;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.OcrResponse;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -13,10 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(path = "/api/ocr")
@@ -65,7 +62,10 @@ public class OcrController {
                     .build());
         }
 
-        WebResponse<?> response = ocrProcessorService.processOcrRequest(request);
+        WebResponse<?> response = request.isUsingUrl()
+                                ? ocrProcessorService.processOcrRequestWithImageUrl(request)
+                                : ocrProcessorService.processOcrRequestWithUploadedImage(request);
+
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
 

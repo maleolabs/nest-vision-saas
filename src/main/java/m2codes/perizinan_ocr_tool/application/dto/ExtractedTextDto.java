@@ -17,14 +17,11 @@ public class ExtractedTextDto {
 
     private String textValue;
 
-    private Long dataEntriId;
-
     @Override
     public String toString() {
         return "ExtractedTextDto{" +
                 "textKey=" + textKey +
                 ", textValue=" + textValue +
-                ", dataEntriId=" + dataEntriId +
                 "}";
     }
 }

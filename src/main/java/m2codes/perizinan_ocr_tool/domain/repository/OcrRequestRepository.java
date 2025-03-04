@@ -12,11 +12,6 @@ import java.util.Optional;
  * @author marij_mokoginta
  */
 public interface OcrRequestRepository extends  JpaRepository<OcrRequest, Long> {
-
-    List<OcrRequest> findByIzinId(Long izinId);
-
-    Optional<OcrRequest> findFirstByIzinIdAndSyaratIzinId(Long izinId, Long syaratIzinId);
-
-    Optional<OcrRequest> findFirstByIzinIdAndSyaratIzinIdAndImageUrl(Long izinId, Long syaratIzinId, String imageUrl);
+    Optional<OcrRequest> findFirstByImageUrl(String imageUrl);
 
 }

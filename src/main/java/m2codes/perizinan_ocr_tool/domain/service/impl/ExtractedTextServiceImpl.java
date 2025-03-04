@@ -30,14 +30,13 @@ public class ExtractedTextServiceImpl implements ExtractedTextService {
 
     @Override
     public void save(ExtractedTextDto extractedTextDto, @NonNull OcrResult ocrResult) {
-        Long savedETId = extractedTextRepository.findFirstByOcrResultAndDataEntriId(ocrResult, extractedTextDto.getDataEntriId()).map(ExtractedText::getId).orElse(null);
+        Long savedETId = extractedTextRepository.findFirstByOcrResult(ocrResult).map(ExtractedText::getId).orElse(null);
 
         ExtractedText extractedText = ExtractedText.builder()
                 .id(savedETId)
                 .ocrResult(ocrResult)
                 .textKey(extractedTextDto.getTextKey())
                 .textValue(extractedTextDto.getTextValue())
-                .dataEntriId(extractedTextDto.getDataEntriId())
                 .build();
 
         extractedTextRepository.save(extractedText);
@@ -48,13 +47,12 @@ public class ExtractedTextServiceImpl implements ExtractedTextService {
         List<ExtractedText> extractedTexts = new ArrayList<>();
 
         extractedTextDtos.forEach(extractedTextDto -> {
-            Long savedETId = extractedTextRepository.findFirstByOcrResultAndDataEntriId(ocrResult, extractedTextDto.getDataEntriId()).map(ExtractedText::getId).orElse(null);
+            Long savedETId = extractedTextRepository.findFirstByOcrResult(ocrResult).map(ExtractedText::getId).orElse(null);
             extractedTexts.add(ExtractedText.builder()
                     .id(savedETId)
                     .textKey(extractedTextDto.getTextKey())
                     .textValue(extractedTextDto.getTextValue())
                     .ocrResult(ocrResult)
-                    .dataEntriId(extractedTextDto.getDataEntriId())
                     .build()
             );
         });
@@ -63,8 +61,8 @@ public class ExtractedTextServiceImpl implements ExtractedTextService {
     }
 
     @Override
-    public Optional<ExtractedText> findByTextKey(String textKey, Long izinId) {
-        return extractedTextRepository.findFirstByTextKeyAndIzinId(textKey, izinId);
+    public Optional<ExtractedText> findByTextKey(String textKey) {
+        return Optional.empty();
     }
 
 }

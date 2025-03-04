@@ -24,33 +24,6 @@ public class ExtractedTextQueryServiceImpl extends ExtractedTextQueryService {
     }
 
     @Override
-    protected Optional<ExtractedText> findETByTextKeyAndIzinId(String textKey, Long izinId) {
-        return extractedTextService.findByTextKey(textKey, izinId);
-    }
-
-    @Override
-    protected Optional<OcrRequest> findIUByIzinIdAndSyaratIzinId(Long izinId, Long syaratIzinId) {
-        return ocrRequestService.findFirstByIzinIdAndSyaratIzinId(izinId, syaratIzinId);
-    }
-
-    @Override
-    protected List<OcrRequest> findIUByIzinId(Long izinId) {
-        return ocrRequestService.findByIzinId(izinId);
-    }
-
-    @Override
-    protected List<ExtractedTextResponse> mapExtractedTextsToResponses(List<ExtractedText> extractedTexts) {
-        List<ExtractedTextResponse> responses = new ArrayList<>();
-        for (ExtractedText extractedText : extractedTexts) {
-            responses.add(ExtractedTextResponse.builder()
-                    .textKey(extractedText.getTextKey())
-                    .textValue(extractedText.getTextValue())
-                    .build());
-        }
-        return responses;
-    }
-
-    @Override
     protected OcrRequest findRequestById(Long requestId) {
         return ocrRequestService.find(requestId).orElse(null);
     }

@@ -111,9 +111,9 @@
             extractionLoadingMessage.innerText = 'Mengunggah gambar...';
 
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append('image', file);
 
-            fetch('/api/ocr/do-ocr-with-direct-image', {
+            fetch('/api/ocr/do-ocr', {
                 method: 'POST',
                 body: formData,
                 headers: {

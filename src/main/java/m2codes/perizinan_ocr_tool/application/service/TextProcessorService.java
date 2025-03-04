@@ -3,7 +3,6 @@ package m2codes.perizinan_ocr_tool.application.service;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import m2codes.perizinan_ocr_tool.domain.model.RequestStatus;
-import m2codes.perizinan_ocr_tool.infrastructure.integration.perizinan.dto.DataEntriDto;
 import m2codes.perizinan_ocr_tool.application.dto.ExtractedTextDto;
 import m2codes.perizinan_ocr_tool.application.dto.OcrResultDto;
 import m2codes.perizinan_ocr_tool.domain.model.OcrRequest;
@@ -39,7 +38,7 @@ public abstract class TextProcessorService {
     }
 
     @Transactional
-    public final WebResponse<?> processOcrRequest(OcrDataRequest request) {
+    public final WebResponse<?> processOcrRequestWithImageUrl(OcrDataRequest request) {
         var status = isPoolAvailable() ? RequestStatus.PROCESSING : RequestStatus.WAITING;
         OcrRequest ocrRequest = saveOcrRequest(request, status);
         processingExtractionText(request, ocrRequest);
@@ -53,30 +52,23 @@ public abstract class TextProcessorService {
         );
     }
 
-    @Transactional
-    public final WebResponse<?> processOcrRequest(MultipartFile file) {
+    public final WebResponse<?> processOcrRequestWithUploadedImage(OcrDataRequest request) {
         var status = isPoolAvailable() ? RequestStatus.PROCESSING : RequestStatus.WAITING;
 
         String uploadedFileName;
         File uploadedFile;
         try {
-            uploadedFileName = uploadFile(file);
+            uploadedFileName = uploadFile(request.getImage());
             uploadedFile = retrieveFile(uploadedFileName);
         } catch (Exception e) {
             log.error("Exception error : {}. Stack trace : {}", e.getMessage(), Arrays.toString(e.getStackTrace()));
-            return buildWebResponse(
-                    null,
-                    false,
-                    "Failed to process file upload! Please try again later."
-            );
+            return buildWebResponse(null, false,
+                    "Failed to process file upload! Please try again later.");
         }
 
         if (uploadedFile == null || uploadedFileName == null) {
-            return buildWebResponse(
-                    null,
-                    false,
-                    "File upload failed! Please try again later"
-            );
+            return buildWebResponse(null, false,
+                    "File upload failed! Please try again later");
         }
 
         OcrDataRequest dataRequest = OcrDataRequest.builder().imageUrl(uploadedFileName).build();
@@ -92,7 +84,6 @@ public abstract class TextProcessorService {
                 null
         );
     }
-
     protected abstract void processingExtractionText(OcrDataRequest request, OcrRequest ocrRequest);
 
     protected abstract void processingExtractionText(File file, OcrRequest ocrRequest, OcrDataRequest dataRequest);
@@ -105,13 +96,11 @@ public abstract class TextProcessorService {
 
     protected abstract OcrResult saveOcrResult(OcrResultDto ocrResultDto, OcrRequest ocrRequest);
 
-    protected abstract List<DataEntriDto> getDataEntri(Long jenisPerizinanId);
-
-    protected abstract CompletableFuture<List<ExtractedTextDto>> processExtractedText(String extractedText, List<DataEntriDto> dataEntri);
+    protected abstract CompletableFuture<List<ExtractedTextDto>> processExtractedText(String extractedText, List<String> requiredKeys);
 
     protected abstract CompletableFuture<List<ExtractedTextDto>> processExtractedText(String extractedText);
 
-    protected abstract void saveAllExtractedText(OcrResultDto ocrResultDto, List<DataEntriDto> dataEntri, OcrResult ocrResult);
+    protected abstract void saveAllExtractedText(OcrResultDto ocrResultDto, List<String> requiredKeys, OcrResult ocrResult);
 
     protected abstract void saveAllExtractedText(OcrResultDto ocrResultDto, OcrResult ocrResult);
 

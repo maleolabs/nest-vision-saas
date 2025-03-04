@@ -25,40 +25,6 @@ public abstract class ExtractedTextQueryService {
         this.ocrRequestService = ocrRequestService;
     }
 
-    public final WebResponse<ExtractedTextResponse> findByTextKey(String textKey, Long izinId) {
-        return handleTextKeyLookup(textKey, izinId);
-    }
-
-    public final WebResponse<List<ExtractedTextResponse>> findByIzinIdAndSyaratIzinId(Long izinId, Long syaratIzinId) {
-        List<ExtractedTextResponse> responses = new ArrayList<>();
-
-        return findIUByIzinIdAndSyaratIzinId(izinId, syaratIzinId)
-                .map(imageUpload -> {
-                    if (imageUpload.getOcrResults() != null) {
-                        responses.addAll(mapExtractedTextsToResponses(imageUpload.getOcrResults().getExtractedText()));
-                        return buildWebResponse(responses, true, null);
-                    }
-                    return buildWebResponse(responses, false, "Extracted text with izinId: " + izinId + " not found.");
-                })
-                .orElseGet(() -> buildWebResponse(responses, false, "Extracted text with izinId: " + izinId + " not found."));
-    }
-
-    public final WebResponse<List<ExtractedTextResponse>> findByIzinId(Long izinId) {
-        List<ExtractedTextResponse> responses = new ArrayList<>();
-
-        findIUByIzinId(izinId)
-                .forEach(imageUpload -> {
-                    if (imageUpload.getOcrResults() != null) {
-                        responses.addAll(mapExtractedTextsToResponses(imageUpload.getOcrResults().getExtractedText()));
-                    }
-                });
-
-        if (!responses.isEmpty())
-            return buildWebResponse(responses, true, null);
-        else
-            return buildWebResponse(responses, false, "Extracted text with izinId: " + izinId + " not found.");
-    }
-
     public final WebResponse<OcrResponse> checkStatus(Long requestId) {
         OcrRequest request = findRequestById(requestId);
         if (request == null) {
@@ -122,33 +88,6 @@ public abstract class ExtractedTextQueryService {
         }
         return ocrResponse;
     }
-
-    protected WebResponse<ExtractedTextResponse> handleTextKeyLookup(String textKey, Long izinId) {
-        try {
-            return findETByTextKeyAndIzinId(textKey, izinId)
-                    .map(extractedText -> {
-                        ExtractedTextResponse extractedTextResponse = ExtractedTextResponse.builder()
-                                .textKey(extractedText.getTextKey())
-                                .textValue(extractedText.getTextValue())
-                                .build();
-                        return buildWebResponse(extractedTextResponse, true, null);
-                    })
-                    .orElseGet(() -> buildWebResponse(
-                            null,
-                            false,
-                            "Extracted text with key: " + textKey + " and izinId: " + izinId + " not found."));
-        } catch (RuntimeException e) {
-            return buildWebResponse(null, false, e.getMessage());
-        }
-    }
-
-    protected abstract Optional<ExtractedText> findETByTextKeyAndIzinId(String textKey, Long izinId);
-
-    protected abstract Optional<OcrRequest> findIUByIzinIdAndSyaratIzinId(Long izinId, Long syaratIzinId);
-
-    protected abstract List<OcrRequest> findIUByIzinId(Long izinId);
-
-    protected abstract List<ExtractedTextResponse> mapExtractedTextsToResponses(List<ExtractedText> extractedTexts);
 
     protected abstract <T> WebResponse<T> buildWebResponse(T data, boolean success, String errorMessage);
 
