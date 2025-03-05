@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import m2codes.perizinan_ocr_tool.domain.model.User;
 import m2codes.perizinan_ocr_tool.domain.service.ApiKeyService;
 import m2codes.perizinan_ocr_tool.domain.service.UserService;
+import m2codes.perizinan_ocr_tool.infrastructure.security.service.ApiRequestLogService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +25,7 @@ public class DashboardController {
 
     private final UserService userService;
     private final ApiKeyService apiKeyService;
+    private final ApiRequestLogService apiRequestLogService;
 
     @GetMapping(path = "")
     public String index(Model model) {
@@ -81,7 +83,13 @@ public class DashboardController {
     }
 
     @GetMapping(path = "/logs")
-    public String logs() {
+    public String logs(Model model, Principal principal) {
+        User user = userService.findByUsername(principal.getName()).orElse(null);
+        if (user == null) {
+            model.addAttribute("userError", true);
+        } else {
+            model.addAttribute("requestLogs", apiRequestLogService.findAllByClientId(user.getClient().getClientId()));
+        }
         return "dashboard/logs";
     }
 

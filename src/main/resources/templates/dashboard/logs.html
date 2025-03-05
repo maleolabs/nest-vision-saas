@@ -74,7 +74,7 @@
     </div>
 
     <div class="relative overflow-x-auto mt-5">
-        <table class="w-full border">
+        <table class="w-full border" th:unless="${userError}">
             <thead>
             <tr class="bg-gray-100">
                 <th scope="col" class="px-4 py-2 border">
@@ -95,42 +95,36 @@
             </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
-                <tr class="hover:bg-gray-50">
+                <tr th:each="requestLog: ${requestLogs}" class="hover:bg-gray-50">
+                    <td class="border px-4 py-2 text-center" th:text="${#temporals.format(requestLog.getRequestTime(), 'dd-MM-yyyy HH:mm:ss ')}"></td>
+                    <td class="border px-4 py-2" th:text="${requestLog.getEndpoint()}"></td>
+                    <td class="border px-4 py-2 text-center" th:text="${requestLog.getHttpMethod()}"></td>
                     <td class="border px-4 py-2 text-center">
-                        04-03-2025 04:55
+                        <span th:classappend="${requestLog.getResponseStatus() == 200
+                            ? 'bg-green-200 text-green-800'
+                            : (requestLog.getResponseStatus() == 400
+                                ? 'bg-orange-200 text-orange-800'
+                                : (requestLog.getResponseStatus() == 404 || requestLog.getResponseStatus() == 500
+                                    ? 'bg-red-200 text-red-800'
+                                    : 'bg-blue-200 text-blue-800'))
+                            }"
+                                th:text="${requestLog.getResponseStatus()}"
+                                class="text-sm font-medium me-2 px-2.5 py-0.5 rounded-sm"></span>
                     </td>
-                    <td class="border px-4 py-2">
-                        /api/ocr/request/0123456789abcdef
-                    </td>
-                    <td class="border px-4 py-2 text-center">
-                        POST
-                    </td>
-                    <td class="border px-4 py-2 text-center">
-                        Success
-                    </td>
-                    <td class="border px-4 py-2 text-center">
-                        127.0.0.1
-                    </td>
-                </tr>
-                <tr class="hover:bg-gray-50">
-                    <td class="border px-4 py-2 text-center">
-                        04-03-2025 04:55
-                    </td>
-                    <td class="border px-4 py-2">
-                        /api/ocr/request/0123456789abcdef
-                    </td>
-                    <td class="border px-4 py-2 text-center">
-                        POST
-                    </td>
-                    <td class="border px-4 py-2 text-center">
-                        Success
-                    </td>
-                    <td class="border px-4 py-2 text-center">
-                        127.0.0.1
-                    </td>
+                    <td class="border px-4 py-2 text-center" th:text="${requestLog.getIpAddress()}"></td>
                 </tr>
             </tbody>
         </table>
+
+        <div th:if="${userError}" class="flex items-center p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-200" role="alert">
+            <svg class="shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+            </svg>
+            <span class="sr-only">Info</span>
+            <div>
+                Terjadi kesalahan saat mengambil data log! Silahkan kembali lagi nanti.
+            </div>
+        </div>
     </div>
 
     <hr class="mb-6 border-gray-200 sm:mx-auto lg:my-8" />
