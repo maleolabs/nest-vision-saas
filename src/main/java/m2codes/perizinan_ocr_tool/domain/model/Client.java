@@ -23,11 +23,33 @@ public class Client {
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private User user;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "full_name")
+    private String fullName;
+
+    @Column(name = "company_name")
+    private String companyName;
+
+    @Column(name = "phone", length = 20, nullable = false)
+    private String phone;
+
+    @Column(nullable = false, unique = true, length = 150)
     private String email;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "address", nullable = false)
+    private String address;
+
+    @Column(name = "website")
+    private String website;
+
+    @Column(name = "industry")
+    private String industry;
+
+    @Column(nullable = false, unique = true, length = 100)
     private String clientId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "account_type_id", nullable = false)
+    private AccountType accountType;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

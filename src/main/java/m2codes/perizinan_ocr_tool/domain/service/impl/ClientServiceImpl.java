@@ -1,34 +1,58 @@
 package m2codes.perizinan_ocr_tool.domain.service.impl;
 
+import lombok.RequiredArgsConstructor;
+import m2codes.perizinan_ocr_tool.domain.model.AccountType;
 import m2codes.perizinan_ocr_tool.domain.model.Client;
 import m2codes.perizinan_ocr_tool.domain.model.User;
+import m2codes.perizinan_ocr_tool.domain.repository.AccountTypeRepository;
 import m2codes.perizinan_ocr_tool.domain.repository.ClientRepository;
 import m2codes.perizinan_ocr_tool.domain.service.ClientService;
+import m2codes.perizinan_ocr_tool.interfaces.dto.request.AccountDataRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class ClientServiceImpl implements ClientService {
 
     private final ClientRepository clientRepository;
-
-    public ClientServiceImpl(ClientRepository clientRepository) {
-        this.clientRepository = clientRepository;
-    }
+    private final AccountTypeRepository accountTypeRepository;
 
     @Override
-    public Client save(String email, User user) {
-        var client = clientRepository.findFirstByEmail(email).orElse(null);
-        if (client != null) {
-            return client;
+    public Client save(AccountDataRequest request, User user) {
+        AccountType accountType = accountTypeRepository.findById(UUID.fromString(request.getAccountTypeId())).orElse(null);
+        if (accountType == null) {
+            return null;
         }
-        client = clientRepository.save(
-            Client.builder()
-                .email(email)
-                .user(user)
-                .build()
-        );
+
+        var client = clientRepository.findFirstByEmail(request.getEmail()).orElse(null);
+        if (client != null) {
+            client.setFullName(request.getFullName());
+            client.setCompanyName(request.getCompanyName());
+            client.setPhone(request.getPhone());
+            client.setAddress(request.getAddress());
+            client.setWebsite(request.getWebsite());
+            client.setIndustry(request.getIndustry());
+            client.setAccountType(accountType);
+
+            client = clientRepository.save(client);
+        } else {
+            client = clientRepository.save(
+                    Client.builder()
+                            .fullName(request.getFullName())
+                            .companyName(request.getCompanyName())
+                            .phone(request.getPhone())
+                            .email(request.getEmail())
+                            .address(request.getAddress())
+                            .website(request.getWebsite())
+                            .industry(request.getIndustry())
+                            .accountType(accountType)
+                            .user(user)
+                            .build()
+            );
+        }
 
         return client;
     }
@@ -41,6 +65,11 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public Optional<Client> findByEmail(String email) {
         return clientRepository.findFirstByEmail(email);
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return clientRepository.existsByEmail(email);
     }
 
     @Override

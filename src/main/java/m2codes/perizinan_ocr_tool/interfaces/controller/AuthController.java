@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import m2codes.perizinan_ocr_tool.infrastructure.security.service.AuthService;
+import m2codes.perizinan_ocr_tool.interfaces.dto.request.AccountDataRequest;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.LoginRequest;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.UserDataRequest;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
@@ -24,13 +25,13 @@ public class AuthController {
 
     @GetMapping(path = "/register")
     public String register(Model  model) {
-        model.addAttribute("registerRequest", new UserDataRequest());
+        model.addAttribute("registerRequest", new AccountDataRequest());
         return "auth/register";
     }
 
     @PostMapping(path = "/register")
     public String register(
-        @Valid @ModelAttribute("registerRequest") UserDataRequest request,
+        @Valid @ModelAttribute("registerRequest") AccountDataRequest request,
         BindingResult result,
         Model model
     ) {

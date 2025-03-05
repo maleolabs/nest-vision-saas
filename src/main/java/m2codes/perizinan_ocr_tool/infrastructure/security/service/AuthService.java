@@ -1,5 +1,6 @@
 package m2codes.perizinan_ocr_tool.infrastructure.security.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import m2codes.perizinan_ocr_tool.domain.model.Client;
@@ -7,13 +8,13 @@ import m2codes.perizinan_ocr_tool.domain.model.Role;
 import m2codes.perizinan_ocr_tool.domain.model.User;
 import m2codes.perizinan_ocr_tool.domain.service.ClientService;
 import m2codes.perizinan_ocr_tool.domain.service.UserService;
+import m2codes.perizinan_ocr_tool.interfaces.dto.request.AccountDataRequest;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.UserDataRequest;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.UserResponse;
 import m2codes.perizinan_ocr_tool.interfaces.dto.response.WebResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -26,27 +27,36 @@ public class AuthService {
 
     private final ClientService clientService;
     private final UserService userService;
-    private final PasswordEncoder passwordEncoder;
     private final AccountVerificationService accountVerificationService;
 
-    public WebResponse<UserResponse> register(UserDataRequest request) {
-        if (userService.existsByUsername(request.getUsername())) {
-            return WebResponse.error("username already exists", HttpStatus.BAD_REQUEST);
-        }
-
+    @Transactional
+    public WebResponse<UserResponse> register(AccountDataRequest request) {
         try {
-            User user = Optional.ofNullable(userService.save(request, Role.CLIENT))
+            if (userService.existsByUsername(request.getUsername())) {
+                return WebResponse.error("username already exists", HttpStatus.BAD_REQUEST);
+            }
+
+            if (clientService.existsByEmail(request.getEmail())) {
+                return WebResponse.error("email already in used", HttpStatus.BAD_REQUEST);
+            }
+
+            User user = Optional.ofNullable(userService.save(
+                    UserDataRequest.builder()
+                            .username(request.getUsername())
+                            .password(request.getPassword())
+                            .build(),
+                    Role.CLIENT))
                     .orElseThrow(() -> new RuntimeException("User registration failed"));
 
-            clientService.save(request.getEmail(), user);
+            clientService.save(request, user);
 
             accountVerificationService.sendVerificationCode(user);
 
             UserResponse userResponse = UserResponse.fromModel(user);
             return WebResponse.success(userResponse, HttpStatus.CREATED);
         } catch (Exception e) {
-            log.error("error when registering the user: {}", Arrays.toString(e.getStackTrace()));
-            return WebResponse.error("there was an error when registering the user", HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("error while registering the user: {}", Arrays.toString(e.getStackTrace()));
+            return WebResponse.error("there was an error while registering the user", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

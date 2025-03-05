@@ -15,4 +15,6 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     @Transactional
     void deleteByClientId(String clientId);
 
+    boolean existsByEmail(String email);
+
 }
