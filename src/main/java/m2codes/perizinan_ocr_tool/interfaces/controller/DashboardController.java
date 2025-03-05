@@ -4,19 +4,20 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import m2codes.perizinan_ocr_tool.domain.model.ApiRequestLog;
 import m2codes.perizinan_ocr_tool.domain.model.User;
 import m2codes.perizinan_ocr_tool.domain.service.ApiKeyService;
 import m2codes.perizinan_ocr_tool.domain.service.UserService;
 import m2codes.perizinan_ocr_tool.infrastructure.security.service.ApiRequestLogService;
 import m2codes.perizinan_ocr_tool.infrastructure.security.service.AuthService;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.ChangePasswordRequest;
+import org.springframework.data.domain.Page;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
 import java.util.Map;
 
@@ -55,7 +56,7 @@ public class DashboardController {
     }
 
     @GetMapping(path = "/docs")
-    public String docs(Model model, Principal principal, HttpSession session) {
+    public String docs(Model model, HttpSession session) {
         User user = authService.getCurrentUser();
         if (user != null) {
             try {
@@ -76,7 +77,7 @@ public class DashboardController {
     }
 
     @PostMapping(path = "/docs/create-new-api-key")
-    public String createNewApiKey(HttpSession session, Principal principal) {
+    public String createNewApiKey(HttpSession session) {
         User user = authService.getCurrentUser();
         if (user == null || user.getClient() == null) {
             session.setAttribute("apiKeyError",
@@ -88,9 +89,19 @@ public class DashboardController {
     }
 
     @GetMapping(path = "/logs")
-    public String logs(Model model, Principal principal) {
+    public String logs(
+            Model model,
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "limit", defaultValue = "100") int limit
+    ) {
         User user = authService.getCurrentUser();
-        model.addAttribute("requestLogs", apiRequestLogService.findAllByClientId(user.getClient().getClientId()));
+        Page<ApiRequestLog> pageLogs = apiRequestLogService.findAllByClientId(user.getClient().getClientId(), page, limit);
+
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", pageLogs.getTotalPages());
+        model.addAttribute("totalItems", pageLogs.getTotalElements());
+        model.addAttribute("requestLogs", pageLogs.getContent());
+
         return "dashboard/logs";
     }
 

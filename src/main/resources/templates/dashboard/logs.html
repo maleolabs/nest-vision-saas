@@ -116,6 +116,35 @@
             </tbody>
         </table>
 
+        <div class="flex justify-center my-5">
+            <nav aria-label="Page navigation">
+                <ul class="inline-flex -space-x-px text-sm">
+                    <li>
+                        <a th:href="@{/dashboard/logs(page=${currentPage > 1 ? (currentPage - 1) : 1})}"
+                           th:disabled="${currentPage <= 1}"
+                           th:classappend="${currentPage <= 1} ? 'cursor-not-allowed bg-gray-100 text-gray-700' : 'text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700'"
+                           class="flex items-center justify-center px-3 h-8 ms-0 leading-tight border border-e-0 border-gray-300 rounded-s-lg">
+                            Previous
+                        </a>
+                    </li>
+                    <li th:each="page: ${#numbers.sequence(1, totalPages)}">
+                        <a th:href="@{/dashboard/logs(page=${page})}"
+                           th:classappend="${page == currentPage} ? 'text-blue-600 border border-gray-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700' : 'leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700'"
+                           class="flex items-center justify-center px-3 h-8"
+                           th:text="${page}"></a>
+                    </li>
+                    <li>
+                        <a th:href="@{/dashboard/logs(page=${currentPage < totalPages ? (currentPage + 1) : totalPages})}"
+                           th:disabled="${currentPage >= totalPages}"
+                           th:classappend="${currentPage >= totalPages} ? 'cursor-not-allowed bg-gray-100 text-gray-700' : 'text-gray-500 bg-white hover:bg-gray-100 hover:text-gray-700'"
+                           class="flex items-center justify-center px-3 h-8 leading-tight border border-gray-300 rounded-e-lg">
+                            Next
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
         <div th:if="${userError}" class="flex items-center p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-200" role="alert">
             <svg class="shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
