@@ -8,6 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tw-elements/css/tw-elements.min.css" />
     <script src="https://cdn.tailwindcss.com/3.3.0"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="h-full">
     <div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
@@ -19,44 +20,128 @@
 
             <div th:if="${error}" th:text="${error}" class="p-4 my-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert"></div>
 
-            <form class="space-y-6" th:action="@{/auth/register}" th:object="${registerRequest}" method="POST">
+            <form class="space-y-6" th:action="@{/auth/register}" th:object="${registerRequest}" method="POST" x-data="{ accountType: 'personal' }">
                 <div>
-                    <label for="username" class="block text-sm/6 font-medium text-gray-900">Masukkan Username</label>
+                    <label for="username" class="block text-sm font-medium text-gray-900">Masukkan Username</label>
                     <div class="mt-2">
-                        <input th:field="*{username}"
-                               type="text" name="username" id="username" autocomplete="username" required
+                        <input th:field="*{username}" type="text" id="username" autocomplete="username" required
                                placeholder="johndoe"
-                               th:classappend="${#fields.hasErrors('username') ? 'bg-red-50 outline-red-300 text-red-900 placeholder-red-700 text-sm rounded-lg focus:ring-red-500 focus:outline-red-600' : 'bg-white text-gray-900 outline-gray-300 placeholder:text-gray-400 focus:outline-indigo-600'}"
-                               class="block w-full rounded-md px-3 py-1.5 text-base outline outline-1 -outline-offset-1 focus:outline focus:outline-2 focus:-outline-offset-2 sm:text-sm/6">
+                               th:classappend="${#fields.hasErrors('username') ? 'bg-red-50 outline-red-300' : 'bg-white outline-gray-300'}"
+                               class="block w-full rounded-md px-3 py-1.5 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
                         <div th:if="${#fields.hasErrors('username')}">
-                            <span th:each="err : ${#fields.errors('username')}" th:text="${err}" class="text-sm text-red-800 dark:text-red-400 font-medium" role="alert"></span>
+                            <span th:each="err : ${#fields.errors('username')}" th:text="${err}" class="text-sm text-red-800" role="alert"></span>
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <label for="email" class="block text-sm/6 font-medium text-gray-900">Masukkan alamat Email</label>
+                    <label for="email" class="block text-sm font-medium text-gray-900">Masukkan Email</label>
                     <div class="mt-2">
-                        <input type="email" th:field="*{email}"
-                               name="email" id="email" autocomplete="email" required
-                               placeholder="johndoe@email.com"
-                               th:classappend="${#fields.hasErrors('email') ? 'bg-red-50 outline-red-300 text-red-900 placeholder-red-700 text-sm rounded-lg focus:ring-red-500 focus:outline-red-600' : 'bg-white text-gray-900 outline-gray-300 placeholder:text-gray-400 focus:outline-indigo-600'}"
-                               class="block w-full rounded-md px-3 py-1.5 text-base outline outline-1 -outline-offset-1 focus:outline focus:outline-2 focus:-outline-offset-2 sm:text-sm/6">
+                        <input type="email" th:field="*{email}" id="email" required placeholder="johndoe@email.com"
+                               th:classappend="${#fields.hasErrors('email') ? 'bg-red-50 outline-red-300' : 'bg-white outline-gray-300'}"
+                               class="block w-full rounded-md px-3 py-1.5 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
                         <div th:if="${#fields.hasErrors('email')}">
-                            <span th:each="err : ${#fields.errors('email')}" th:text="${err}" class="text-sm text-red-800 dark:text-red-400 font-medium" role="alert"></span>
+                            <span th:each="err : ${#fields.errors('email')}" th:text="${err}" class="text-sm text-red-800" role="alert"></span>
                         </div>
                     </div>
                 </div>
 
                 <div>
-                    <label for="password" class="block text-sm/6 font-medium text-gray-900">Masukkan Password</label>
+                    <label for="password" class="block text-sm font-medium text-gray-900">Masukkan Password</label>
                     <div class="mt-2">
-                        <input type="password" th:field="*{password}"
-                               name="password" id="password" autocomplete="current-password" required
-                               th:classappend="${#fields.hasErrors('password') ? 'bg-red-50 outline-red-300 text-red-900 placeholder-red-700 text-sm rounded-lg focus:ring-red-500 focus:outline-red-600' : 'bg-white text-gray-900 outline-gray-300 placeholder:text-gray-400 focus:outline-indigo-600'}"
-                               class="block w-full rounded-md px-3 py-1.5 text-base outline outline-1 -outline-offset-1 focus:outline focus:outline-2 focus:-outline-offset-2 sm:text-sm/6">
+                        <input type="password" th:field="*{password}" id="password" required
+                               th:classappend="${#fields.hasErrors('password') ? 'bg-red-50 outline-red-300' : 'bg-white outline-gray-300'}"
+                               class="block w-full rounded-md px-3 py-1.5 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
                         <div th:if="${#fields.hasErrors('password')}">
-                            <span th:each="err : ${#fields.errors('password')}" th:text="${err}" class="text-sm text-red-800 dark:text-red-400 font-medium" role="alert"></span>
+                            <span th:each="err : ${#fields.errors('password')}" th:text="${err}" class="text-sm text-red-800" role="alert"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="accountType" class="block text-sm font-medium text-gray-900">Pilih Jenis Akun</label>
+                    <div class="mt-2">
+                        <select id="accountType" th:field="*{accountTypeId}" required
+                                th:classappend="${#fields.hasErrors('accountTypeId') ? 'bg-red-50 outline-red-300' : 'bg-white outline-gray-300'}"
+                                class="block w-full rounded-md px-3 py-1.5 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                                x-model="accountType">
+                            <option value="personal">Personal</option>
+                            <option value="organization">Organization</option>
+                        </select>
+                        <div th:if="${#fields.hasErrors('accountTypeId')}">
+                            <span th:each="err : ${#fields.errors('accountTypeId')}" th:text="${err}" class="text-sm text-red-800" role="alert"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="phone" class="block text-sm font-medium text-gray-900">Masukkan Nomor Telepon</label>
+                    <div class="mt-2">
+                        <input type="text" th:field="*{phone}" id="phone" required placeholder="+62 8123456789"
+                               th:classappend="${#fields.hasErrors('phone') ? 'bg-red-50 outline-red-300' : 'bg-white outline-gray-300'}"
+                               class="block w-full rounded-md px-3 py-1.5 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
+                        <div th:if="${#fields.hasErrors('phone')}">
+                            <span th:each="err : ${#fields.errors('phone')}" th:text="${err}" class="text-sm text-red-800" role="alert"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="address" class="block text-sm font-medium text-gray-900">Masukkan Alamat</label>
+                    <div class="mt-2">
+                        <textarea th:field="*{address}" id="address" required placeholder="Alamat lengkap"
+                          th:classappend="${#fields.hasErrors('address') ? 'bg-red-50 outline-red-300' : 'bg-white outline-gray-300'}"
+                          class="block w-full rounded-md px-3 py-1.5 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"></textarea>
+                        <div th:if="${#fields.hasErrors('address')}">
+                            <span th:each="err : ${#fields.errors('address')}" th:text="${err}" class="text-sm text-red-800" role="alert"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div x-show="accountType === 'personal'">
+                    <label for="fullName" class="block text-sm font-medium text-gray-900">Masukkan Nama Lengkap</label>
+                    <div class="mt-2">
+                        <input type="text" th:field="*{fullName}" id="fullName" placeholder="John Doe"
+                               th:classappend="${#fields.hasErrors('fullName') ? 'bg-red-50 outline-red-300' : 'bg-white outline-gray-300'}"
+                               class="block w-full rounded-md px-3 py-1.5 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
+                        <div th:if="${#fields.hasErrors('fullName')}">
+                            <span th:each="err : ${#fields.errors('fullName')}" th:text="${err}" class="text-sm text-red-800" role="alert"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div x-show="accountType === 'organization'">
+                    <label for="companyName" class="block text-sm font-medium text-gray-900">Masukkan Nama Perusahaan</label>
+                    <div class="mt-2">
+                        <input type="text" th:field="*{companyName}" id="companyName" placeholder="ABC Corp"
+                               th:classappend="${#fields.hasErrors('companyName') ? 'bg-red-50 outline-red-300' : 'bg-white outline-gray-300'}"
+                               class="block w-full rounded-md px-3 py-1.5 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
+                        <div th:if="${#fields.hasErrors('companyName')}">
+                            <span th:each="err : ${#fields.errors('companyName')}" th:text="${err}" class="text-sm text-red-800" role="alert"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div x-show="accountType === 'organization'">
+                    <label for="industry" class="block text-sm font-medium text-gray-900">Bidang Industri</label>
+                    <div class="mt-2">
+                        <input type="text" th:field="*{industry}" id="industry" placeholder="Teknologi, Finansial, dll."
+                               th:classappend="${#fields.hasErrors('industry') ? 'bg-red-50 outline-red-300' : 'bg-white outline-gray-300'}"
+                               class="block w-full rounded-md px-3 py-1.5 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
+                        <div th:if="${#fields.hasErrors('industry')}">
+                            <span th:each="err : ${#fields.errors('industry')}" th:text="${err}" class="text-sm text-red-800" role="alert"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div x-show="accountType === 'organization'">
+                    <label for="website" class="block text-sm font-medium text-gray-900">Website Perusahaan</label>
+                    <div class="mt-2">
+                        <input type="url" th:field="*{website}" id="website" placeholder="https://example.com"
+                               th:classappend="${#fields.hasErrors('website') ? 'bg-red-50 outline-red-300' : 'bg-white outline-gray-300'}"
+                               class="block w-full rounded-md px-3 py-1.5 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6">
+                        <div th:if="${#fields.hasErrors('website')}">
+                            <span th:each="err : ${#fields.errors('website')}" th:text="${err}" class="text-sm text-red-800" role="alert"></span>
                         </div>
                     </div>
                 </div>
