@@ -97,6 +97,7 @@ public class DashboardController {
     public String profile(Model model, Principal principal) {
         User user = userService.findByUsername(principal.getName()).orElseThrow();
         model.addAttribute("user", user);
+        model.addAttribute("accountType", user.getClient().getAccountType());
         return "dashboard/profile";
     }
 
