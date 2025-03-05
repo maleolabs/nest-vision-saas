@@ -94,6 +94,14 @@ public class DashboardController {
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "limit", defaultValue = "100") int limit
     ) {
+        if (page < 1) {
+            page = 1;
+        }
+
+        if (limit < 1) {
+            limit = 1;
+        }
+
         User user = authService.getCurrentUser();
         Page<ApiRequestLog> pageLogs = apiRequestLogService.findAllByClientId(user.getClient().getClientId(), page, limit);
 
