@@ -22,8 +22,8 @@ public class AccountType {
     @Column(nullable = false, length = 150)
     private String name;
 
-    @Column(nullable = false, name = "max_requests")
-    private int maxRequests;
+    @Column(nullable = false, name = "daily_limit")
+    private int dailyLimit;
 
     @Column(nullable = false)
     private String description;

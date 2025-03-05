@@ -22,7 +22,7 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public Client save(AccountDataRequest request, User user) {
-        AccountType accountType = accountTypeRepository.findById(UUID.fromString(request.getAccountTypeId())).orElse(null);
+        AccountType accountType = accountTypeRepository.findByName(request.getAccountType()).orElse(null);
         if (accountType == null) {
             return null;
         }

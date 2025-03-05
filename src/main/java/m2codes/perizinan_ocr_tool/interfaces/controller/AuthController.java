@@ -3,6 +3,7 @@ package m2codes.perizinan_ocr_tool.interfaces.controller;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import m2codes.perizinan_ocr_tool.domain.repository.AccountTypeRepository;
 import m2codes.perizinan_ocr_tool.infrastructure.security.service.AuthService;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.AccountDataRequest;
 import m2codes.perizinan_ocr_tool.interfaces.dto.request.LoginRequest;
@@ -22,10 +23,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 public class AuthController {
 
     private final AuthService authService;
+    private final AccountTypeRepository accountTypeRepository;
 
     @GetMapping(path = "/register")
     public String register(Model  model) {
         model.addAttribute("registerRequest", new AccountDataRequest());
+        model.addAttribute("accountTypes", accountTypeRepository.findAll());
         return "auth/register";
     }
 

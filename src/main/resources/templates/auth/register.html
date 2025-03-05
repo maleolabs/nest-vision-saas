@@ -20,7 +20,7 @@
 
             <div th:if="${error}" th:text="${error}" class="p-4 my-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert"></div>
 
-            <form class="space-y-6" th:action="@{/auth/register}" th:object="${registerRequest}" method="POST" x-data="{ accountType: 'personal' }">
+            <form class="space-y-6" th:action="@{/auth/register}" th:object="${registerRequest}" method="POST" x-data="{ accountTypeName: 'Personal' }">
                 <div>
                     <label for="username" class="block text-sm font-medium text-gray-900">Masukkan Username</label>
                     <div class="mt-2">
@@ -61,15 +61,14 @@
                 <div>
                     <label for="accountType" class="block text-sm font-medium text-gray-900">Pilih Jenis Akun</label>
                     <div class="mt-2">
-                        <select id="accountType" th:field="*{accountTypeId}" required
-                                th:classappend="${#fields.hasErrors('accountTypeId') ? 'bg-red-50 outline-red-300' : 'bg-white outline-gray-300'}"
+                        <select id="accountType" th:field="*{accountType}" required
+                                th:classappend="${#fields.hasErrors('accountType') ? 'bg-red-50 outline-red-300' : 'bg-white outline-gray-300'}"
                                 class="block w-full rounded-md px-3 py-1.5 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-                                x-model="accountType">
-                            <option value="personal">Personal</option>
-                            <option value="organization">Organization</option>
+                                x-model="accountTypeName">
+                            <option th:each="accountType: ${accountTypes}" th:value="${accountType.getName()}" th:text="${accountType.getName()}"></option>
                         </select>
-                        <div th:if="${#fields.hasErrors('accountTypeId')}">
-                            <span th:each="err : ${#fields.errors('accountTypeId')}" th:text="${err}" class="text-sm text-red-800" role="alert"></span>
+                        <div th:if="${#fields.hasErrors('accountType')}">
+                            <span th:each="err : ${#fields.errors('accountType')}" th:text="${err}" class="text-sm text-red-800" role="alert"></span>
                         </div>
                     </div>
                 </div>
@@ -98,7 +97,7 @@
                     </div>
                 </div>
 
-                <div x-show="accountType === 'personal'">
+                <div x-show="accountTypeName === 'Personal'">
                     <label for="fullName" class="block text-sm font-medium text-gray-900">Masukkan Nama Lengkap</label>
                     <div class="mt-2">
                         <input type="text" th:field="*{fullName}" id="fullName" placeholder="John Doe"
@@ -110,7 +109,7 @@
                     </div>
                 </div>
 
-                <div x-show="accountType === 'organization'">
+                <div x-show="accountTypeName === 'Organization'">
                     <label for="companyName" class="block text-sm font-medium text-gray-900">Masukkan Nama Perusahaan</label>
                     <div class="mt-2">
                         <input type="text" th:field="*{companyName}" id="companyName" placeholder="ABC Corp"
@@ -122,7 +121,7 @@
                     </div>
                 </div>
 
-                <div x-show="accountType === 'organization'">
+                <div x-show="accountTypeName === 'Organization'">
                     <label for="industry" class="block text-sm font-medium text-gray-900">Bidang Industri</label>
                     <div class="mt-2">
                         <input type="text" th:field="*{industry}" id="industry" placeholder="Teknologi, Finansial, dll."
@@ -134,7 +133,7 @@
                     </div>
                 </div>
 
-                <div x-show="accountType === 'organization'">
+                <div x-show="accountTypeName === 'Organization'">
                     <label for="website" class="block text-sm font-medium text-gray-900">Website Perusahaan</label>
                     <div class="mt-2">
                         <input type="url" th:field="*{website}" id="website" placeholder="https://example.com"
