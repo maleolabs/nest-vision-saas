@@ -27,4 +27,6 @@ public interface UserService {
 
     void lockUser(String username);
 
+    void updatePassword(User user, String newPassword);
+
 }

@@ -138,22 +138,46 @@
             </div>
         </li>
         <li class="mb-5 border border-gray-200 rounded px-20 py-10">
-            <form th:action="@{/profile/change-password}" method="post">
+            <form th:action="@{/dashboard/profile/change-password}" method="POST" th:object="${changePasswordRequest}">
                 <h3 class="mb-3 font-bold tracking-tight text-gray-900">Ganti Password</h3>
+
+                <div th:if="${changePasswordError}" th:text="${changePasswordError}" class="p-4 my-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert"></div>
+
                 <div class="mb-4">
-                    <label class="block text-gray-600 text-sm font-semibold">Password Lama</label>
-                    <input type="password" name="oldPassword" placeholder="masukkan password lama anda"
-                           class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" required>
+                    <label class="block text-gray-600 text-sm font-semibold" for="oldPassword">Password Lama</label>
+                    <div class="mt-2">
+                        <input type="password" id="oldPassword" placeholder="masukkan password lama anda"
+                               th:field="*{oldPassword}"
+                               th:classappend="${#fields.hasErrors('oldPassword') ? 'bg-red-50 outline-red-300' : 'bg-white outline-gray-300'}"
+                               class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" required>
+                        <div th:if="${#fields.hasErrors('oldPassword')}">
+                            <span th:each="err : ${#fields.errors('oldPassword')}" th:text="${err}" class="text-sm text-red-800" role="alert"></span>
+                        </div>
+                    </div>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-600 text-sm font-semibold">Password Baru</label>
-                    <input type="password" name="newPassword" placeholder="masukkan password baru anda"
-                           class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" required>
+                    <label class="block text-gray-600 text-sm font-semibold" for="newPassword">Password Baru</label>
+                    <div class="mt-2">
+                        <input type="password" id="newPassword" placeholder="masukkan password baru anda"
+                               th:field="*{newPassword}"
+                               th:classappend="${#fields.hasErrors('newPassword') ? 'bg-red-50 outline-red-300' : 'bg-white outline-gray-300'}"
+                               class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" required>
+                        <div th:if="${#fields.hasErrors('newPassword')}">
+                            <span th:each="err : ${#fields.errors('newPassword')}" th:text="${err}" class="text-sm text-red-800" role="alert"></span>
+                        </div>
+                    </div>
                 </div>
                 <div class="mb-4">
-                    <label class="block text-gray-600 text-sm font-semibold">Konfirmasi Password Baru</label>
-                    <input type="password" name="confirmPassword" placeholder="masukkan konfirmasi password baru anda"
-                           class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" required>
+                    <label class="block text-gray-600 text-sm font-semibold" for="confirmPassword">Konfirmasi Password Baru</label>
+                    <div class="mt-2">
+                        <input type="password" id="confirmPassword" placeholder="masukkan konfirmasi password baru anda"
+                               th:field="*{confirmPassword}"
+                               th:classappend="${#fields.hasErrors('confirmPassword') ? 'bg-red-50 outline-red-300' : 'bg-white outline-gray-300'}"
+                               class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" required>
+                        <div th:if="${#fields.hasErrors('confirmPassword')}">
+                            <span th:each="err : ${#fields.errors('confirmPassword')}" th:text="${err}" class="text-sm text-red-800" role="alert"></span>
+                        </div>
+                    </div>
                 </div>
                 <button type="submit"
                         class="flex justify-center rounded-md bg-stone-600 px-3 py-1.5 text-sm/6 font-semibold

@@ -1,8 +1,8 @@
-package m2codes.perizinan_ocr_tool.interfaces.validation.constraint;
+package m2codes.perizinan_ocr_tool.interfaces.validator.constraint;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import m2codes.perizinan_ocr_tool.interfaces.validation.annotation.FileSize;
+import m2codes.perizinan_ocr_tool.interfaces.validator.annotation.FileSize;
 import org.springframework.web.multipart.MultipartFile;
 
 public class FileSizeValidator implements ConstraintValidator<FileSize, MultipartFile> {

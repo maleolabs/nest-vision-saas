@@ -60,21 +60,18 @@ public class AuthService {
         }
     }
 
-    public UserResponse getCurrentUser() {
+    public User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null
-                && authentication.isAuthenticated()
-                && authentication.getPrincipal() instanceof String principal) {
-
-            Optional<User> userOpt = userService.findByUsername(principal);
-            Optional<Client> clientOpt = clientService.findByEmail(principal);
+        if (authentication != null && authentication.isAuthenticated()) {
+            String authName = authentication.getName();
+            Optional<User> userOpt = userService.findByUsername(authName);
+            Optional<Client> clientOpt = clientService.findByEmail(authName);
 
             if (userOpt.isEmpty() && clientOpt.isEmpty()) {
                 throw new IllegalStateException("failed get current user");
             }
 
-            User user = userOpt.orElseGet(() -> clientOpt.get().getUser());
-            return UserResponse.fromModel(user);
+            return userOpt.orElseGet(() -> clientOpt.get().getUser());
         }
         throw new IllegalStateException("no user is currently logged in");
     }

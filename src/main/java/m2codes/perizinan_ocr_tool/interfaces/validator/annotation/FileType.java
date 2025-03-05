@@ -1,8 +1,8 @@
-package m2codes.perizinan_ocr_tool.interfaces.validation.annotation;
+package m2codes.perizinan_ocr_tool.interfaces.validator.annotation;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
-import m2codes.perizinan_ocr_tool.interfaces.validation.constraint.FileTypeValidator;
+import m2codes.perizinan_ocr_tool.interfaces.validator.constraint.FileTypeValidator;
 
 import java.lang.annotation.*;
 

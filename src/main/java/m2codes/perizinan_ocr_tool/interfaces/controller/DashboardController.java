@@ -1,17 +1,20 @@
 package m2codes.perizinan_ocr_tool.interfaces.controller;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import m2codes.perizinan_ocr_tool.domain.model.User;
 import m2codes.perizinan_ocr_tool.domain.service.ApiKeyService;
 import m2codes.perizinan_ocr_tool.domain.service.UserService;
 import m2codes.perizinan_ocr_tool.infrastructure.security.service.ApiRequestLogService;
+import m2codes.perizinan_ocr_tool.infrastructure.security.service.AuthService;
+import m2codes.perizinan_ocr_tool.interfaces.dto.request.ChangePasswordRequest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
@@ -26,6 +29,8 @@ public class DashboardController {
     private final UserService userService;
     private final ApiKeyService apiKeyService;
     private final ApiRequestLogService apiRequestLogService;
+    private final AuthService authService;
+    private final PasswordEncoder passwordEncoder;
 
     @GetMapping(path = "")
     public String index(Model model) {
@@ -51,7 +56,7 @@ public class DashboardController {
 
     @GetMapping(path = "/docs")
     public String docs(Model model, Principal principal, HttpSession session) {
-        User user = userService.findByUsername(principal.getName()).orElse(null);
+        User user = authService.getCurrentUser();
         if (user != null) {
             try {
                 String apiKey = apiKeyService.findByClientId(user.getClient().getClientId());
@@ -72,7 +77,7 @@ public class DashboardController {
 
     @PostMapping(path = "/docs/create-new-api-key")
     public String createNewApiKey(HttpSession session, Principal principal) {
-        User user = userService.findByUsername(principal.getName()).orElse(null);
+        User user = authService.getCurrentUser();
         if (user == null || user.getClient() == null) {
             session.setAttribute("apiKeyError",
                     "Tidak dapat membuat API Key baru, data pengguna tidak ditemukan! Silahkan coba lagi nanti");
@@ -84,21 +89,56 @@ public class DashboardController {
 
     @GetMapping(path = "/logs")
     public String logs(Model model, Principal principal) {
-        User user = userService.findByUsername(principal.getName()).orElse(null);
-        if (user == null) {
-            model.addAttribute("userError", true);
-        } else {
-            model.addAttribute("requestLogs", apiRequestLogService.findAllByClientId(user.getClient().getClientId()));
-        }
+        User user = authService.getCurrentUser();
+        model.addAttribute("requestLogs", apiRequestLogService.findAllByClientId(user.getClient().getClientId()));
         return "dashboard/logs";
     }
 
     @GetMapping(path = "/profile")
-    public String profile(Model model, Principal principal) {
-        User user = userService.findByUsername(principal.getName()).orElseThrow();
+    public String profile(Model model) {
+        User user = authService.getCurrentUser();
         model.addAttribute("user", user);
         model.addAttribute("accountType", user.getClient().getAccountType());
+        model.addAttribute("changePasswordRequest", new ChangePasswordRequest());
         return "dashboard/profile";
+    }
+
+    @PostMapping(path = "/profile/change-password")
+    public String changePassword(
+            @Valid @ModelAttribute("changePasswordRequest") ChangePasswordRequest request,
+            BindingResult result,
+            Model model,
+            HttpSession session
+    ) {
+        try {
+            User user = authService.getCurrentUser();
+
+            model.addAttribute("user", user);
+            model.addAttribute("accountType", user.getClient().getAccountType());
+            model.addAttribute("changePasswordRequest", request);
+
+            if (result.hasErrors()) {
+                return "dashboard/profile";
+            }
+
+            if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+                result.rejectValue("oldPassword", "error.oldPassword", "password wrong.");
+                return "dashboard/profile";
+            }
+
+            userService.updatePassword(user, request.getNewPassword());
+        } catch (Exception e) {
+            log.error("failed to change password, got error: {}", e.getMessage());
+
+            model.addAttribute("changePasswordError", "there is an error while changing password");
+            return "dashboard/profile";
+        }
+
+        if (session != null) {
+            session.invalidate();
+        }
+
+        return "redirect:/auth/login?passwordChanged";
     }
 
 }

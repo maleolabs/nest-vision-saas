@@ -4,8 +4,8 @@ import jakarta.validation.constraints.Pattern;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import m2codes.perizinan_ocr_tool.interfaces.validation.annotation.FileSize;
-import m2codes.perizinan_ocr_tool.interfaces.validation.annotation.FileType;
+import m2codes.perizinan_ocr_tool.interfaces.validator.annotation.FileSize;
+import m2codes.perizinan_ocr_tool.interfaces.validator.annotation.FileType;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;

@@ -1,8 +1,8 @@
-package m2codes.perizinan_ocr_tool.interfaces.validation.constraint;
+package m2codes.perizinan_ocr_tool.interfaces.validator.constraint;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import m2codes.perizinan_ocr_tool.interfaces.validation.annotation.FileType;
+import m2codes.perizinan_ocr_tool.interfaces.validator.annotation.FileType;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
