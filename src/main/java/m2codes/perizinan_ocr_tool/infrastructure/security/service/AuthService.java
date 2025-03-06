@@ -50,7 +50,7 @@ public class AuthService {
 
             clientService.save(request, user);
 
-            accountVerificationService.sendVerificationCode(user);
+            accountVerificationService.sendVerificationCode(user, request.getEmail());
 
             UserResponse userResponse = UserResponse.fromModel(user);
             return WebResponse.success(userResponse, HttpStatus.CREATED);

@@ -23,8 +23,9 @@ public class AccountVerificationService {
     private final VerificationCodeRepository verificationCodeRepository;
     private final UserService userService;
     private final ApiKeyService apiKeyService;
+    private final EmailSenderService emailSenderService;
 
-    public void sendVerificationCode(User user) {
+    public void sendVerificationCode(User user, String email) {
         String generatedCode = getCode();
 
         verificationCodeRepository.save(VerificationCode.builder()
@@ -33,7 +34,9 @@ public class AccountVerificationService {
                         .expiresAt(Instant.now().plus(1, ChronoUnit.HOURS))
                         .build());
 
-        // TODO : send code to email
+        String mailSubject = generatedCode + " is your confirmation code";
+
+        emailSenderService.sendEmail(email, mailSubject, generatedCode);
     }
 
     @Transactional
