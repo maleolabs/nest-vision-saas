@@ -5,6 +5,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import m2codes.perizinan_ocr_tool.domain.model.ApiRequestLog;
+import m2codes.perizinan_ocr_tool.domain.model.Client;
 import m2codes.perizinan_ocr_tool.domain.model.User;
 import m2codes.perizinan_ocr_tool.domain.service.ApiKeyService;
 import m2codes.perizinan_ocr_tool.domain.service.UserService;
@@ -35,11 +36,13 @@ public class DashboardController {
 
     @GetMapping(path = "")
     public String index(Model model) {
-        model.addAttribute("apiRequests", List.of(
-                Map.of("month", "Jan", "count", 120),
-                Map.of("month", "Feb", "count", 200),
-                Map.of("month", "Mar", "count", 150)
-        ));
+        User user = authService.getCurrentUser();
+        Client client = user.getClient();
+
+        var requestsCountPerPeriod = apiRequestLogService.getRequestsCountPerPeriodByClientId(client.getClientId());
+        log.info("requests count per period: {}", requestsCountPerPeriod);
+
+        model.addAttribute("apiRequests", requestsCountPerPeriod);
 
         model.addAttribute("endpointUsage", List.of(
                 Map.of("endpoint", "Ekstraksi", "count", 300),
