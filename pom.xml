@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>m2codes</groupId>
-	<artifactId>perizinan-ocr-tool</artifactId>
+	<artifactId>ocr-tool</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>perizinan-ocr-tool</name>
-	<description>Perizinan OCR Tool</description>
+	<name>ocr-tool</name>
+	<description>OCR Tool</description>
 	<url/>
 	<licenses>
 		<license/>

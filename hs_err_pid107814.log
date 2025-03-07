@@ -18,7 +18,7 @@
 
 ---------------  S U M M A R Y ------------
 
-Command Line: -javaagent:/snap/intellij-idea-community/530/lib/idea_rt.jar=38541:/snap/intellij-idea-community/530/bin -Dfile.encoding=UTF-8 m2codes.perizinan_ocr_tool.PerizinanOcrToolApplication -Djava.library.path=/lib/x86_64-linux-gnu
+Command Line: -javaagent:/snap/intellij-idea-community/530/lib/idea_rt.jar=38541:/snap/intellij-idea-community/530/bin -Dfile.encoding=UTF-8 m2codes.ocr_tool.OcrToolApplication -Djava.library.path=/lib/x86_64-linux-gnu
 
 Host: Intel(R) Celeron(R) N4020 CPU @ 1.10GHz, 4 cores, 7G, Ubuntu 24.04.1 LTS
 Time: Sat Sep 14 13:35:07 2024 WITA elapsed time: 140.355963 seconds (0d 0h 2m 20s)
@@ -41,7 +41,7 @@ j  net.sourceforge.tess4j.Tesseract.dispose()V+22
 j  net.sourceforge.tess4j.Tesseract.doOCR(Ljava/util/List;Ljava/lang/String;Ljava/util/List;)Ljava/lang/String;+157
 j  net.sourceforge.tess4j.Tesseract.doOCR(Ljava/awt/image/BufferedImage;Ljava/lang/String;Ljava/util/List;)Ljava/lang/String;+27
 j  net.sourceforge.tess4j.Tesseract.doOCR(Ljava/awt/image/BufferedImage;)Ljava/lang/String;+7
-j  m2codes.perizinan_ocr_tool.application.service.impl.TesseractOcrService.extractTextFromImage(Ljava/lang/String;)Ljava/util/concurrent/CompletableFuture;+50
+j  m2codes.ocr_tool.application.service.impl.TesseractOcrService.extractTextFromImage(Ljava/lang/String;)Ljava/util/concurrent/CompletableFuture;+50
 v  ~StubRoutines::call_stub
 J 4381  jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Ljava/lang/reflect/Method;Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object; java.base@17.0.12 (0 bytes) @ 0x00007629e10164bf [0x00007629e1016440+0x000000000000007f]
 J 4380 c1 jdk.internal.reflect.NativeMethodAccessorImpl.invoke(Ljava/lang/Object;[Ljava/lang/Object;)Ljava/lang/Object; java.base@17.0.12 (137 bytes) @ 0x00007629d9b66cb4 [0x00007629d9b66980+0x0000000000000334]
@@ -1918,7 +1918,7 @@ ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsysca
 
 VM Arguments:
 jvm_args: -javaagent:/snap/intellij-idea-community/530/lib/idea_rt.jar=38541:/snap/intellij-idea-community/530/bin -Dfile.encoding=UTF-8 
-java_command: m2codes.perizinan_ocr_tool.PerizinanOcrToolApplication -Djava.library.path=/lib/x86_64-linux-gnu
+java_command: m2codes.ocr_tool.OcrToolApplication -Djava.library.path=/lib/x86_64-linux-gnu
 java_class_path (initial): /home/marij/developments/perizinan-ocr-tool/target/classes:/home/marij/.m2/repository/org/springframework/boot/spring-boot-starter-data-jpa/3.3.3/spring-boot-starter-data-jpa-3.3.3.jar:/home/marij/.m2/repository/org/springframework/boot/spring-boot-starter-aop/3.3.3/spring-boot-starter-aop-3.3.3.jar:/home/marij/.m2/repository/org/springframework/spring-aop/6.1.12/spring-aop-6.1.12.jar:/home/marij/.m2/repository/org/aspectj/aspectjweaver/1.9.22.1/aspectjweaver-1.9.22.1.jar:/home/marij/.m2/repository/org/springframework/boot/spring-boot-starter-jdbc/3.3.3/spring-boot-starter-jdbc-3.3.3.jar:/home/marij/.m2/repository/com/zaxxer/HikariCP/5.1.0/HikariCP-5.1.0.jar:/home/marij/.m2/repository/org/springframework/spring-jdbc/6.1.12/spring-jdbc-6.1.12.jar:/home/marij/.m2/repository/org/hibernate/orm/hibernate-core/6.5.2.Final/hibernate-core-6.5.2.Final.jar:/home/marij/.m2/repository/jakarta/persistence/jakarta.persistence-api/3.1.0/jakarta.persistence-api-3.1.0.jar:/home/marij/.m2/repository/jakarta/transaction/jakarta.transaction-api/2.0.1/jakarta.transaction-api-2.0.1.jar:/home/marij/.m2/repository/org/jboss/logging/jboss-logging/3.5.3.Final/jboss-logging-3.5.3.Final.jar:/home/marij/.m2/repository/org/hibernate/common/hibernate-commons-annotations/6.0.6.Final/hibernate-commons-annotations-6.0.6.Final.jar:/home/marij/.m2/repository/io/smallrye/jandex/3.1.2/jandex-3.1.2.jar:/home/marij/.m2/repository/com/fasterxml/classmate/1.7.0/classmate-1.7.0.jar:/home/marij/.m2/repository/net/bytebuddy/byte-buddy/1.14.19/byte-buddy-1.14.19.jar:/home/marij/.m2/repository/org/glassfish/jaxb/jaxb-runtime/4.0.5/jaxb-runtime-4.0.5.jar:/home/marij/.m2/repository/org/glassfish/jaxb/jaxb-core/4.0.5/jaxb-core-4.0.5.jar:/home/marij/.m2/repository/org/eclipse/angus/angus-activation/2.0.2/angus-activation-2.0.2.jar:/home/marij/.m2/repository/org/glassfish/jaxb/txw2/4.0.5/txw2-4.0.5.jar:/home/marij/.m2/repository/com/sun/istack/istack-commons-runtime/4.1.2/istack-commons-r
 Launcher Type: SUN_STANDARD
 
