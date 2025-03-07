@@ -12,7 +12,7 @@ import m2codes.ocr_tool.domain.service.OcrRequestService;
 import m2codes.ocr_tool.domain.service.OcrResultService;
 import m2codes.ocr_tool.interfaces.dto.request.OcrDataRequest;
 import m2codes.ocr_tool.interfaces.dto.response.OcrResponse;
-import m2codes.ocr_tool.interfaces.dto.response.WebResponse;
+import m2codes.ocr_tool.interfaces.dto.response.ApiResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -38,11 +38,11 @@ public abstract class TextProcessorService {
     }
 
     @Transactional
-    public final WebResponse<?> processOcrRequestWithImageUrl(OcrDataRequest request) {
+    public final ApiResponse<?> processOcrRequestWithImageUrl(OcrDataRequest request) {
         var status = isPoolAvailable() ? RequestStatus.PROCESSING : RequestStatus.WAITING;
         OcrRequest ocrRequest = saveOcrRequest(request, status);
         processingExtractionText(request, ocrRequest);
-        return buildWebResponse(
+        return buildResponse(
                 OcrResponse.builder()
                         .requestId(ocrRequest.getId())
                         .status(ocrRequest.getStatus())
@@ -52,7 +52,7 @@ public abstract class TextProcessorService {
         );
     }
 
-    public final WebResponse<?> processOcrRequestWithUploadedImage(OcrDataRequest request) {
+    public final ApiResponse<?> processOcrRequestWithUploadedImage(OcrDataRequest request) {
         var status = isPoolAvailable() ? RequestStatus.PROCESSING : RequestStatus.WAITING;
 
         String uploadedFileName;
@@ -62,12 +62,12 @@ public abstract class TextProcessorService {
             uploadedFile = retrieveFile(uploadedFileName);
         } catch (Exception e) {
             log.error("Exception error : {}. Stack trace : {}", e.getMessage(), Arrays.toString(e.getStackTrace()));
-            return buildWebResponse(null, false,
+            return buildResponse(null, false,
                     "Failed to process file upload! Please try again later.");
         }
 
         if (uploadedFile == null || uploadedFileName == null) {
-            return buildWebResponse(null, false,
+            return buildResponse(null, false,
                     "File upload failed! Please try again later");
         }
 
@@ -75,7 +75,7 @@ public abstract class TextProcessorService {
         OcrRequest ocrRequest = saveOcrRequest(dataRequest, status);
         processingExtractionText(uploadedFile, ocrRequest, dataRequest);
 
-        return buildWebResponse(
+        return buildResponse(
                 OcrResponse.builder()
                         .requestId(ocrRequest.getId())
                         .status(ocrRequest.getStatus())
@@ -110,6 +110,6 @@ public abstract class TextProcessorService {
 
     protected abstract boolean isPoolAvailable();
 
-    protected abstract <T> WebResponse<T> buildWebResponse(T data, boolean success, String errorMessage);
+    protected abstract <T> ApiResponse<T> buildResponse(T data, boolean success, String errorMessage);
 
 }

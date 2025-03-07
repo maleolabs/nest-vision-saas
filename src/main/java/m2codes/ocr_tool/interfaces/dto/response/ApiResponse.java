@@ -12,7 +12,7 @@ import org.springframework.http.HttpStatus;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class WebResponse<T> {
+public class ApiResponse<T> {
 
     private T data;
 
@@ -22,8 +22,8 @@ public class WebResponse<T> {
 
     private Integer statusCode;
 
-    public static <T> WebResponse<T> error(String errorMessage, HttpStatus statusCode) {
-        return WebResponse.<T>builder()
+    public static <T> ApiResponse<T> error(String errorMessage, HttpStatus statusCode) {
+        return ApiResponse.<T>builder()
                 .data(null)
                 .success(false)
                 .errorMessage(errorMessage)
@@ -31,8 +31,8 @@ public class WebResponse<T> {
                 .build();
     }
 
-    public static <T> WebResponse<T> success(T data, HttpStatus statusCode) {
-        return WebResponse.<T>builder()
+    public static <T> ApiResponse<T> success(T data, HttpStatus statusCode) {
+        return ApiResponse.<T>builder()
                 .data(data)
                 .success(true)
                 .errorMessage(null)

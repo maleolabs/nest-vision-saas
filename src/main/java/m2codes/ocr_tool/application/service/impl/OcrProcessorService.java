@@ -19,7 +19,7 @@ import m2codes.ocr_tool.domain.service.ExtractedTextService;
 import m2codes.ocr_tool.domain.service.OcrRequestService;
 import m2codes.ocr_tool.domain.service.OcrResultService;
 import m2codes.ocr_tool.interfaces.dto.request.OcrDataRequest;
-import m2codes.ocr_tool.interfaces.dto.response.WebResponse;
+import m2codes.ocr_tool.interfaces.dto.response.ApiResponse;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -163,12 +163,12 @@ public class OcrProcessorService extends TextProcessorService {
     }
 
     @Override
-    protected <T> WebResponse<T> buildWebResponse(T data, boolean success, String errorMessage) {
-        WebResponse<T> webResponse = new WebResponse<>();
-        webResponse.setData(data);
-        webResponse.setSuccess(success);
-        webResponse.setErrorMessage(errorMessage);
-        return webResponse;
+    protected <T> ApiResponse<T> buildResponse(T data, boolean success, String errorMessage) {
+        ApiResponse<T> apiResponse = new ApiResponse<>();
+        apiResponse.setData(data);
+        apiResponse.setSuccess(success);
+        apiResponse.setErrorMessage(errorMessage);
+        return apiResponse;
     }
 
     @Override

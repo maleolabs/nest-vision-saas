@@ -7,7 +7,7 @@ import m2codes.ocr_tool.domain.service.OcrRequestService;
 import m2codes.ocr_tool.interfaces.dto.response.ExtractedTextResponse;
 import m2codes.ocr_tool.interfaces.dto.response.OcrResponse;
 import m2codes.ocr_tool.interfaces.dto.response.OcrResponse2;
-import m2codes.ocr_tool.interfaces.dto.response.WebResponse;
+import m2codes.ocr_tool.interfaces.dto.response.ApiResponse;
 
 import java.util.*;
 
@@ -25,10 +25,10 @@ public abstract class ExtractedTextQueryService {
         this.ocrRequestService = ocrRequestService;
     }
 
-    public final WebResponse<OcrResponse> checkStatus(Long requestId) {
+    public final ApiResponse<OcrResponse> checkStatus(Long requestId) {
         OcrRequest request = findRequestById(requestId);
         if (request == null) {
-            return buildWebResponse(null, false, "Request with id : " + requestId + " not found!");
+            return builResponse(null, false, "Request with id : " + requestId + " not found!");
         }
         OcrResponse response = OcrResponse.builder()
                 .requestId(requestId)
@@ -37,13 +37,13 @@ public abstract class ExtractedTextQueryService {
         if (request.getOcrResults() != null) {
             response.setDuration((float) (request.getOcrResults().getDuration() / 1000));
         }
-        return buildWebResponse(response, true, null);
+        return builResponse(response, true, null);
     }
 
-    public final WebResponse<OcrResponse2> getByRequestId(Long requestId) {
+    public final ApiResponse<OcrResponse2> getByRequestId(Long requestId) {
         OcrRequest request = findRequestById(requestId);
         if (request == null) {
-            return buildWebResponse(null, false, "Request ID not found");
+            return builResponse(null, false, "Request ID not found");
         }
         var ocrResponse = OcrResponse2.builder()
                 .requestId(request.getId())
@@ -59,7 +59,7 @@ public abstract class ExtractedTextQueryService {
             }
             ocrResponse.setExtractedTexts(extractedTexts);
         }
-        return buildWebResponse(ocrResponse, true, null);
+        return builResponse(ocrResponse, true, null);
     }
 
     public final OcrResponse findByRequestId(Long requestId) {
@@ -89,7 +89,7 @@ public abstract class ExtractedTextQueryService {
         return ocrResponse;
     }
 
-    protected abstract <T> WebResponse<T> buildWebResponse(T data, boolean success, String errorMessage);
+    protected abstract <T> ApiResponse<T> builResponse(T data, boolean success, String errorMessage);
 
     protected abstract OcrRequest findRequestById(Long requestId);
 

@@ -11,7 +11,7 @@ import m2codes.ocr_tool.domain.service.UserService;
 import m2codes.ocr_tool.interfaces.dto.request.AccountDataRequest;
 import m2codes.ocr_tool.interfaces.dto.request.UserDataRequest;
 import m2codes.ocr_tool.interfaces.dto.response.UserResponse;
-import m2codes.ocr_tool.interfaces.dto.response.WebResponse;
+import m2codes.ocr_tool.interfaces.dto.response.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -30,14 +30,14 @@ public class AuthService {
     private final AccountVerificationService accountVerificationService;
 
     @Transactional
-    public WebResponse<UserResponse> register(AccountDataRequest request) {
+    public ApiResponse<UserResponse> register(AccountDataRequest request) {
         try {
             if (userService.existsByUsername(request.getUsername())) {
-                return WebResponse.error("username already exists", HttpStatus.BAD_REQUEST);
+                return ApiResponse.error("username already exists", HttpStatus.BAD_REQUEST);
             }
 
             if (clientService.existsByEmail(request.getEmail())) {
-                return WebResponse.error("email already in used", HttpStatus.BAD_REQUEST);
+                return ApiResponse.error("email already in used", HttpStatus.BAD_REQUEST);
             }
 
             User user = Optional.ofNullable(userService.save(
@@ -53,10 +53,10 @@ public class AuthService {
             accountVerificationService.sendVerificationCode(user, request.getEmail());
 
             UserResponse userResponse = UserResponse.fromModel(user);
-            return WebResponse.success(userResponse, HttpStatus.CREATED);
+            return ApiResponse.success(userResponse, HttpStatus.CREATED);
         } catch (Exception e) {
             log.error("error while registering the user: {}", Arrays.toString(e.getStackTrace()));
-            return WebResponse.error("there was an error while registering the user", HttpStatus.INTERNAL_SERVER_ERROR);
+            return ApiResponse.error("there was an error while registering the user", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

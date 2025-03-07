@@ -7,7 +7,7 @@ import m2codes.ocr_tool.domain.repository.AccountTypeRepository;
 import m2codes.ocr_tool.infrastructure.security.service.AuthService;
 import m2codes.ocr_tool.interfaces.dto.request.AccountDataRequest;
 import m2codes.ocr_tool.interfaces.dto.request.LoginRequest;
-import m2codes.ocr_tool.interfaces.dto.response.WebResponse;
+import m2codes.ocr_tool.interfaces.dto.response.ApiResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -41,7 +41,7 @@ public class AuthController {
             return "auth/register";
         }
 
-        WebResponse<?> response = authService.register(request);
+        ApiResponse<?> response = authService.register(request);
         if (!response.isSuccess()) {
             model.addAttribute("error", response.getErrorMessage());
             return "auth/register";

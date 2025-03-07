@@ -1,6 +1,7 @@
 package m2codes.ocr_tool.interfaces.controller;
 
-import m2codes.ocr_tool.interfaces.dto.response.WebResponse;
+import m2codes.ocr_tool.interfaces.dto.response.ApiResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -9,8 +10,14 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 public class ErrorController {
 
     @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<WebResponse<?>> handleRuntimeException(RuntimeException exception) {
-        return ResponseEntity.internalServerError().body(WebResponse.builder().success(false).errorMessage(exception.getMessage()).build());
+    public ResponseEntity<ApiResponse<?>> handleRuntimeException(RuntimeException exception) {
+        return ResponseEntity.internalServerError().body(
+                ApiResponse.builder()
+                        .success(false)
+                        .errorMessage(exception.getMessage())
+                        .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                        .build()
+        );
     }
 
 }

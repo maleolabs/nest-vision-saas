@@ -10,7 +10,7 @@ import m2codes.ocr_tool.infrastructure.security.service.RequestLimitService;
 import m2codes.ocr_tool.infrastructure.security.util.ApiKeyGenerator;
 import m2codes.ocr_tool.interfaces.dto.request.OcrDataRequest;
 import m2codes.ocr_tool.interfaces.dto.response.OcrResponse;
-import m2codes.ocr_tool.interfaces.dto.response.WebResponse;
+import m2codes.ocr_tool.interfaces.dto.response.ApiResponse;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -36,7 +36,7 @@ public class OcrController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<WebResponse<?>> doOcr(
+    public ResponseEntity<ApiResponse<?>> doOcr(
             @ModelAttribute @Valid OcrDataRequest request,
             BindingResult result,
             HttpServletRequest servletRequest
@@ -48,7 +48,7 @@ public class OcrController {
             clientId = apiKeyGenerator.decrypt(apiKey);
             if (!requestLimitService.isRequestAllowed(clientId)) {
                 return ResponseEntity.badRequest().body(
-                        WebResponse.error(
+                        ApiResponse.error(
                                 "Request limit exceeded for today.",
                                 HttpStatus.BAD_REQUEST
                         )
@@ -56,7 +56,7 @@ public class OcrController {
             }
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(
-                    WebResponse.error(
+                    ApiResponse.error(
                             "Failed to process request",
                             HttpStatus.INTERNAL_SERVER_ERROR
                     )
@@ -68,7 +68,7 @@ public class OcrController {
                     .map(DefaultMessageSourceResolvable::getDefaultMessage)
                     .toList();
 
-            return ResponseEntity.badRequest().body(WebResponse.builder()
+            return ResponseEntity.badRequest().body(ApiResponse.builder()
                     .success(false)
                     .statusCode(HttpStatus.BAD_REQUEST.value())
                     .data(errors)
@@ -77,7 +77,7 @@ public class OcrController {
         }
 
         if (!(request.isUsingFile() || request.isUsingUrl())) {
-            return ResponseEntity.badRequest().body(WebResponse.builder()
+            return ResponseEntity.badRequest().body(ApiResponse.builder()
                     .success(false)
                     .statusCode(HttpStatus.BAD_REQUEST.value())
                     .data(null)
@@ -85,7 +85,7 @@ public class OcrController {
                     .build());
         }
 
-        WebResponse<?> response = request.isUsingUrl()
+        ApiResponse<?> response = request.isUsingUrl()
                                 ? ocrProcessorService.processOcrRequestWithImageUrl(request)
                                 : ocrProcessorService.processOcrRequestWithUploadedImage(request);
 
@@ -102,7 +102,7 @@ public class OcrController {
             path = "/get-result/{requestId}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<WebResponse<?>> getByRequestId(@PathVariable(name = "requestId") Long requestId) {
+    public ResponseEntity<ApiResponse<?>> getByRequestId(@PathVariable(name = "requestId") Long requestId) {
         var response = extractedTextQueryService.getByRequestId(requestId);
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
@@ -111,8 +111,8 @@ public class OcrController {
             path = "/check-status/{requestId}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<WebResponse<OcrResponse>> checkStatus(@PathVariable(name = "requestId") Long requestId) {
-        WebResponse<OcrResponse> response = extractedTextQueryService.checkStatus(requestId);
+    public ResponseEntity<ApiResponse<OcrResponse>> checkStatus(@PathVariable(name = "requestId") Long requestId) {
+        ApiResponse<OcrResponse> response = extractedTextQueryService.checkStatus(requestId);
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
 
