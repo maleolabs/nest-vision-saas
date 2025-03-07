@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Selamat Datang</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tw-elements/css/tw-elements.min.css" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              fontFamily: {
+                inter: ['Inter Tight', 'sans-serif'],
+              },
+            },
+          },
+        }
+    </script>
+</head>
+<body class="bg-gray-800 h-screen flex flex-col items-center justify-around antialiased font-inter">
+    <div class="max-w-2xl">
+        <div class="flex mb-4 items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 50" width="50" height="50">
+                <!-- Latar belakang bulat -->
+                <circle cx="25" cy="25" r="22.5" fill="#3B82F6" />
+
+                <!-- Gambar dokumen -->
+                <rect x="15" y="15" width="20" height="25" rx="2.5" ry="2.5" fill="#FFFFFF" />
+                <rect x="17.5" y="17.5" width="15" height="5" rx="1" ry="1" fill="#E5E7EB" />
+                <rect x="17.5" y="25" width="15" height="2.5" rx="1" ry="1" fill="#E5E7EB" />
+                <rect x="17.5" y="30" width="15" height="2.5" rx="1" ry="1" fill="#E5E7EB" />
+
+                <!-- Tanda OCR (mata dan teks) -->
+                <circle cx="25" cy="37.5" r="1.5" fill="#3B82F6" />
+                <path d="M 23.5 39 Q 25 40 26.5 39" stroke="#3B82F6" stroke-width="1" fill="none" />
+                <text x="25" y="45" font-size="5" fill="#FFFFFF" text-anchor="middle" font-family="Arial, sans-serif">OCR</text>
+            </svg>
+            <h6 class="text-2xl font-semibold text-white">API OCR Tool</h6>
+        </div>
+
+        <h1 class="mb-4 text-5xl font-bold tracking-tight text-white leading-none">
+            Solusi OCR Terintegrasi untuk Aplikasi Anda.
+        </h1>
+
+        <p class="text-base mb-8 mx-auto text-gray-200">
+            API OCR Tool menyediakan solusi OCR terintegrasi yang memungkinkan Anda mengekstrak teks dari
+            gambar dengan cepat dan akurat. Dirancang khusus untuk developer dan bisnis, API kami mudah diintegrasikan
+            ke dalam aplikasi Anda, mendukung berbagai format gambar, dan dilengkapi dengan dokumentasi lengkap untuk memudahkan implementasi.
+            Tingkatkan efisiensi sistem Anda dengan teknologi OCR modern yang scalable dan handal.
+        </p>
+
+        <div class="space-x-4">
+            <a th:href="@{/auth/login}" class="bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700 transition duration-300">Mulai Sekarang</a>
+            <a th:href="@{/dashboard/docs}" class="bg-white text-blue-600 px-6 py-3 rounded-full font-semibold hover:bg-blue-100 transition duration-300">Lihat Dokumentasi</a>
+        </div>
+
+        <hr class="mt-20 mb-6 border-gray-700"/>
+        <span class="block text-sm text-gray-400">© 2024 - 2025 <a href="https://github.com/marijmokoginta" class="hover:underline">Marij Mokoginta™</a>. All Rights Reserved.</span>
+    </div>
+</body>
+</html>
