@@ -64,6 +64,17 @@ public class ApiRequestLogService {
                 .toList();
     }
 
+    public List<?> getSuccessRateByClientId(String clientId) {
+        List<Object[]> results = apiRequestLogRepository.countSuccessRateByClientId(clientId);
+
+        return results.stream()
+                .map(row -> Map.of(
+                        "type", row[0].toString(),
+                        "value", ((Number) row[1]).intValue()
+                ))
+                .toList();
+    }
+
     private String convertEndpoint(String endpoint) {
         if (endpoint.contains("do-ocr")) {
             return "Ekstraksi";

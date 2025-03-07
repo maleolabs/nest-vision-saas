@@ -41,14 +41,11 @@ public class DashboardController {
 
         var requestCountPerPeriod = apiRequestLogService.getRequestCountByClientIdAndEndpoint(client.getClientId(), "do-ocr");
         var requestCountByEndpoint = apiRequestLogService.getEndpointUsageByClientId(client.getClientId());
+        var requestSuccessRate = apiRequestLogService.getSuccessRateByClientId(client.getClientId());
 
         model.addAttribute("apiRequests", requestCountPerPeriod);
         model.addAttribute("endpointUsage", requestCountByEndpoint);
-
-        model.addAttribute("successRate", List.of(
-                Map.of("type", "Sukses", "value", 450),
-                Map.of("type", "Gagal", "value", 50)
-        ));
+        model.addAttribute("successRate", requestSuccessRate);
 
         return "dashboard/index";
     }

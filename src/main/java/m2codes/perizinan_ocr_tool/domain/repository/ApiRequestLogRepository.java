@@ -54,4 +54,17 @@ public interface ApiRequestLogRepository extends JpaRepository<ApiRequestLog, Lo
             """)
     List<Object[]> countRequestsGroupedByEndpoint(@Param("clientId") String clientId);
 
+    @Query("""
+            SELECT
+                CASE
+                    WHEN a.responseStatus = 200 THEN 'success'
+                    ELSE 'failed'
+                END AS success_rate,
+                COUNT(a)
+            FROM ApiRequestLog a
+            WHERE a.clientId = :clientId
+            GROUP BY success_rate
+            """)
+    List<Object[]> countSuccessRateByClientId(@Param("clientId") String clientId);
+
 }
