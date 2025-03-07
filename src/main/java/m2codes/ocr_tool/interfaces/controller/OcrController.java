@@ -1,9 +1,13 @@
 package m2codes.ocr_tool.interfaces.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import m2codes.ocr_tool.application.service.impl.ExtractedTextQueryServiceImpl;
 import m2codes.ocr_tool.application.service.impl.OcrProcessorService;
+import m2codes.ocr_tool.infrastructure.security.service.RequestLimitService;
+import m2codes.ocr_tool.infrastructure.security.util.ApiKeyGenerator;
 import m2codes.ocr_tool.interfaces.dto.request.OcrDataRequest;
 import m2codes.ocr_tool.interfaces.dto.response.OcrResponse;
 import m2codes.ocr_tool.interfaces.dto.response.WebResponse;
@@ -19,19 +23,13 @@ import java.util.List;
 @RestController
 @RequestMapping(path = "/api/ocr")
 @Slf4j
+@RequiredArgsConstructor
 public class OcrController {
 
     private final OcrProcessorService ocrProcessorService;
-
     private final ExtractedTextQueryServiceImpl extractedTextQueryService;
-
-    public OcrController(
-            OcrProcessorService ocrProcessorService,
-            ExtractedTextQueryServiceImpl extractedTextQueryService
-    ) {
-        this.ocrProcessorService = ocrProcessorService;
-        this.extractedTextQueryService = extractedTextQueryService;
-    }
+    private final ApiKeyGenerator apiKeyGenerator;
+    private final RequestLimitService requestLimitService;
 
     @PostMapping(
             path = "/do-ocr",
@@ -40,8 +38,31 @@ public class OcrController {
     )
     public ResponseEntity<WebResponse<?>> doOcr(
             @ModelAttribute @Valid OcrDataRequest request,
-            BindingResult result
+            BindingResult result,
+            HttpServletRequest servletRequest
             ) {
+        String apiKey = servletRequest.getHeader("X-API-KEY");
+        String clientId = null;
+
+        try {
+            clientId = apiKeyGenerator.decrypt(apiKey);
+            if (!requestLimitService.isRequestAllowed(clientId)) {
+                return ResponseEntity.badRequest().body(
+                        WebResponse.error(
+                                "Request limit exceeded for today.",
+                                HttpStatus.BAD_REQUEST
+                        )
+                );
+            }
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(
+                    WebResponse.error(
+                            "Failed to process request",
+                            HttpStatus.INTERNAL_SERVER_ERROR
+                    )
+            );
+        }
+
         if (result.hasErrors()) {
             List<String> errors = result.getAllErrors().stream()
                     .map(DefaultMessageSourceResolvable::getDefaultMessage)
@@ -68,7 +89,13 @@ public class OcrController {
                                 ? ocrProcessorService.processOcrRequestWithImageUrl(request)
                                 : ocrProcessorService.processOcrRequestWithUploadedImage(request);
 
-        return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+        if (response.isSuccess()) {
+            requestLimitService.incrementUsage(clientId);
+
+            return ResponseEntity.ok().body(response);
+        }
+
+        return ResponseEntity.badRequest().body(response);
     }
 
     @GetMapping(
