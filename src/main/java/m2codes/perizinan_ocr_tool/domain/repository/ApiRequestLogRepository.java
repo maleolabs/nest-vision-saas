@@ -40,4 +40,18 @@ public interface ApiRequestLogRepository extends JpaRepository<ApiRequestLog, Lo
 
     Optional<ApiRequestLog> findFirstByClientIdOrderByRequestTimeAsc(String clientId);
 
+    @Query("""
+            SELECT
+                CASE
+                    WHEN a.endpoint LIKE '/api/ocr/check-status/%' THEN '/api/ocr/check-status/{id}'
+                    WHEN a.endpoint LIKE '/api/ocr/get-result/%' THEN '/api/ocr/get-result/{id}'
+                    ELSE a.endpoint
+                END AS grouped_endpoint,
+                COUNT(a)
+            FROM ApiRequestLog a
+            WHERE a.clientId = :clientId
+            GROUP BY grouped_endpoint
+            """)
+    List<Object[]> countRequestsGroupedByEndpoint(@Param("clientId") String clientId);
+
 }

@@ -53,6 +53,28 @@ public class ApiRequestLogService {
                 .toList();
     }
 
+    public List<?> getEndpointUsageByClientId(String clientId) {
+        List<Object[]> results = apiRequestLogRepository.countRequestsGroupedByEndpoint(clientId);
+
+        return results.stream()
+                .map(row -> Map.of(
+                        "endpoint", convertEndpoint(row[0].toString()),
+                        "count", ((Number) row[1]).intValue()
+                ))
+                .toList();
+    }
+
+    private String convertEndpoint(String endpoint) {
+        if (endpoint.contains("do-ocr")) {
+            return "Ekstraksi";
+        } else if (endpoint.contains("check-status")) {
+            return "Cek Proses";
+        } else if (endpoint.contains("get-result")) {
+            return "Ambil Hasil";
+        }
+        return endpoint;
+    }
+
     private String convertToFormattedString(String period, boolean isMonthly) {
         try {
             var locale = new Locale("id", "ID");
