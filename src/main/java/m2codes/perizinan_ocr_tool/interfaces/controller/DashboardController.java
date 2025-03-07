@@ -39,10 +39,9 @@ public class DashboardController {
         User user = authService.getCurrentUser();
         Client client = user.getClient();
 
-        var requestsCountPerPeriod = apiRequestLogService.getRequestsCountPerPeriodByClientId(client.getClientId());
-        log.info("requests count per period: {}", requestsCountPerPeriod);
+        var requestCountPerPeriod = apiRequestLogService.getRequestCountByClientIdAndEndpoint(client.getClientId(), "do-ocr");
 
-        model.addAttribute("apiRequests", requestsCountPerPeriod);
+        model.addAttribute("apiRequests", requestCountPerPeriod);
 
         model.addAttribute("endpointUsage", List.of(
                 Map.of("endpoint", "Ekstraksi", "count", 300),

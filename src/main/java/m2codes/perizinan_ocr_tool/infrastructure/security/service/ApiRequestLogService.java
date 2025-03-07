@@ -30,7 +30,7 @@ public class ApiRequestLogService {
         return apiRequestLogRepository.findAllByClientIdOrderByRequestTimeDesc(pageable, clientId);
     }
 
-    public List<?> getRequestsCountPerPeriodByClientId(String clientId) {
+    public List<?> getRequestCountByClientIdAndEndpoint(String clientId, String endpoint) {
         Instant firstRequestInstant = apiRequestLogRepository.findFirstByClientIdOrderByRequestTimeAsc(clientId)
                 .map(ApiRequestLog::getRequestTime)
                 .orElse(Instant.now());
@@ -38,13 +38,12 @@ public class ApiRequestLogService {
         LocalDate firstRequestDate = firstRequestInstant.atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate currentDate = Instant.now().atZone(ZoneId.systemDefault()).toLocalDate();
 
-        long daysDiff = ChronoUnit.DAYS.between(firstRequestDate, currentDate   );
-        log.info("days diff : {}", daysDiff);
-        boolean isMonthly = daysDiff >= 30;
+        long daysDiff = ChronoUnit.DAYS.between(firstRequestDate, currentDate);
+        boolean isMonthly = daysDiff > 30;
 
         List<Object[]> results = isMonthly
-                ? apiRequestLogRepository.countRequestsGroupedByMonth(clientId)
-                : apiRequestLogRepository.countRequestsGroupedByDay(clientId);
+                ? apiRequestLogRepository.countRequestsGroupedByMonth(clientId, endpoint)
+                : apiRequestLogRepository.countRequestsGroupedByDay(clientId, endpoint);
 
         return results.stream()
                 .map(row -> Map.of(

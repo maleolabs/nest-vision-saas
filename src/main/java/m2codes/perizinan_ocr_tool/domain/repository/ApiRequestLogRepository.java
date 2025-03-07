@@ -15,22 +15,28 @@ public interface ApiRequestLogRepository extends JpaRepository<ApiRequestLog, Lo
     Page<ApiRequestLog> findAllByClientIdOrderByRequestTimeDesc(Pageable pageable, String clientId);
 
     @Query("""
-            SELECT DATE_FORMAT(a.requestTime, '%Y-%m') AS period, COUNT(a)
+            SELECT
+                DATE_FORMAT(CONVERT_TZ(a.requestTime, '+00:00', '+07:00'), '%Y-%m') AS period,
+                COUNT(a)
             FROM ApiRequestLog a
             WHERE a.clientId = :clientId
+            AND (:endpoint IS NULL OR a.endpoint LIKE CONCAT('%', :endpoint, '%'))
             GROUP BY period
-            ORDER BY period DESC
+            ORDER BY period ASC
             """)
-    List<Object[]> countRequestsGroupedByMonth(@Param("clientId") String clientId);
+    List<Object[]> countRequestsGroupedByMonth(@Param("clientId") String clientId, @Param("endpoint") String endpoint);
 
     @Query("""
-            SELECT DATE(a.requestTime) AS period, COUNT(a)
+            SELECT
+                DATE(CONVERT_TZ(a.requestTime, '+00:00', '+07:00')) AS period,
+                COUNT(a)
             FROM ApiRequestLog a
             WHERE a.clientId = :clientId
+            AND (:endpoint IS NULL OR a.endpoint LIKE CONCAT('%', :endpoint, '%'))
             GROUP BY period
-            ORDER BY period DESC
+            ORDER BY period ASC
             """)
-    List<Object[]> countRequestsGroupedByDay(@Param("clientId") String clientId);
+    List<Object[]> countRequestsGroupedByDay(@Param("clientId") String clientId, @Param("endpoint") String endpoint);
 
     Optional<ApiRequestLog> findFirstByClientIdOrderByRequestTimeAsc(String clientId);
 
