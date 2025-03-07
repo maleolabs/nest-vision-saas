@@ -39,6 +39,15 @@ public class AccountVerificationController {
 
     @PostMapping(path = "/verify")
     public String verifyAccount(@RequestParam String verificationCode, Model model) {
+        User user = authService.getCurrentUser();
+        if (user == null) {
+            return "redirect:/auth/login";
+        }
+
+        if (!user.getStatus().equals(AccountStatus.PENDING)) {
+            return "redirect:/dashboard";
+        }
+
         if (verificationCode.length() == 6) {
             if (accountVerificationService.verifyAccount(verificationCode)) {
                 return "redirect:/dashboard";
@@ -56,6 +65,10 @@ public class AccountVerificationController {
         User user = authService.getCurrentUser();
         if (user == null) {
             return "redirect:/auth/login";
+        }
+
+        if (!user.getStatus().equals(AccountStatus.PENDING)) {
+            return "redirect:/dashboard";
         }
 
         accountVerificationService.sendVerificationCode(user, user.getClient().getEmail());

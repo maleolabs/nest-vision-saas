@@ -42,7 +42,7 @@ public class OcrController {
             HttpServletRequest servletRequest
             ) {
         String apiKey = servletRequest.getHeader("X-API-KEY");
-        String clientId = null;
+        String clientId;
 
         try {
             clientId = apiKeyGenerator.decrypt(apiKey);
