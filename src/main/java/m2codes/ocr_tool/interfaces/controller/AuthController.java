@@ -3,6 +3,8 @@ package m2codes.ocr_tool.interfaces.controller;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import m2codes.ocr_tool.domain.model.User;
 import m2codes.ocr_tool.domain.repository.AccountTypeRepository;
 import m2codes.ocr_tool.infrastructure.security.service.AuthService;
 import m2codes.ocr_tool.interfaces.dto.request.AccountDataRequest;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+@Slf4j
 @RequiredArgsConstructor
 @Controller
 @RequestMapping("auth")
@@ -26,6 +29,15 @@ public class AuthController {
 
     @GetMapping(path = "/register")
     public String register(Model  model) {
+        try {
+            User user = authService.getCurrentUser();
+            if (user != null) {
+                return "redirect:/dashboard";
+            }
+        } catch (Exception e) {
+            log.error("failed to get current user on register, got error: {}", e.getMessage());
+        }
+
         model.addAttribute("registerRequest", new AccountDataRequest());
         model.addAttribute("accountTypes", accountTypeRepository.findAll());
         return "auth/register";
@@ -51,6 +63,15 @@ public class AuthController {
 
     @GetMapping(path = "/login")
     public String login(HttpSession session, Model model) {
+        try {
+            User user = authService.getCurrentUser();
+            if (user != null) {
+                return "redirect:/dashboard";
+            }
+        } catch (Exception e) {
+            log.error("failed to get current user on login, got error: {}", e.getMessage());
+        }
+
         String errorMessage = (String) session.getAttribute("loginError");
         if (errorMessage != null) {
             model.addAttribute("errorMessage", errorMessage);
