@@ -2,23 +2,54 @@
 <html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8">
-    <title>Testing OCR</title>
+    <title>Try OCR | Request</title>
 
     <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tw-elements/css/tw-elements.min.css" />
-    <script src="https://cdn.tailwindcss.com/3.3.0"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              fontFamily: {
+                inter: ['Inter Tight', 'sans-serif'],
+              },
+            },
+          },
+        }
+    </script>
 </head>
 <body>
-    <div class="bg-gray-200 flex items-center justify-center h-screen relative">
-        <div id="ocr-form" class="w-2/3 max-w-lg p-6 bg-white border border-gray-200 rounded-lg shadow flex flex-col">
-            <h5 class="text-xl font-bold text-center">
-                Selamat datang di Sistem Perizinan PMPTSP OCR Tool
+    <div class="bg-gray-800 flex items-center justify-center h-screen relative">
+        <div id="ocr-form" class="w-2/3 max-w-lg p-6 bg-gray-700 rounded-lg flex flex-col">
+            <a href="/" class="flex items-center p-2.5 mb-5 self-center">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 33 33" width="33" height="33">
+                    <circle cx="16.5" cy="16.5" r="15" fill="#3B82F6" />
+
+                    <rect x="10" y="10" width="13" height="16.5" rx="1.65" ry="1.65" fill="#FFFFFF" />
+                    <rect x="11.5" y="11.5" width="10" height="3.3" rx="0.8" ry="0.8" fill="#E5E7EB" />
+                    <rect x="11.5" y="16.5" width="10" height="1.65" rx="0.8" ry="0.8" fill="#E5E7EB" />
+                    <rect x="11.5" y="20" width="10" height="1.65" rx="0.8" ry="0.8" fill="#E5E7EB" />
+
+                    <circle cx="16.5" cy="25" r="1" fill="#3B82F6" />
+                    <path d="M 15.5 26 Q 16.5 26.5 17.5 26" stroke="#3B82F6" stroke-width="0.7" fill="none" />
+                    <text x="16.5" y="30" font-size="3.3" fill="#FFFFFF" text-anchor="middle" font-family="Arial, sans-serif">OCR</text>
+                </svg>
+                <span class="ms-2 self-center text-xl font-bold whitespace-nowrap text-white">API OCR Tool</span>
+            </a>
+            <h5 class="text-xl font-bold text-center text-white">
+                Unggah Gambar untuk Ekstraksi Teks
             </h5>
-            <p class="text-md mb-3 text-center font-normal text-gray-500 dark:text-gray-400">
-                Silahkan upload gambar untuk di ekstrak menjadi teks
+            <p class="text-md mb-3 text-center font-normal text-gray-400">
+                Silahkan unggah gambar, dan sistem kami akan mengekstrak teksnya untuk Anda.
             </p>
             <div class="flex items-center justify-center w-full">
-                <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 relative">
+                <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-500 border-dashed rounded-lg cursor-pointer bg-gray-600 hover:bg-gray-500 relative">
                     <div id="loading-spinner" role="status" class="hidden absolute -translate-x-1/2 -translate-y-1/2 top-2/4 left-1/2">
                         <svg aria-hidden="true" class="w-8 h-8 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/><path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/></svg>
                         <span class="sr-only">Loading...</span>
@@ -40,6 +71,8 @@
             <button type="button" id="extract-button" class="mt-4 hidden text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
                 Ekstrak
             </button>
+
+            <span class="block text-sm text-gray-400 self-center mt-20">© 2024 - 2025 <a href="https://github.com/marijmokoginta" class="hover:underline">Marij Mokoginta™</a>. All Rights Reserved.</span>
         </div>
         <div id="extraction-loading" class="absolute hidden inset-0 bg-gray-900/50 flex flex-col items-center justify-center">
             <img th:src="@{/img/ocr.gif}" alt="loading" class="w-52">
@@ -65,7 +98,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
 
-    <script>
+    <script th:inline="javascript">
         const ocrForm = document.getElementById('ocr-form');
         const dropzoneFileInput = document.getElementById('dropzone-file');
         const previewImage = document.getElementById('preview-image');
@@ -77,6 +110,10 @@
 
         const modalButton = document.getElementById('modal-button');
         const modalMessage = document.getElementById('modal-message');
+
+        /*<![CDATA[*/
+        const apiKey = /*[[${apiKey}]]*/ "";
+        /*]]>*/
 
         dropzoneFileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
@@ -117,7 +154,7 @@
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-API-KEY': 'aa95014e7e56d57b30cfc80c16040ad73002d7078be6244b851e8ccb14b896d3'
+                    'X-API-KEY': apiKey
                 }
             })
             .then(response => response.json())
@@ -143,7 +180,7 @@
                 fetch('/api/ocr/check-status/' + requestId, {
                     method: 'GET',
                     headers: {
-                        'X-API-KEY': 'aa95014e7e56d57b30cfc80c16040ad73002d7078be6244b851e8ccb14b896d3'
+                        'X-API-KEY': apiKey
                     }
                 })
                 .then(response => response.json())
@@ -152,7 +189,7 @@
                         extractionLoading.classList.add('hidden');
                         extractionLoadingMessage.innerText = 'Ekstraksi selesai!';
                         clearInterval(intervalId);
-                        window.location.replace('/testing/result/' + responseData.data.requestId);
+                        window.location.replace('/ocr/result/' + responseData.data.requestId);
                     } else if (responseData.data.status == 'WAITING') {
                         extractionLoadingMessage.innerText = 'Menunggu hasil ekstraksi!';
                     } else if (responseData.data.status == 'FAILURE') {

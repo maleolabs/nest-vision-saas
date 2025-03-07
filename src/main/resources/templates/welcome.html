@@ -54,7 +54,8 @@
         </p>
 
         <div class="space-x-4">
-            <a th:href="@{${isGuest ? '/auth/login' : '/dashboard'}}" class="bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700 transition duration-300">Mulai Sekarang</a>
+            <a th:href="@{/auth/login}" th:if="${isGuest}" class="bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700 transition duration-300">Mulai Sekarang</a>
+            <a th:href="@{/ocr/extract}" th:unless="${isGuest}" class="bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700 transition duration-300">Upload & Ekstraksi</a>
             <a th:href="@{/dashboard/docs}" class="bg-white text-blue-600 px-6 py-3 rounded-full font-semibold hover:bg-blue-100 transition duration-300">Lihat Dokumentasi</a>
         </div>
 

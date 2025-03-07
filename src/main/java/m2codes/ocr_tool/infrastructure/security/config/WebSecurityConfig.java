@@ -29,8 +29,9 @@ public class WebSecurityConfig {
     public SecurityFilterChain webSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
-                .securityMatcher("/dashboard/**", "/auth/**", "/account/**")
+                .securityMatcher("/", "/ocr/**", "/dashboard/**", "/auth/**", "/account/**")
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/").permitAll()
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers("/account/**").permitAll()
                         .anyRequest().authenticated()
