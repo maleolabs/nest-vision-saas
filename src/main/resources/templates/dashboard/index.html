@@ -49,10 +49,14 @@
             new Chart(ctxPie, {
                 type: "pie",
                 data: {
-                    labels: successRate.map(d => d.type),
+                    labels: successRate.map(d =>
+                        d.type.toLowerCase() === "success" ? "Sukses" : "Gagal"
+                    ),
                     datasets: [{
                         data: successRate.map(d => d.value),
-                        backgroundColor: ["#ef4444", "#22c55e"]
+                        backgroundColor: successRate.map(d =>
+                            d.type.toLowerCase() === "success" ? "#22c55e" : "#ef4444"
+                        )
                     }]
                 }
             });
