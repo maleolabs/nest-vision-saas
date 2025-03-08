@@ -25,8 +25,6 @@ public class OcrResultDto {
 
     private Long duration;
 
-    private Long extractedAt;
-
     @Override
     public String toString() {
         return "OcrResultDto{" +
@@ -34,7 +32,6 @@ public class OcrResultDto {
                 ", isSuccess=" + isSuccess +
                 ", errorMessage=" + errorMessage +
                 ", duration=" + duration +
-                ", extractedAt=" + extractedAt +
                 "}";
     }
 }

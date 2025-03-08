@@ -51,7 +51,6 @@ public class TesseractOcrService implements TextExtractionService {
             result.setExtractedText(text);
             result.setSuccess(true);
             result.setDuration(duration);
-            result.setExtractedAt(endTime);
         } catch (IOException | TesseractException exception) {
             result.setSuccess(false);
             result.setErrorMessage(exception.getMessage());
@@ -77,7 +76,6 @@ public class TesseractOcrService implements TextExtractionService {
             result.setExtractedText(text);
             result.setSuccess(true);
             result.setDuration(duration);
-            result.setExtractedAt(endTime);
         } catch (IOException | TesseractException exception) {
             result.setSuccess(false);
             result.setErrorMessage(exception.getMessage());

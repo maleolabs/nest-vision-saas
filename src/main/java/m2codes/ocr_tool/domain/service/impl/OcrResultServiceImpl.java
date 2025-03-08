@@ -35,7 +35,6 @@ public class OcrResultServiceImpl implements OcrResultService {
                 .isSuccess(ocrResultDto.isSuccess())
                 .errorMessage(ocrResultDto.getErrorMessage())
                 .duration(ocrResultDto.getDuration())
-                .extractedAt(ocrResultDto.getExtractedAt())
                 .originalExtractedText(ocrResultDto.getExtractedText())
                 .build();
 

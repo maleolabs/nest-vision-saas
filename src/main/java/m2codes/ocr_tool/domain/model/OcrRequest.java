@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.util.UUID;
 
 /**
@@ -30,8 +31,8 @@ public class OcrRequest {
     @Column(name="image_url")
     private String imageUrl;
 
-    @Column(name="requested_at")
-    private Long requestedAt;
+    @Column(name="requested_at", nullable = false, updatable = false)
+    private Instant requestedAt;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
@@ -43,5 +44,10 @@ public class OcrRequest {
             fetch=FetchType.LAZY
     )
     private OcrResult ocrResults;
+
+    @PrePersist
+    protected void onCreate() {
+        requestedAt = Instant.now();
+    }
 
 }

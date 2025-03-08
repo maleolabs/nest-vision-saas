@@ -48,9 +48,6 @@ public class OcrResult {
     @Column(name = "duration")
     private Long duration;
 
-    @Column(name="extracted_at")
-    private Long extractedAt;
-
     @Column(name = "original_extracted_text", columnDefinition = "TEXT")
     private String originalExtractedText;
 
@@ -69,7 +66,6 @@ public class OcrResult {
                 ", isSuccess=" + isSuccess +
                 ", errorMessage=" + errorMessage +
                 ", duration=" + duration +
-                ", extractedAt=" + extractedAt +
                 "}";
     }
 }

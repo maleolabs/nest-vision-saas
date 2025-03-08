@@ -37,7 +37,6 @@ public class OcrRequestServiceImpl implements OcrRequestService {
         OcrRequest ocrRequest = OcrRequest.builder()
                 .id(savedImageUploadId)
                 .imageUrl(imageUrl)
-                .requestedAt(System.currentTimeMillis())
                 .status(status)
                 .build();
 
