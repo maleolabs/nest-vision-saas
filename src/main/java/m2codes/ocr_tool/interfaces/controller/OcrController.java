@@ -86,8 +86,8 @@ public class OcrController {
         }
 
         ApiResponse<?> response = request.isUsingUrl()
-                                ? ocrProcessorService.processOcrRequestWithImageUrl(request)
-                                : ocrProcessorService.processOcrRequestWithUploadedImage(request);
+                                ? ocrProcessorService.processOcrRequestWithImageUrl(request, clientId)
+                                : ocrProcessorService.processOcrRequestWithUploadedImage(request, clientId);
 
         if (response.isSuccess()) {
             requestLimitService.incrementUsage(clientId);
@@ -102,8 +102,31 @@ public class OcrController {
             path = "/get-result/{requestId}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<ApiResponse<?>> getByRequestId(@PathVariable(name = "requestId") String requestId) {
+    public ResponseEntity<ApiResponse<?>> getByRequestId(
+            @PathVariable(name = "requestId") String requestId,
+            HttpServletRequest servletRequest
+    ) {
+        String apiKey = servletRequest.getHeader("X-API-KEY");
+        String clientId;
+
+        try {
+            clientId = apiKeyGenerator.decrypt(apiKey);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(
+                    ApiResponse.error(
+                            "Failed to get request result",
+                            HttpStatus.INTERNAL_SERVER_ERROR
+                    )
+            );
+        }
+
         var response = extractedTextQueryService.getByRequestId(requestId);
+
+        var invalidClientId = checkClientId(clientId, response.getData().getClientId());
+        if (invalidClientId != null) {
+            return invalidClientId;
+        }
+
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
 
@@ -111,9 +134,39 @@ public class OcrController {
             path = "/check-status/{requestId}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<ApiResponse<OcrResponse>> checkStatus(@PathVariable(name = "requestId") String requestId) {
+    public ResponseEntity<ApiResponse<?>> checkStatus(
+            @PathVariable(name = "requestId") String requestId,
+            HttpServletRequest servletRequest
+    ) {
+        String apiKey = servletRequest.getHeader("X-API-KEY");
+        String clientId;
+
+        try {
+            clientId = apiKeyGenerator.decrypt(apiKey);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(
+                    ApiResponse.error(
+                            "Failed to get request result",
+                            HttpStatus.INTERNAL_SERVER_ERROR
+                    )
+            );
+        }
         ApiResponse<OcrResponse> response = extractedTextQueryService.checkStatus(requestId);
+
+        var invalidClientId = checkClientId(clientId, response.getData().getClientId());
+        if (invalidClientId != null) {
+            return invalidClientId;
+        }
+
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
+    }
+
+    private ResponseEntity<ApiResponse<?>> checkClientId(String requestClientId, String actualClientId) {
+        if (requestClientId.equals(actualClientId)) {
+            return null;
+        }
+
+        return ResponseEntity.notFound().build();
     }
 
 }

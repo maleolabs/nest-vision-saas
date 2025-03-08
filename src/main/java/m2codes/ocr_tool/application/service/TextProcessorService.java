@@ -38,10 +38,10 @@ public abstract class TextProcessorService {
     }
 
     @Transactional
-    public final ApiResponse<?> processOcrRequestWithImageUrl(OcrDataRequest request) {
+    public final ApiResponse<?> processOcrRequestWithImageUrl(OcrDataRequest request, String clientId) {
         var status = isPoolAvailable() ? RequestStatus.PROCESSING : RequestStatus.WAITING;
-        OcrRequest ocrRequest = saveOcrRequest(request, status);
-        processingExtractionText(request, ocrRequest);
+        OcrRequest ocrRequest = saveOcrRequest(request, status, clientId);
+        processingExtractionText(request, ocrRequest, clientId);
         return buildResponse(
                 OcrResponse.builder()
                         .requestId(ocrRequest.getId().toString())
@@ -52,7 +52,7 @@ public abstract class TextProcessorService {
         );
     }
 
-    public final ApiResponse<?> processOcrRequestWithUploadedImage(OcrDataRequest request) {
+    public final ApiResponse<?> processOcrRequestWithUploadedImage(OcrDataRequest request, String clientId) {
         var status = isPoolAvailable() ? RequestStatus.PROCESSING : RequestStatus.WAITING;
 
         String uploadedFileName;
@@ -72,8 +72,8 @@ public abstract class TextProcessorService {
         }
 
         OcrDataRequest dataRequest = OcrDataRequest.builder().imageUrl(uploadedFileName).build();
-        OcrRequest ocrRequest = saveOcrRequest(dataRequest, status);
-        processingExtractionText(uploadedFile, ocrRequest, dataRequest);
+        OcrRequest ocrRequest = saveOcrRequest(dataRequest, status, clientId);
+        processingExtractionText(uploadedFile, ocrRequest, dataRequest, clientId);
 
         return buildResponse(
                 OcrResponse.builder()
@@ -84,11 +84,11 @@ public abstract class TextProcessorService {
                 null
         );
     }
-    protected abstract void processingExtractionText(OcrDataRequest request, OcrRequest ocrRequest);
+    protected abstract void processingExtractionText(OcrDataRequest request, OcrRequest ocrRequest, String clientId);
 
-    protected abstract void processingExtractionText(File file, OcrRequest ocrRequest, OcrDataRequest dataRequest);
+    protected abstract void processingExtractionText(File file, OcrRequest ocrRequest, OcrDataRequest dataRequest, String clientid);
 
-    protected abstract OcrRequest saveOcrRequest(OcrDataRequest request, RequestStatus status);
+    protected abstract OcrRequest saveOcrRequest(OcrDataRequest request, RequestStatus status, String clientId);
 
     protected abstract OcrResultDto extractTextFromImage(String imageUrl);
 

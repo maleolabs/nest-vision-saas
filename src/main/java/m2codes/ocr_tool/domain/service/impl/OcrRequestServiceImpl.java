@@ -27,7 +27,7 @@ public class OcrRequestServiceImpl implements OcrRequestService {
     }
 
     @Override
-    public OcrRequest save(OcrDataRequest request, RequestStatus status) {
+    public OcrRequest save(OcrDataRequest request, RequestStatus status, String clientId) {
         var imageUrl = request != null ? request.getImageUrl() : null;
 
         UUID savedImageUploadId = ocrRequestRepository
@@ -38,6 +38,7 @@ public class OcrRequestServiceImpl implements OcrRequestService {
                 .id(savedImageUploadId)
                 .imageUrl(imageUrl)
                 .status(status)
+                .clientId(clientId)
                 .build();
 
         return ocrRequestRepository.save(ocrRequest);

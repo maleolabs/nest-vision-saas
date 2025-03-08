@@ -67,12 +67,12 @@ public class OcrProcessorService extends TextProcessorService {
     @Async
     @Transactional
     @Override
-    protected void processingExtractionText(OcrDataRequest request, OcrRequest ocrRequest) {
+    protected void processingExtractionText(OcrDataRequest request, OcrRequest ocrRequest, String clientId) {
         ocrRequest = entityManager.merge(ocrRequest);
 
         OcrResultDto ocrResultDto = extractTextFromImage(request.getImageUrl());
         if (!ocrResultDto.isSuccess()) {
-            saveOcrRequest(request, RequestStatus.FAILURE);
+            saveOcrRequest(request, RequestStatus.FAILURE, clientId);
             entityManager.flush();
             return;
         }
@@ -87,13 +87,13 @@ public class OcrProcessorService extends TextProcessorService {
     @Async
     @Transactional
     @Override
-    protected void processingExtractionText(File file, OcrRequest ocrRequest, OcrDataRequest dataRequest) {
+    protected void processingExtractionText(File file, OcrRequest ocrRequest, OcrDataRequest dataRequest, String clientId) {
         ocrRequest = entityManager.merge(ocrRequest);
 
         try {
             OcrResultDto ocrResultDto = extractTextFromImage(file);
             if (!ocrResultDto.isSuccess()) {
-                saveOcrRequest(dataRequest, RequestStatus.FAILURE);
+                saveOcrRequest(dataRequest, RequestStatus.FAILURE, clientId);
                 entityManager.flush();
             }
             OcrResult ocrResult = saveOcrResult(ocrResultDto, ocrRequest);
@@ -102,14 +102,14 @@ public class OcrProcessorService extends TextProcessorService {
             entityManager.flush();
         } catch (Exception e) {
             log.error("Exception Error : {}", e.getMessage());
-            saveOcrRequest(dataRequest, RequestStatus.FAILURE);
+            saveOcrRequest(dataRequest, RequestStatus.FAILURE, clientId);
             entityManager.flush();
         }
     }
 
     @Override
-    protected OcrRequest saveOcrRequest(OcrDataRequest request, RequestStatus status) {
-        return ocrRequestService.save(request, status);
+    protected OcrRequest saveOcrRequest(OcrDataRequest request, RequestStatus status, String clientId) {
+        return ocrRequestService.save(request, status, clientId);
     }
 
     @Override

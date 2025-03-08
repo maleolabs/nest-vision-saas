@@ -45,6 +45,9 @@ public class OcrRequest {
     )
     private OcrResult ocrResults;
 
+    @Column(name = "client_id")
+    private String clientId;
+
     @PrePersist
     protected void onCreate() {
         requestedAt = Instant.now();

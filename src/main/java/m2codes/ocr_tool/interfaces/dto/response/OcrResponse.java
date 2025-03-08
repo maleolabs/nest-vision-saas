@@ -15,6 +15,8 @@ public class OcrResponse {
 
     private String requestId;
 
+    private String clientId;
+
     private RequestStatus status;
 
     private Float duration;

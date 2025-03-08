@@ -32,6 +32,7 @@ public abstract class ExtractedTextQueryService {
         }
         OcrResponse response = OcrResponse.builder()
                 .requestId(requestId)
+                .clientId(request.getClientId())
                 .status(request.getStatus())
                 .build();
         if (request.getOcrResults() != null) {
@@ -48,6 +49,7 @@ public abstract class ExtractedTextQueryService {
         var ocrResponse = OcrResponse2.builder()
                 .requestId(request.getId().toString())
                 .status(request.getStatus())
+                .clientId(request.getClientId())
                 .build();
 
         if (request.getOcrResults() != null) {
@@ -70,6 +72,7 @@ public abstract class ExtractedTextQueryService {
         var ocrResponse = OcrResponse.builder()
                 .requestId(request.getId().toString())
                 .status(request.getStatus())
+                .clientId(request.getClientId())
                 .build();
         if (request.getOcrResults() != null) {
             var ocrResult = request.getOcrResults();

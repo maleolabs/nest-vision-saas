@@ -34,9 +34,19 @@ public class TryOcrController {
     }
 
     @GetMapping(path = "/result/{requestId}")
-    public String showTestingResultPage(@PathVariable("requestId") String requestId, Model model) {
+    public String showTestingResultPage(
+            @PathVariable("requestId") String requestId,
+            Model model
+    ) {
+        User user;
+        try {
+            user = authService.getCurrentUser();
+        } catch (Exception e) {
+            return "redirect:/auth/login";
+        }
+
         OcrResponse ocrResponse = extractedTextQueryService.findByRequestId(requestId);
-        if (ocrResponse == null) {
+        if (ocrResponse == null || !user.getClient().getClientId().equals(ocrResponse.getClientId())) {
             return "error/404";
         }
         model.addAttribute("ocrResult", ocrResponse);

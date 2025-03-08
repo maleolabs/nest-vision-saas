@@ -12,7 +12,7 @@ import java.util.Optional;
  */
 public interface OcrRequestService {
 
-    OcrRequest save(OcrDataRequest request, RequestStatus status);
+    OcrRequest save(OcrDataRequest request, RequestStatus status, String clientId);
 
     Optional<OcrRequest> find(String id);
 
