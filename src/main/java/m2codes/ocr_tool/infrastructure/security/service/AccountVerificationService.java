@@ -8,6 +8,7 @@ import m2codes.ocr_tool.domain.model.VerificationCode;
 import m2codes.ocr_tool.domain.repository.VerificationCodeRepository;
 import m2codes.ocr_tool.domain.service.ApiKeyService;
 import m2codes.ocr_tool.domain.service.UserService;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,7 @@ public class AccountVerificationService {
     private final ApiKeyService apiKeyService;
     private final EmailSenderService emailSenderService;
 
+    @Async
     public void sendVerificationCode(User user, String email) {
         String generatedCode = getCode();
 
