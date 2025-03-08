@@ -7,12 +7,13 @@ import m2codes.ocr_tool.domain.model.ExtractedText;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  *
  * @author marij_mokoginta
  */
-public interface ExtractedTextRepository extends JpaRepository<ExtractedText, Long> {
+public interface ExtractedTextRepository extends JpaRepository<ExtractedText, UUID> {
 
     Optional<ExtractedText> findFirstByTextKey(@Param("textKey") String textKey);
 

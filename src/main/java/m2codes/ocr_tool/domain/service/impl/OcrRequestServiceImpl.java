@@ -10,6 +10,7 @@ import m2codes.ocr_tool.domain.service.OcrRequestService;
 import m2codes.ocr_tool.interfaces.dto.request.OcrDataRequest;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  *
@@ -29,7 +30,7 @@ public class OcrRequestServiceImpl implements OcrRequestService {
     public OcrRequest save(OcrDataRequest request, RequestStatus status) {
         var imageUrl = request != null ? request.getImageUrl() : null;
 
-        Long savedImageUploadId = ocrRequestRepository
+        UUID savedImageUploadId = ocrRequestRepository
                 .findFirstByImageUrl(imageUrl)
                 .map(OcrRequest::getId).orElse(null);
 
@@ -44,8 +45,9 @@ public class OcrRequestServiceImpl implements OcrRequestService {
     }
 
     @Override
-    public Optional<OcrRequest> find(Long id) {
-        return ocrRequestRepository.findById(id);
+    public Optional<OcrRequest> find(String id) {
+        UUID requestId = UUID.fromString(id);
+        return ocrRequestRepository.findById(requestId);
     }
 
     @Override

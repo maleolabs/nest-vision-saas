@@ -10,6 +10,8 @@ import m2codes.ocr_tool.domain.repository.OcrResultRepository;
 import m2codes.ocr_tool.domain.service.OcrResultService;
 import m2codes.ocr_tool.application.dto.OcrResultDto;
 
+import java.util.UUID;
+
 /**
  *
  * @author marij_mokoginta
@@ -26,7 +28,7 @@ public class OcrResultServiceImpl implements OcrResultService {
 
     @Override
     public OcrResult save(OcrResultDto ocrResultDto, @NonNull OcrRequest ocrRequest) {
-        Long savedOcrResultId = ocrResultRepository.findFirstByOcrRequest(ocrRequest).map(OcrResult::getId).orElse(null);
+        UUID savedOcrResultId = ocrResultRepository.findFirstByOcrRequest(ocrRequest).map(OcrResult::getId).orElse(null);
         OcrResult ocrResult = OcrResult.builder()
                 .id(savedOcrResultId)
                 .ocrRequest(ocrRequest)

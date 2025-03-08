@@ -14,7 +14,7 @@ public interface OcrRequestService {
 
     OcrRequest save(OcrDataRequest request, RequestStatus status);
 
-    Optional<OcrRequest> find(Long id);
+    Optional<OcrRequest> find(String id);
 
     void updateStatus(OcrRequest request, RequestStatus status);
 

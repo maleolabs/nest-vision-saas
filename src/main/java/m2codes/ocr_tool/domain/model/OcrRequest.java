@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.UUID;
+
 /**
  *
  * @author marij_mokoginta
@@ -21,9 +23,9 @@ import lombok.Setter;
 public class OcrRequest {
 
     @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
+    @GeneratedValue(strategy=GenerationType.AUTO)
     @Column(name="id")
-    private Long id;
+    private UUID id;
 
     @Column(name="image_url")
     private String imageUrl;

@@ -1,6 +1,7 @@
 package m2codes.ocr_tool.domain.model;
 
 import java.util.List;
+import java.util.UUID;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -23,9 +24,9 @@ import lombok.Setter;
 public class OcrResult {
 
     @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
+    @GeneratedValue(strategy=GenerationType.AUTO)
     @Column(name="id")
-    private Long id;
+    private UUID id;
 
     @OneToOne(
             fetch=FetchType.LAZY,

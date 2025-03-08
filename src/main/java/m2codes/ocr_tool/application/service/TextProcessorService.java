@@ -44,7 +44,7 @@ public abstract class TextProcessorService {
         processingExtractionText(request, ocrRequest);
         return buildResponse(
                 OcrResponse.builder()
-                        .requestId(ocrRequest.getId())
+                        .requestId(ocrRequest.getId().toString())
                         .status(ocrRequest.getStatus())
                         .build(),
                 true,
@@ -77,7 +77,7 @@ public abstract class TextProcessorService {
 
         return buildResponse(
                 OcrResponse.builder()
-                        .requestId(ocrRequest.getId())
+                        .requestId(ocrRequest.getId().toString())
                         .status(ocrRequest.getStatus())
                         .build(),
                 true,

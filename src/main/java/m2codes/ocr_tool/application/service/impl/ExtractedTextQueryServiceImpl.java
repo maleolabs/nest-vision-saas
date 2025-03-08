@@ -18,7 +18,7 @@ public class ExtractedTextQueryServiceImpl extends ExtractedTextQueryService {
     }
 
     @Override
-    protected OcrRequest findRequestById(Long requestId) {
+    protected OcrRequest findRequestById(String requestId) {
         return ocrRequestService.find(requestId).orElse(null);
     }
 

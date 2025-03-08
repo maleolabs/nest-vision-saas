@@ -34,7 +34,7 @@ public class TryOcrController {
     }
 
     @GetMapping(path = "/result/{requestId}")
-    public String showTestingResultPage(@PathVariable("requestId") Long requestId, Model model) {
+    public String showTestingResultPage(@PathVariable("requestId") String requestId, Model model) {
         OcrResponse ocrResponse = extractedTextQueryService.findByRequestId(requestId);
         if (ocrResponse == null) {
             return "error/404";

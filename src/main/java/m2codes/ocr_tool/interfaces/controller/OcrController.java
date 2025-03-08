@@ -102,7 +102,7 @@ public class OcrController {
             path = "/get-result/{requestId}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<ApiResponse<?>> getByRequestId(@PathVariable(name = "requestId") Long requestId) {
+    public ResponseEntity<ApiResponse<?>> getByRequestId(@PathVariable(name = "requestId") String requestId) {
         var response = extractedTextQueryService.getByRequestId(requestId);
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }
@@ -111,7 +111,7 @@ public class OcrController {
             path = "/check-status/{requestId}",
             produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<ApiResponse<OcrResponse>> checkStatus(@PathVariable(name = "requestId") Long requestId) {
+    public ResponseEntity<ApiResponse<OcrResponse>> checkStatus(@PathVariable(name = "requestId") String requestId) {
         ApiResponse<OcrResponse> response = extractedTextQueryService.checkStatus(requestId);
         return response.isSuccess() ? ResponseEntity.ok(response) : ResponseEntity.badRequest().body(response);
     }

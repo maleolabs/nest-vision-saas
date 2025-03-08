@@ -25,7 +25,7 @@ public abstract class ExtractedTextQueryService {
         this.ocrRequestService = ocrRequestService;
     }
 
-    public final ApiResponse<OcrResponse> checkStatus(Long requestId) {
+    public final ApiResponse<OcrResponse> checkStatus(String requestId) {
         OcrRequest request = findRequestById(requestId);
         if (request == null) {
             return builResponse(null, false, "Request with id : " + requestId + " not found!");
@@ -40,13 +40,13 @@ public abstract class ExtractedTextQueryService {
         return builResponse(response, true, null);
     }
 
-    public final ApiResponse<OcrResponse2> getByRequestId(Long requestId) {
+    public final ApiResponse<OcrResponse2> getByRequestId(String requestId) {
         OcrRequest request = findRequestById(requestId);
         if (request == null) {
             return builResponse(null, false, "Request ID not found");
         }
         var ocrResponse = OcrResponse2.builder()
-                .requestId(request.getId())
+                .requestId(request.getId().toString())
                 .status(request.getStatus())
                 .build();
 
@@ -62,13 +62,13 @@ public abstract class ExtractedTextQueryService {
         return builResponse(ocrResponse, true, null);
     }
 
-    public final OcrResponse findByRequestId(Long requestId) {
+    public final OcrResponse findByRequestId(String requestId) {
         OcrRequest request = findRequestById(requestId);
         if (request == null) {
             return null;
         }
         var ocrResponse = OcrResponse.builder()
-                .requestId(request.getId())
+                .requestId(request.getId().toString())
                 .status(request.getStatus())
                 .build();
         if (request.getOcrResults() != null) {
@@ -91,6 +91,6 @@ public abstract class ExtractedTextQueryService {
 
     protected abstract <T> ApiResponse<T> builResponse(T data, boolean success, String errorMessage);
 
-    protected abstract OcrRequest findRequestById(Long requestId);
+    protected abstract OcrRequest findRequestById(String requestId);
 
 }

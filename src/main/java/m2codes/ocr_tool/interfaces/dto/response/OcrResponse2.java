@@ -12,7 +12,7 @@ import java.util.Map;
 @NoArgsConstructor
 public class OcrResponse2 {
 
-    private Long requestId;
+    private String requestId;
 
     private RequestStatus status;
 

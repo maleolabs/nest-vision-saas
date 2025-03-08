@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 public class OcrResponse {
 
-    private Long requestId;
+    private String requestId;
 
     private RequestStatus status;
 

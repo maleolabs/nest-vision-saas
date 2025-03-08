@@ -13,6 +13,7 @@ import m2codes.ocr_tool.application.dto.ExtractedTextDto;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  *
@@ -30,7 +31,7 @@ public class ExtractedTextServiceImpl implements ExtractedTextService {
 
     @Override
     public void save(ExtractedTextDto extractedTextDto, @NonNull OcrResult ocrResult) {
-        Long savedETId = extractedTextRepository.findFirstByOcrResult(ocrResult).map(ExtractedText::getId).orElse(null);
+        UUID savedETId = extractedTextRepository.findFirstByOcrResult(ocrResult).map(ExtractedText::getId).orElse(null);
 
         ExtractedText extractedText = ExtractedText.builder()
                 .id(savedETId)
@@ -47,7 +48,7 @@ public class ExtractedTextServiceImpl implements ExtractedTextService {
         List<ExtractedText> extractedTexts = new ArrayList<>();
 
         extractedTextDtos.forEach(extractedTextDto -> {
-            Long savedETId = extractedTextRepository.findFirstByOcrResult(ocrResult).map(ExtractedText::getId).orElse(null);
+            UUID savedETId = extractedTextRepository.findFirstByOcrResult(ocrResult).map(ExtractedText::getId).orElse(null);
             extractedTexts.add(ExtractedText.builder()
                     .id(savedETId)
                     .textKey(extractedTextDto.getTextKey())
