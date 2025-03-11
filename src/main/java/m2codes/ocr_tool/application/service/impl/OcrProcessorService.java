@@ -64,7 +64,7 @@ public class OcrProcessorService extends TextProcessorService {
         this.fileManagerService = fileManagerService;
     }
 
-    @Async
+    @Async("ocrTaskExecutor")
     @Transactional
     @Override
     protected void processingExtractionText(OcrDataRequest request, OcrRequest ocrRequest, String clientId) {
@@ -84,7 +84,7 @@ public class OcrProcessorService extends TextProcessorService {
         entityManager.flush();
     }
 
-    @Async
+    @Async("ocrTaskExecutor")
     @Transactional
     @Override
     protected void processingExtractionText(File file, OcrRequest ocrRequest, OcrDataRequest dataRequest, String clientId) {
@@ -127,7 +127,7 @@ public class OcrProcessorService extends TextProcessorService {
         return ocrResultService.save(ocrResultDto, ocrRequest);
     }
 
-    @Async
+    @Async("ocrTaskExecutor")
     @Override
     protected CompletableFuture<List<ExtractedTextDto>> processExtractedText(String extractedText, List<String> requiredKeys) {
         String[] lines = extractedText.split("\\r?\\n");
@@ -140,7 +140,7 @@ public class OcrProcessorService extends TextProcessorService {
         return CompletableFuture.completedFuture(filteredData);
     }
 
-    @Async
+    @Async("ocrTaskExecutor")
     @Override
     protected CompletableFuture<List<ExtractedTextDto>> processExtractedText(String extractedText) {
         String[] lines = extractedText.split("\\r?\\n");

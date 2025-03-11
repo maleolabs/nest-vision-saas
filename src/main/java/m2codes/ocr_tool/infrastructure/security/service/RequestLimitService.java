@@ -1,5 +1,6 @@
 package m2codes.ocr_tool.infrastructure.security.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import m2codes.ocr_tool.domain.model.Client;
 import m2codes.ocr_tool.domain.model.RequestUsage;
@@ -32,6 +33,7 @@ public class RequestLimitService {
         return usage.getRequestCount() < maxRequest;
     }
 
+    @Transactional
     public void incrementUsage(String clientId) {
         RequestUsage usage = requestUsageRepository.findByClientIdAndRequestDate(clientId, getTodayUtcDate())
                 .orElse(RequestUsage.builder().clientId(clientId).requestCount(0).build());

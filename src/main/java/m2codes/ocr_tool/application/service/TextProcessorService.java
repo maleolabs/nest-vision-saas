@@ -52,6 +52,8 @@ public abstract class TextProcessorService {
         );
     }
 
+
+    @Transactional
     public final ApiResponse<?> processOcrRequestWithUploadedImage(OcrDataRequest request, String clientId) {
         var status = isPoolAvailable() ? RequestStatus.PROCESSING : RequestStatus.WAITING;
 
