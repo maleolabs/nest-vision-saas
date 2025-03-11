@@ -9,7 +9,6 @@ import javax.imageio.ImageIO;
 
 import m2codes.ocr_tool.application.service.TextExtractionService;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
@@ -25,8 +24,8 @@ import net.sourceforge.tess4j.TesseractException;
 @Slf4j
 public class TesseractOcrService implements TextExtractionService {
 
-    @Value("classpath:static/tessdata")
-    private Resource tessdataDirectory;
+    @Value("${tesseract.datapath}")
+    private String tessdataPath;
 
     @Override
     public OcrResultDto extractTextFromImage(String imageUrl) {
@@ -87,9 +86,13 @@ public class TesseractOcrService implements TextExtractionService {
 
     private Tesseract getTesseractInstance() throws IOException{
         Tesseract tesseract = new Tesseract();
-        String tessdataPath = tessdataDirectory.getFile().getAbsolutePath();
+
         tesseract.setDatapath(tessdataPath);
         tesseract.setLanguage("ind");
+
+        tesseract.setPageSegMode(1);
+        tesseract.setOcrEngineMode(3);
+
         return tesseract;
     }
 
