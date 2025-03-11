@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  ocr-api:
+    build: .
+    container_name: ocr-api
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_SERVLET_SESSION_TIMEOUT=1500m
+      - SPRING_CONFIG_ADDITIONAL_LOCATION=/lib/x86_64-linux-gnu
+
+      # Database Configuration
+      - SPRING_DATASOURCE_DRIVER-CLASS-NAME=${SPRING_DATASOURCE_DRIVER-CLASS-NAME}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
+
+      # JPA & Hibernate
+      - SPRING_JPA_HIBERNATE_DDL-AUTO=update
+
+      # Tesseract OCR Configuration
+      - TESSERACT_DATAPATH=/usr/share/tesseract-ocr/5/tessdata/
+
+      # API Key Configuration
+      - APP_API-KEY_LENGTH=32
+      - APP_API-KEY_LIFETIME=180
+
+      # Thread Pool Configuration
+      - PHYSICAL-DEVICE_CORE-POOL=3
+      - PHYSICAL-DEVICE_MAX-POOL=5
+      - PHYSICAL-DEVICE_QUEUE-CAPACITY=50
+
+      # File Upload Configuration
+      - FILE_UPLOAD-METHOD=local
+      - FILE_UPLOAD-DIR=uploads/ocr-request
+      - FILE_EXTERNAL-API-URL=
+      - FILE_EXTERNAL-API-KEY=
+
+      # Keystore Configuration
+      - KEYSTORE_PASSWORD=${KEYSTORE_PASSWORD}
+      - KEYSTORE_ALIAS=${KEYSTORE_ALIAS}
+
+      # Account Limits
+      - ACCOUNT_PERSONAL_DAILY-LIMIT=20
+      - ACCOUNT_ORGANIZATION_DAILY-LIMIT=50
+
+      # Email Configuration
+      - SPRING_MAIL_HOST=smtp.gmail.com
+      - SPRING_MAIL_PORT=587
+      - SPRING_MAIL_USERNAME=${SPRING_MAIL_USERNAME}
+      - SPRING_MAIL_PASSWORD=${SPRING_MAIL_PASSWORD}
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
+    restart: unless-stopped

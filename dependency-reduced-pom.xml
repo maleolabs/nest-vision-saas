@@ -8,10 +8,10 @@
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>m2codes</groupId>
-  <artifactId>perizinan-ocr-tool</artifactId>
-  <name>perizinan-ocr-tool</name>
+  <artifactId>ocr-tool</artifactId>
+  <name>ocr-tool</name>
   <version>0.0.1-SNAPSHOT</version>
-  <description>Perizinan OCR Tool</description>
+  <description>OCR Tool</description>
   <developers>
     <developer />
   </developers>
@@ -44,15 +44,6 @@
             </goals>
             <configuration>
               <outputDirectory>${project.build.directory}/classes/native</outputDirectory>
-              <resources>
-                <resource>
-                  <directory>src/main/resources/native</directory>
-                  <includes>
-                    <include>**/*.so</include>
-                    <include>**/*.dll</include>
-                  </includes>
-                </resource>
-              </resources>
             </configuration>
           </execution>
         </executions>
@@ -87,6 +78,12 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-websocket</artifactId>
+      <version>3.3.3</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-mail</artifactId>
       <version>3.3.3</version>
       <scope>provided</scope>
     </dependency>
@@ -204,6 +201,19 @@
       <artifactId>caffeine</artifactId>
       <version>3.1.8</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-thymeleaf</artifactId>
+      <version>3.3.3</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-devtools</artifactId>
+      <version>3.3.3</version>
+      <scope>provided</scope>
+      <optional>true</optional>
     </dependency>
   </dependencies>
   <properties>
