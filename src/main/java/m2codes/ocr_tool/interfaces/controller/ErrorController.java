@@ -25,8 +25,9 @@ public class ErrorController {
     public ResponseEntity<ApiResponse<?>> handleRuntimeException(RuntimeException exception) {
         return ResponseEntity.internalServerError().body(
                 ApiResponse.builder()
+                        .data(exception.getLocalizedMessage())
                         .success(false)
-                        .errorMessage(exception.getMessage())
+                        .errorMessage(HttpStatus.INTERNAL_SERVER_ERROR.name())
                         .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
                         .build()
         );

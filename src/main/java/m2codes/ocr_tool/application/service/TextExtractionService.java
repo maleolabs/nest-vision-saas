@@ -10,8 +10,8 @@ import java.io.File;
  */
 public interface TextExtractionService {
 
-    OcrResultDto extractTextFromImage(String imageUrl);
+    OcrResultDto extractTextFromImage(String imageUrl, boolean preprocessed);
 
-    OcrResultDto extractTextFromImage(File file);
+    OcrResultDto extractTextFromImage(File file, boolean preprocessed);
 
 }

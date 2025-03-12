@@ -55,4 +55,9 @@ public class OcrRequestServiceImpl implements OcrRequestService {
         request.setStatus(status);
         ocrRequestRepository.save(request);
     }
+
+    @Override
+    public boolean existsByImageUrlAndClientId(String imageUrl, String clientId) {
+        return ocrRequestRepository.existsByImageUrlAndClientId(imageUrl, clientId);
+    }
 }

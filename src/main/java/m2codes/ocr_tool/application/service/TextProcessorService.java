@@ -40,8 +40,11 @@ public abstract class TextProcessorService {
     @Transactional
     public final ApiResponse<?> processOcrRequestWithImageUrl(OcrDataRequest request, String clientId) {
         var status = isPoolAvailable() ? RequestStatus.PROCESSING : RequestStatus.WAITING;
+
+        boolean preprocessed = usePreprocessedImage(request.getImageUrl(), clientId);
+
         OcrRequest ocrRequest = saveOcrRequest(request, status, clientId);
-        processingExtractionText(request, ocrRequest, clientId);
+        processingExtractionText(request, ocrRequest, clientId, preprocessed);
         return buildResponse(
                 OcrResponse.builder()
                         .requestId(ocrRequest.getId().toString())
@@ -63,7 +66,6 @@ public abstract class TextProcessorService {
             uploadedFileName = uploadFile(request.getImage());
             uploadedFile = retrieveFile(uploadedFileName);
         } catch (Exception e) {
-            log.error("Exception error : {}. Stack trace : {}", e.getMessage(), Arrays.toString(e.getStackTrace()));
             return buildResponse(null, false,
                     "Failed to process file upload! Please try again later.");
         }
@@ -73,9 +75,11 @@ public abstract class TextProcessorService {
                     "File upload failed! Please try again later");
         }
 
+        boolean preprocessed = usePreprocessedImage(uploadedFileName, clientId);
+
         OcrDataRequest dataRequest = OcrDataRequest.builder().imageUrl(uploadedFileName).build();
         OcrRequest ocrRequest = saveOcrRequest(dataRequest, status, clientId);
-        processingExtractionText(uploadedFile, ocrRequest, dataRequest, clientId);
+        processingExtractionText(uploadedFile, ocrRequest, dataRequest, clientId, preprocessed);
 
         return buildResponse(
                 OcrResponse.builder()
@@ -86,15 +90,15 @@ public abstract class TextProcessorService {
                 null
         );
     }
-    protected abstract void processingExtractionText(OcrDataRequest request, OcrRequest ocrRequest, String clientId);
+    protected abstract void processingExtractionText(OcrDataRequest request, OcrRequest ocrRequest, String clientId, boolean preprocessed);
 
-    protected abstract void processingExtractionText(File file, OcrRequest ocrRequest, OcrDataRequest dataRequest, String clientid);
+    protected abstract void processingExtractionText(File file, OcrRequest ocrRequest, OcrDataRequest dataRequest, String clientid, boolean preprocessed);
 
     protected abstract OcrRequest saveOcrRequest(OcrDataRequest request, RequestStatus status, String clientId);
 
-    protected abstract OcrResultDto extractTextFromImage(String imageUrl);
+    protected abstract OcrResultDto extractTextFromImage(String imageUrl, boolean preprocessed);
 
-    protected abstract OcrResultDto extractTextFromImage(File file);
+    protected abstract OcrResultDto extractTextFromImage(File file, boolean preprocessed);
 
     protected abstract OcrResult saveOcrResult(OcrResultDto ocrResultDto, OcrRequest ocrRequest);
 
@@ -109,6 +113,8 @@ public abstract class TextProcessorService {
     protected abstract String uploadFile(MultipartFile file) throws Exception;
 
     protected abstract File retrieveFile(String fileName) throws Exception;
+
+    protected abstract boolean usePreprocessedImage(String imageUrl, String clientId);
 
     protected abstract boolean isPoolAvailable();
 
