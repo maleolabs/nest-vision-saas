@@ -97,7 +97,7 @@ public class OcrProcessorService extends TextProcessorService {
                 entityManager.flush();
             }
             OcrResult ocrResult = saveOcrResult(ocrResultDto, ocrRequest);
-            saveAllExtractedText(ocrResultDto, ocrResult);
+            saveAllExtractedText(ocrResultDto, dataRequest.getRequiredKeys(), ocrResult);
             ocrRequestService.updateStatus(ocrRequest, RequestStatus.DONE);
             entityManager.flush();
         } catch (Exception e) {
