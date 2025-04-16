@@ -67,10 +67,10 @@ public class OcrProcessorService extends TextProcessorService {
     @Async("ocrTaskExecutor")
     @Transactional
     @Override
-    protected void processingExtractionText(OcrDataRequest request, OcrRequest ocrRequest, String clientId) {
+    protected void processingExtractionText(OcrDataRequest request, OcrRequest ocrRequest, String clientId, boolean preprocessed) {
         ocrRequest = entityManager.merge(ocrRequest);
 
-        OcrResultDto ocrResultDto = extractTextFromImage(request.getImageUrl());
+        OcrResultDto ocrResultDto = extractTextFromImage(request.getImageUrl(), preprocessed);
         if (!ocrResultDto.isSuccess()) {
             saveOcrRequest(request, RequestStatus.FAILURE, clientId);
             entityManager.flush();
@@ -87,17 +87,17 @@ public class OcrProcessorService extends TextProcessorService {
     @Async("ocrTaskExecutor")
     @Transactional
     @Override
-    protected void processingExtractionText(File file, OcrRequest ocrRequest, OcrDataRequest dataRequest, String clientId) {
+    protected void processingExtractionText(File file, OcrRequest ocrRequest, OcrDataRequest dataRequest, String clientId, boolean preprocessed) {
         ocrRequest = entityManager.merge(ocrRequest);
 
         try {
-            OcrResultDto ocrResultDto = extractTextFromImage(file);
+            OcrResultDto ocrResultDto = extractTextFromImage(file, preprocessed);
             if (!ocrResultDto.isSuccess()) {
                 saveOcrRequest(dataRequest, RequestStatus.FAILURE, clientId);
                 entityManager.flush();
             }
             OcrResult ocrResult = saveOcrResult(ocrResultDto, ocrRequest);
-            saveAllExtractedText(ocrResultDto, ocrResult);
+            saveAllExtractedText(ocrResultDto, dataRequest.getRequiredKeys(), ocrResult);
             ocrRequestService.updateStatus(ocrRequest, RequestStatus.DONE);
             entityManager.flush();
         } catch (Exception e) {
@@ -113,13 +113,13 @@ public class OcrProcessorService extends TextProcessorService {
     }
 
     @Override
-    protected OcrResultDto extractTextFromImage(String imageUrl) {
-        return textExtractionService.extractTextFromImage(imageUrl);
+    protected OcrResultDto extractTextFromImage(String imageUrl, boolean preprocessed) {
+        return textExtractionService.extractTextFromImage(imageUrl, preprocessed);
     }
 
     @Override
-    protected OcrResultDto extractTextFromImage(File file) {
-        return textExtractionService.extractTextFromImage(file);
+    protected OcrResultDto extractTextFromImage(File file, boolean preprocessed) {
+        return textExtractionService.extractTextFromImage(file, preprocessed);
     }
 
     @Override
@@ -187,4 +187,9 @@ public class OcrProcessorService extends TextProcessorService {
         return fileManagerService.createTempFileFromInputStream(fileInputStream, fileName);
     }
 
+    @Override
+    protected boolean usePreprocessedImage(String imageUrl, String clientId) {
+        // ocrRequestService.existsByImageUrlAndClientId(imageUrl, clientId);
+        return false;
+    }
 }

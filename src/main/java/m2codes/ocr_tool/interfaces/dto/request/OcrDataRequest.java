@@ -35,4 +35,8 @@ public class OcrDataRequest {
     public boolean isUsingFile() {
         return image != null && !image.isEmpty();
     }
+
+    public List<String> getRequiredKeys() {
+        return requiredKeys != null ? requiredKeys : List.of();
+    }
 }

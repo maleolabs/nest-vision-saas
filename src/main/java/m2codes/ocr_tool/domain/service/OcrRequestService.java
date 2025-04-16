@@ -16,6 +16,8 @@ public interface OcrRequestService {
 
     Optional<OcrRequest> find(String id);
 
+    boolean existsByImageUrlAndClientId(String imageUrl, String clientId);
+
     void updateStatus(OcrRequest request, RequestStatus status);
 
 }

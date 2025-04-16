@@ -14,4 +14,6 @@ import java.util.UUID;
 public interface OcrRequestRepository extends  JpaRepository<OcrRequest, UUID> {
     Optional<OcrRequest> findFirstByImageUrl(String imageUrl);
 
+    boolean existsByImageUrlAndClientId(String imageUrl, String clientId);
+
 }
