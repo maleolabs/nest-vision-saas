@@ -20,6 +20,7 @@ import m2codes.ocr_tool.domain.service.OcrRequestService;
 import m2codes.ocr_tool.domain.service.OcrResultService;
 import m2codes.ocr_tool.interfaces.dto.request.OcrDataRequest;
 import m2codes.ocr_tool.interfaces.dto.response.ApiResponse;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -47,7 +48,7 @@ public class OcrProcessorService extends TextProcessorService {
             OcrRequestService ocrRequestService,
             OcrResultService ocrResultService,
             ExtractedTextService extractedTextService,
-            TextExtractionService textExtractionService,
+            @Qualifier("pyTesseractService") TextExtractionService textExtractionService,
             ExtractedTextCleaner extractedTextCleaner,
             ExtractedTextMapper extractedTextMapper,
             TaskManager taskManager,
