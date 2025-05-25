@@ -132,10 +132,10 @@ public class OcrProcessorService extends TextProcessorService {
     @Override
     protected CompletableFuture<List<ExtractedTextDto>> processExtractedText(String extractedText, List<String> requiredKeys) {
         String[] lines = extractedText.split("\\r?\\n");
-        String[] cleanLines = extractedTextCleaner.linesCleaner(lines);
+        // String[] cleanLines = extractedTextCleaner.linesCleaner(lines);
 
-        List<ExtractedTextDto> extractedTextDtos = new ArrayList<>(extractedTextMapper.parseLinesByColon(cleanLines));
-        extractedTextDtos.addAll(extractedTextMapper.detectAndAddMissingKeyValue(cleanLines, requiredKeys));
+        List<ExtractedTextDto> extractedTextDtos = new ArrayList<>(extractedTextMapper.parseLinesByColon(lines));
+        extractedTextDtos.addAll(extractedTextMapper.detectAndAddMissingKeyValue(lines, requiredKeys));
 
         List<ExtractedTextDto> filteredData = extractedTextMapper.filterParsedDataByRequiredKeys(extractedTextDtos, requiredKeys);
         return CompletableFuture.completedFuture(filteredData);
@@ -145,9 +145,9 @@ public class OcrProcessorService extends TextProcessorService {
     @Override
     protected CompletableFuture<List<ExtractedTextDto>> processExtractedText(String extractedText) {
         String[] lines = extractedText.split("\\r?\\n");
-        String[] cleanLines = extractedTextCleaner.linesCleaner(lines);
+        // String[] cleanLines = extractedTextCleaner.linesCleaner(lines);
 
-        List<ExtractedTextDto> extractedTextDtos = new ArrayList<>(extractedTextMapper.parseLinesByColon(cleanLines));
+        List<ExtractedTextDto> extractedTextDtos = new ArrayList<>(extractedTextMapper.parseLinesByColon(lines));
         return CompletableFuture.completedFuture(extractedTextDtos);
     }
 
