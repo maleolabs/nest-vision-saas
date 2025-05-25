@@ -1,6 +1,7 @@
 import sys
 import cv2
 import pytesseract
+from postprocessor import postprocess_ocr_text
 
 def preprocess_image(img_path):
     img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
@@ -21,7 +22,11 @@ def main(image_path):
     blur, thresh = preprocess_image(image_path)
     config = '--oem 3 --psm 6 -l ind'
     result = ocr_with_fallback(blur, thresh, config)
-    print(result)
+
+    data_text = postprocess_ocr_text(result)
+
+    for key, value in data_text.items():
+        print(f"{key}: {value}")
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
