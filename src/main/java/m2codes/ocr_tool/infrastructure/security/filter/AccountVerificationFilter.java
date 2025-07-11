@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
 
@@ -26,7 +27,7 @@ public class AccountVerificationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
-        String requestUri = request.getRequestURI();
+        String requestUri = request.getServletPath();
 
         if (requestUri.startsWith("/account")) {
             filterChain.doFilter(request, response);
@@ -38,7 +39,11 @@ public class AccountVerificationFilter extends OncePerRequestFilter {
             String username = auth.getName();
             User user = userService.findByUsername(username).orElse(null);
             if (user != null && user.getStatus().equals(AccountStatus.PENDING)) {
-                response.sendRedirect("/account/verify");
+                String redirectUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+                    .path("/account/verify")
+                    .build()
+                    .toUriString();
+                response.sendRedirect(redirectUrl);
                 return;
             }
         }
