@@ -25,7 +25,7 @@ import net.sourceforge.tess4j.TesseractException;
  *
  * @author marij_mokoginta
  */
-@Service
+@Service(value = "nativeTesseractService")
 @Slf4j
 public class TesseractOcrService implements TextExtractionService {
 

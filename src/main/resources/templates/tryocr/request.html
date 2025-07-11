@@ -27,7 +27,7 @@
 <body>
     <div class="bg-gray-800 flex items-center justify-center h-screen relative">
         <div id="ocr-form" class="w-2/3 max-w-lg p-6 bg-gray-700 rounded-lg flex flex-col">
-            <a href="/" class="flex items-center p-2.5 mb-5 self-center">
+            <a th:href="@{/}" class="flex items-center p-2.5 mb-5 self-center">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 33 33" width="33" height="33">
                     <circle cx="16.5" cy="16.5" r="15" fill="#3B82F6" />
 
@@ -99,6 +99,11 @@
     <script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
 
     <script th:inline="javascript">
+        /*<![CDATA[*/
+        const apiKey = /*[[${apiKey}]]*/ "";
+        const BASE_PATH = /*[[@{/}]]*/ "";
+        /*]]>*/
+
         const ocrForm = document.getElementById('ocr-form');
         const dropzoneFileInput = document.getElementById('dropzone-file');
         const previewImage = document.getElementById('preview-image');
@@ -110,10 +115,6 @@
 
         const modalButton = document.getElementById('modal-button');
         const modalMessage = document.getElementById('modal-message');
-
-        /*<![CDATA[*/
-        const apiKey = /*[[${apiKey}]]*/ "";
-        /*]]>*/
 
         dropzoneFileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
@@ -150,7 +151,7 @@
             const formData = new FormData();
             formData.append('image', file);
 
-            fetch('/api/ocr/do-ocr', {
+            fetch(`${BASE_PATH}/api/ocr/do-ocr`, {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -177,7 +178,7 @@
 
         function checkExtractionStatus(requestId) {
             const intervalId = setInterval(() => {
-                fetch('/api/ocr/check-status/' + requestId, {
+                fetch(`${BASE_PATH}/api/ocr/check-status/${requestId}`, {
                     method: 'GET',
                     headers: {
                         'X-API-KEY': apiKey
@@ -185,14 +186,14 @@
                 })
                 .then(response => response.json())
                 .then(responseData => {
-                    if (responseData.data.status == 'DONE') {
+                    if (responseData.data.status === 'DONE') {
                         extractionLoading.classList.add('hidden');
                         extractionLoadingMessage.innerText = 'Ekstraksi selesai!';
                         clearInterval(intervalId);
-                        window.location.replace('/ocr/result/' + responseData.data.requestId);
-                    } else if (responseData.data.status == 'WAITING') {
+                        window.location.replace(`${BASE_PATH}/ocr/result/${responseData.data.requestId}`);
+                    } else if (responseData.data.status === 'WAITING') {
                         extractionLoadingMessage.innerText = 'Menunggu hasil ekstraksi!';
-                    } else if (responseData.data.status == 'FAILURE') {
+                    } else if (responseData.data.status === 'FAILURE') {
                         extractionLoading.classList.add('hidden');
                         clearInterval(intervalId);
                         modalMessage.innerText = 'Gagal!';

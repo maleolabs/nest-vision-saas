@@ -11,6 +11,7 @@ import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.io.IOException;
 
@@ -38,7 +39,12 @@ public class AuthenticationFailureHandlerImpl implements AuthenticationFailureHa
 
         session.setAttribute("loginError", errorMessage);
 
-        response.sendRedirect("/auth/login");
+        String redirectUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
+            .path("/auth/login")
+            .build()
+            .toUriString();
+
+        response.sendRedirect(redirectUrl);
     }
 
 }

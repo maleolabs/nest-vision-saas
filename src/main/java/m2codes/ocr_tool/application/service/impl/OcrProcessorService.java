@@ -20,6 +20,7 @@ import m2codes.ocr_tool.domain.service.OcrRequestService;
 import m2codes.ocr_tool.domain.service.OcrResultService;
 import m2codes.ocr_tool.interfaces.dto.request.OcrDataRequest;
 import m2codes.ocr_tool.interfaces.dto.response.ApiResponse;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -47,7 +48,7 @@ public class OcrProcessorService extends TextProcessorService {
             OcrRequestService ocrRequestService,
             OcrResultService ocrResultService,
             ExtractedTextService extractedTextService,
-            TextExtractionService textExtractionService,
+            @Qualifier("pyTesseractService") TextExtractionService textExtractionService,
             ExtractedTextCleaner extractedTextCleaner,
             ExtractedTextMapper extractedTextMapper,
             TaskManager taskManager,
@@ -131,10 +132,10 @@ public class OcrProcessorService extends TextProcessorService {
     @Override
     protected CompletableFuture<List<ExtractedTextDto>> processExtractedText(String extractedText, List<String> requiredKeys) {
         String[] lines = extractedText.split("\\r?\\n");
-        String[] cleanLines = extractedTextCleaner.linesCleaner(lines);
+        // String[] cleanLines = extractedTextCleaner.linesCleaner(lines);
 
-        List<ExtractedTextDto> extractedTextDtos = new ArrayList<>(extractedTextMapper.parseLinesByColon(cleanLines));
-        extractedTextDtos.addAll(extractedTextMapper.detectAndAddMissingKeyValue(cleanLines, requiredKeys));
+        List<ExtractedTextDto> extractedTextDtos = new ArrayList<>(extractedTextMapper.parseLinesByColon(lines));
+        extractedTextDtos.addAll(extractedTextMapper.detectAndAddMissingKeyValue(lines, requiredKeys));
 
         List<ExtractedTextDto> filteredData = extractedTextMapper.filterParsedDataByRequiredKeys(extractedTextDtos, requiredKeys);
         return CompletableFuture.completedFuture(filteredData);
@@ -144,9 +145,9 @@ public class OcrProcessorService extends TextProcessorService {
     @Override
     protected CompletableFuture<List<ExtractedTextDto>> processExtractedText(String extractedText) {
         String[] lines = extractedText.split("\\r?\\n");
-        String[] cleanLines = extractedTextCleaner.linesCleaner(lines);
+        // String[] cleanLines = extractedTextCleaner.linesCleaner(lines);
 
-        List<ExtractedTextDto> extractedTextDtos = new ArrayList<>(extractedTextMapper.parseLinesByColon(cleanLines));
+        List<ExtractedTextDto> extractedTextDtos = new ArrayList<>(extractedTextMapper.parseLinesByColon(lines));
         return CompletableFuture.completedFuture(extractedTextDtos);
     }
 
