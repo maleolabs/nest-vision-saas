@@ -3,12 +3,14 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  release:
+  # --- Fat jar only (for users who already have JRE/Python/Tesseract) ---
+  jar:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,16 +21,62 @@ jobs:
           cache: maven
       - name: Package
         run: ./mvnw -B clean package -DskipTests
-      - name: Compute SHA256
-        run: |
-          JAR=$(ls target/*.jar | head -1)
-          sha256sum "$JAR" > "$JAR.sha256"
-          cat "$JAR.sha256"
-          echo "JAR=$JAR" >> "$GITHUB_ENV"
-      - name: Create Release
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jar-only
+          path: target/*.jar
+          retention-days: 7
+
+  # --- Self-contained bundles per platform (JRE + Python + Tesseract) ---
+  bundle:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest,  target: linux-amd64   }
+          - { os: windows-latest, target: windows-amd64 }
+          - { os: macos-14,       target: macos-arm64   }  # Apple Silicon
+          - { os: macos-13,       target: macos-x64     }  # Intel
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+      - name: Build bundle (${{ matrix.target }})
+        shell: bash
+        run: bash scripts/bundle/build-bundle.sh
+      - name: Checksums
+        shell: bash
+        run: cat dist/*.sha256
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-${{ matrix.target }}
+          path: dist/*
+          retention-days: 7
+
+  # --- Attach everything to GitHub Release on tag ---
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [jar, bundle]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: List artifacts
+        run: ls -la dist/
+      - name: Create/Update Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            ${{ env.JAR }}
-            ${{ env.JAR }}.sha256
+            dist/*.jar
+            dist/*.zip
+            dist/*.tar.gz
+            dist/*.sha256
           generate_release_notes: true

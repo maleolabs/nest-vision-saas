@@ -1,0 +1,13 @@
+pipeline:
+    name: bundle
+    stages:
+        - name: bundle
+          tasks:
+            - name: build-host-bundle
+              command: bash
+              args: ["-c", "exec bash scripts/bundle/build-bundle.sh"]
+        - name: artifact
+          tasks:
+            - name: copy-bundle
+              command: bash
+              args: ["-c", 'if [ -n "$ANVIL_OUTPUT_DIR" ]; then cp dist/* "$ANVIL_OUTPUT_DIR"/ && echo "Bundle copied to $ANVIL_OUTPUT_DIR"; else echo "ANVIL_OUTPUT_DIR not set, bundle at dist/"; fi']
