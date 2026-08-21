@@ -153,6 +153,16 @@ chmod +x "$MM_BIN"
 export MAMBA_ROOT_PREFIX="$WORK/mamba-root"
 "$MM_BIN" create -y -q -p "$BUNDLE/tesseract" -c conda-forge "$TESSERACT_SPEC"
 
+# Normalize Windows conda layout (Library/bin, Library/lib) -> bin/, lib/
+# so launcher paths stay identical across platforms.
+if [ -d "$BUNDLE/tesseract/Library/bin" ]; then
+    mkdir -p "$BUNDLE/tesseract/bin"
+    mv "$BUNDLE/tesseract/Library/bin/"* "$BUNDLE/tesseract/bin/"
+    if [ -d "$BUNDLE/tesseract/Library/lib" ]; then
+        mv "$BUNDLE/tesseract/Library/lib" "$BUNDLE/tesseract/lib"
+    fi
+fi
+
 # slim: drop docs/cmake leftovers
 rm -rf "$BUNDLE/tesseract/share/man" "$BUNDLE/tesseract/share/doc" \
        "$BUNDLE/tesseract/share/cmake" 2>/dev/null || true
