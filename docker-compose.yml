@@ -1,0 +1,63 @@
+services:
+  db:
+    image: mysql:8
+    container_name: ocr-tool-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ocr_tool
+      MYSQL_USER: ocr
+      MYSQL_PASSWORD: ocr
+    ports:
+      - "127.0.0.1:3307:3306"
+    volumes:
+      - ocr-tool-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  ocr-api:
+    build: .
+    container_name: ocr-tool-api
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_SERVLET_SESSION_TIMEOUT=1500m
+      - SPRING_CONFIG_ADDITIONAL_LOCATION=
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      - SPRING_DATASOURCE_USERNAME=ocr
+      - SPRING_DATASOURCE_PASSWORD=ocr
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/ocr_tool?createDatabaseIfNotExist=true
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - TESSERACT_DATAPATH=/usr/share/tesseract-ocr/5/tessdata/
+      - OCR_PYTHON_PATH=python3
+      - OCR_SCRIPT_PATH=/app/opt/app/ocr/tesseract_ocr.py
+      - APP_API_KEY_LENGTH=32
+      - APP_API_KEY_LIFETIME=180
+      - PHYSICAL_DEVICE_CORE_POOL=3
+      - PHYSICAL_DEVICE_MAX_POOL=5
+      - PHYSICAL_DEVICE_QUEUE_CAPACITY=50
+      - FILE_UPLOAD_METHOD=local
+      - FILE_UPLOAD_DIR=uploads/ocr-request
+      - FILE_EXTERNAL_API_URL=
+      - FILE_EXTERNAL_API_KEY=
+      - KEYSTORE_PASSWORD=changeit
+      - KEYSTORE_ALIAS=ocr
+      - ACCOUNT_PERSONAL_DAILY_LIMIT=20
+      - ACCOUNT_ORGANIZATION_DAILY_LIMIT=50
+      - SPRING_MAIL_HOST=smtp.gmail.com
+      - SPRING_MAIL_PORT=587
+      - SPRING_MAIL_USERNAME=dev@example.com
+      - SPRING_MAIL_PASSWORD=dev
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  ocr-tool-db-data:

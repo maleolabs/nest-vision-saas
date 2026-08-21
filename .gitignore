@@ -38,5 +38,8 @@ build/
 ### VS Code ###
 .vscode/
 
+### Anvil ###
+.anvil/state/
+
 ### Docker ###
-docker-compose.yml
+# docker-compose.yml is tracked (dev + prod compose)

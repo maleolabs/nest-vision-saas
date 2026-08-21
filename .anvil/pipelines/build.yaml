@@ -1,0 +1,18 @@
+pipeline:
+  name: build
+  stages:
+    - name: dependencies
+      tasks:
+        - name: mvn-deps
+          command: bash
+          args: ["-c", 'export JAVA_HOME="$HOME/.local/opt/jdk-17"; [ -d "$JAVA_HOME" ] || export JAVA_HOME="/opt/phpstorm/jbr"; export PATH="$JAVA_HOME/bin:$PATH"; exec ./mvnw -q dependency:go-offline']
+    - name: build
+      tasks:
+        - name: package
+          command: bash
+          args: ["-c", 'export JAVA_HOME="$HOME/.local/opt/jdk-17"; [ -d "$JAVA_HOME" ] || export JAVA_HOME="/opt/phpstorm/jbr"; export PATH="$JAVA_HOME/bin:$PATH"; exec ./mvnw clean package -DskipTests']
+    - name: artifact
+      tasks:
+        - name: copy-jar
+          command: bash
+          args: ["-c", 'if [ -n "$ANVIL_OUTPUT_DIR" ]; then cp target/*.jar "$ANVIL_OUTPUT_DIR"/ && echo "Artifact copied to $ANVIL_OUTPUT_DIR"; else echo "ANVIL_OUTPUT_DIR not set, artifact at target/*.jar"; fi']
