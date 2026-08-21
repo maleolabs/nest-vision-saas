@@ -40,12 +40,16 @@ REM ============================================================
 REM END CONFIG — jangan edit di bawah ini kecuali perlu
 REM ============================================================
 
+REM --- Set working dir ke repo root (parent dari scripts) ---
+pushd "%~dp0.."
+
 title OCR Tool - Spring Boot
 
 echo.
 echo  ========================================
 echo   OCR Tool - Starting...
 echo  ========================================
+echo  Repo: %CD%
 echo.
 
 REM --- Cari JAVA ---
@@ -72,9 +76,12 @@ echo.
 
 REM --- Cari JAR ---
 set "JAR="
-for %%f in (target\*.jar) do set "JAR=%%f"
+for %%f in ("target\*.jar") do set "JAR=%%f"
 if not defined JAR (
-    for %%f in (.\*.jar) do set "JAR=%%f"
+    for %%f in (".\*.jar") do set "JAR=%%f"
+)
+if not defined JAR (
+    for %%f in ("%~dp0..\target\*.jar") do set "JAR=%%f"
 )
 if not defined JAR (
     echo  [ERROR] File *.jar tidak ditemukan!
