@@ -134,14 +134,20 @@ MM_URL="https://micro.mamba.pm/api/micromamba/${MM_SUBDIR}/latest"
 fetch "$MM_URL" "$WORK/mm.tar.bz2"
 mkdir -p "$WORK/mm"
 tar -xjf "$WORK/mm.tar.bz2" -C "$WORK/mm"
-# exact path — do NOT use find by name prefix: newer tarballs ship
-# info/test fixtures like micromamba_windows_allowed_dlls.tsv that match
+# Layout differs per platform: unix = bin/micromamba,
+# win-64 = Library/bin/micromamba.exe (conda package layout).
+# Never match by name prefix: newer tarballs ship info/test fixtures
+# like micromamba_windows_allowed_dlls.tsv that would get executed.
 if [ "$OS_ID" = "windows" ]; then
-    MM_BIN="$WORK/mm/bin/micromamba.exe"
+    MM_BIN="$WORK/mm/Library/bin/micromamba.exe"
 else
     MM_BIN="$WORK/mm/bin/micromamba"
 fi
-[ -f "$MM_BIN" ] || die "micromamba binary not found at $MM_BIN"
+if [ ! -f "$MM_BIN" ]; then
+    # fallback: exact-name search only
+    MM_BIN="$(find "$WORK/mm" -type f \( -name 'micromamba.exe' -o -name 'micromamba' \) | head -1)"
+fi
+[ -n "$MM_BIN" ] && [ -f "$MM_BIN" ] || die "micromamba binary not found in extracted tarball"
 chmod +x "$MM_BIN"
 
 export MAMBA_ROOT_PREFIX="$WORK/mamba-root"
