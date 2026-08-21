@@ -59,11 +59,11 @@
         <div class="grid lg:grid-cols-2 gap-12 items-center">
             <div>
                 <div class="inline-flex items-center gap-2 text-xs font-semibold tracking-wide uppercase bg-white border border-slate-200 rounded-full px-3 py-1.5 shadow-sm">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> OCR API • KTP & Dokumen Indonesia
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span> OCR API • KTP & Dokumen Indonesia
                 </div>
                 <h1 class="font-display font-extrabold tracking-tight text-[40px] lg:text-[54px] leading-[0.95] mt-6">
                     Ubah gambar<br>
-                    <span class="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">menjadi data</span><br>
+                    <span class="text-blue-600">menjadi data</span><br>
                     terstruktur.
                 </h1>
                 <p class="mt-5 text-[17px] leading-7 text-slate-600 max-w-xl">
@@ -106,13 +106,13 @@
                         </div>
                         <div class="mt-6 grid grid-cols-2 gap-3 text-sm">
                             <div class="bg-slate-900 text-white rounded-xl p-4"><div class="text-slate-400 text-xs">NIK</div><div class="font-mono font-semibold">3174 ••• 0001</div></div>
-                            <div class="bg-blue-600 text-white rounded-xl p-4"><div class="text-blue-100 text-xs">Nama</div><div class="font-semibold">John Doe</div></div>
+                            <div class="bg-blue-600 text-white rounded-xl p-4"><div class="text-blue-100 text-xs">Nama</div><div class="font-semibold">Rizky Pratama</div></div>
                             <div class="bg-white border border-slate-200 rounded-xl p-4"><div class="text-xs text-slate-500">Status</div><div class="font-semibold text-emerald-600">DONE</div></div>
                             <div class="bg-white border border-slate-200 rounded-xl p-4"><div class="text-xs text-slate-500">Confidence</div><div class="font-semibold">87.4%</div></div>
                         </div>
                         <pre class="mt-6 bg-slate-950 text-slate-200 text-xs rounded-xl p-4 overflow-auto">{
   "nik": "3174010101230001",
-  "nama": "John Doe",
+  "nama": "Rizky Pratama",
   "jenis_kelamin": "Laki-laki"
 }</pre>
                     </div>
@@ -126,18 +126,27 @@
 
 <!-- Features -->
 <section id="features" class="max-w-7xl mx-auto px-6 lg:px-8 py-14">
-    <div class="grid md:grid-cols-3 gap-6">
-        <div class="bg-white border border-slate-200 rounded-2xl p-7">
-            <div class="w-11 h-11 rounded-xl bg-blue-600 text-white grid place-items-center">◎</div>
-            <h3 class="mt-4 font-display font-bold text-lg">Preprocessing Otomatis</h3><p class="mt-2 text-sm leading-6 text-slate-600">Tesseract + OpenCV. Denoise, deskew, koreksi perspektif, dan threshold dijalankan otomatis sebelum ekstraksi — termasuk untuk foto yang blur atau kurang terang.</p>
+    <div class="bg-white border border-slate-200 rounded-2xl divide-y divide-slate-100">
+        <div class="p-7 lg:p-8 flex flex-col sm:flex-row gap-5 sm:items-start">
+            <div class="w-11 h-11 rounded-xl bg-blue-600 text-white grid place-items-center shrink-0">◎</div>
+            <div class="sm:pl-4">
+                <h3 class="font-display font-bold text-lg">Preprocessing Otomatis</h3>
+                <p class="mt-2 text-sm leading-6 text-slate-600 max-w-2xl">Tesseract + OpenCV. Denoise, deskew, koreksi perspektif, dan threshold dijalankan otomatis sebelum ekstraksi — termasuk untuk foto yang blur, miring, atau kurang terang.</p>
+            </div>
         </div>
-        <div class="bg-white border border-slate-200 rounded-2xl p-7">
-            <div class="w-11 h-11 rounded-xl bg-slate-900 text-white grid place-items-center">⚡</div>
-            <h3 class="mt-4 font-display font-bold text-lg">Async & Andal</h3><p class="mt-2 text-sm leading-6 text-slate-600">Ekstraksi berjalan sebagai async job dengan polling status — request tidak blocking. Fallback multi-engine membantu meningkatkan tingkat keberhasilan ekstraksi.</p>
+        <div class="p-7 lg:p-8 flex flex-col sm:flex-row gap-5 sm:items-start">
+            <div class="w-11 h-11 rounded-xl bg-slate-900 text-white grid place-items-center shrink-0">⚡</div>
+            <div class="sm:pl-4">
+                <h3 class="font-display font-bold text-lg">Async & Andal</h3>
+                <p class="mt-2 text-sm leading-6 text-slate-600 max-w-2xl">Ekstraksi berjalan sebagai async job dengan polling status — request tidak blocking. Fallback multi-engine membantu meningkatkan tingkat keberhasilan ekstraksi.</p>
+            </div>
         </div>
-        <div class="bg-white border border-slate-200 rounded-2xl p-7">
-            <div class="w-11 h-11 rounded-xl bg-indigo-600 text-white grid place-items-center">&lt;/&gt;</div>
-            <h3 class="mt-4 font-display font-bold text-lg">Mudah Integrasi</h3><p class="mt-2 text-sm leading-6 text-slate-600">Satu endpoint multipart, X-API-KEY header, response JSON konsisten. Contoh cURL & JavaScript siap pakai di dokumentasi.</p>
+        <div class="p-7 lg:p-8 flex flex-col sm:flex-row gap-5 sm:items-start">
+            <div class="w-11 h-11 rounded-xl bg-indigo-600 text-white grid place-items-center shrink-0">&lt;/&gt;</div>
+            <div class="sm:pl-4">
+                <h3 class="font-display font-bold text-lg">Mudah Integrasi</h3>
+                <p class="mt-2 text-sm leading-6 text-slate-600 max-w-2xl">Satu endpoint multipart, X-API-KEY header, response JSON konsisten. Contoh cURL & JavaScript siap pakai di dokumentasi.</p>
+            </div>
         </div>
     </div>
 </section>
