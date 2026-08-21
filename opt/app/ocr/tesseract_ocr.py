@@ -1,7 +1,42 @@
+import os
 import sys
+import shutil
 import cv2
 import pytesseract
 from postprocessor import postprocess_ocr_text
+
+# --- Tesseract binary auto-config (Windows + Linux) ---
+# Priority: 1) TESSERACT_CMD env, 2) auto-detect, 3) pytesseract default (PATH)
+_tesseract_cmd = os.environ.get("TESSERACT_CMD", "").strip()
+if _tesseract_cmd and os.path.isfile(_tesseract_cmd):
+    pytesseract.pytesseract.tesseract_cmd = _tesseract_cmd
+elif os.name == "nt":  # Windows
+    # Common install locations (UB-Mannheim, choco, scoop)
+    _candidates = [
+        r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+        r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
+        os.path.join(os.environ.get("LOCALAPPDATA", ""), "Programs", "tesseract", "tesseract.exe"),
+        os.path.join(os.environ.get("USERPROFILE", ""), "scoop", "apps", "tesseract", "current", "tesseract.exe"),
+    ]
+    # Also check PATH
+    _which = shutil.which("tesseract")
+    if _which:
+        _candidates.insert(0, _which)
+    for _c in _candidates:
+        if _c and os.path.isfile(_c):
+            pytesseract.pytesseract.tesseract_cmd = _c
+            break
+
+# Tessdata: respect TESSDATA_PREFIX / TESSERACT_DATAPATH if set
+# pytesseract passes --tessdata-dir via config if needed; tesseract binary
+# also reads TESSDATA_PREFIX env. We just ensure it is exported.
+for _k in ("TESSDATA_PREFIX", "TESSERACT_DATAPATH"):
+    _v = os.environ.get(_k, "").strip()
+    if _v:
+        # Normalize: if env points to tessdata dir, set TESSDATA_PREFIX to parent
+        # or keep as-is — tesseract handles both; we just propagate
+        os.environ["TESSDATA_PREFIX"] = _v
+        break
 
 def preprocess_image(img_path):
     img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)

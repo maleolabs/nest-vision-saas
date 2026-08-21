@@ -23,6 +23,10 @@ set "TESSERACT_DATAPATH=C:\tessdata"
 REM Isi C:\tessdata dengan ind.traineddata + eng.traineddata
 REM Download: https://github.com/tesseract-ocr/tessdata_fast/raw/main/ind.traineddata
 
+set "TESSERACT_CMD="
+REM Kosongkan untuk auto-detect. Atau isi manual jika tesseract.exe tidak di PATH:
+REM set "TESSERACT_CMD=C:\Program Files\Tesseract-OCR\tesseract.exe"
+
 set "KEYSTORE_PASSWORD=changeit"
 set "KEYSTORE_ALIAS=ocr"
 
@@ -83,8 +87,34 @@ if not defined JAR (
 echo  [OK] JAR: %JAR%
 echo  [OK] DB: %SPRING_DATASOURCE_URL% (%SPRING_DATASOURCE_USERNAME%)
 echo  [OK] TESSERACT: %TESSERACT_DATAPATH%
+if defined TESSERACT_CMD echo  [OK] TESSERACT_CMD: %TESSERACT_CMD%
 echo  [OK] PORT: %SERVER_PORT%
 echo.
+
+REM --- Cek tesseract binary ---
+where tesseract >nul 2>&1
+if %errorlevel% neq 0 (
+    if not defined TESSERACT_CMD (
+        echo  [WARN] tesseract.exe tidak ditemukan di PATH!
+        echo         Install: https://github.com/UB-Mannheim/tesseract/wiki
+        echo         Atau: choco install tesseract  /  scoop install tesseract
+        echo         Atau set TESSERACT_CMD di CONFIG atas.
+        echo         OCR via Python akan gagal sampai tesseract terinstall.
+        echo.
+    ) else (
+        if not exist "%TESSERACT_CMD%" (
+            echo  [WARN] TESSERACT_CMD tidak ditemukan: %TESSERACT_CMD%
+            echo.
+        ) else (
+            echo  [OK] tesseract binary: %TESSERACT_CMD%
+            echo.
+        )
+    )
+) else (
+    echo  [OK] tesseract binary di PATH
+    tesseract --version 2>&1 | findstr /i "tesseract"
+    echo.
+)
 
 REM --- Cek MySQL (opsional, warning saja) ---
 echo  [INFO] Pastikan MySQL running di %SPRING_DATASOURCE_URL%
@@ -97,6 +127,7 @@ set "SPRING_DATASOURCE_USERNAME=%SPRING_DATASOURCE_USERNAME%"
 set "SPRING_DATASOURCE_PASSWORD=%SPRING_DATASOURCE_PASSWORD%"
 set "SPRING_JPA_HIBERNATE_DDL_AUTO=%SPRING_JPA_HIBERNATE_DDL_AUTO%"
 set "TESSERACT_DATAPATH=%TESSERACT_DATAPATH%"
+if defined TESSERACT_CMD set "TESSERACT_CMD=%TESSERACT_CMD%"
 set "KEYSTORE_PASSWORD=%KEYSTORE_PASSWORD%"
 set "KEYSTORE_ALIAS=%KEYSTORE_ALIAS%"
 set "SPRING_MAIL_HOST=%SPRING_MAIL_HOST%"

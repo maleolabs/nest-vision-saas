@@ -20,6 +20,7 @@ $Config = @{
     SPRING_DATASOURCE_PASSWORD = "ocr"
     SPRING_JPA_HIBERNATE_DDL_AUTO = "update"
     TESSERACT_DATAPATH      = "C:\tessdata"
+    TESSERACT_CMD           = ""  # kosong = auto-detect; atau "C:\Program Files\Tesseract-OCR\tesseract.exe"
     KEYSTORE_PASSWORD       = "changeit"
     KEYSTORE_ALIAS          = "ocr"
     SPRING_MAIL_HOST        = "smtp.gmail.com"
@@ -91,7 +92,27 @@ if (-not $JarPath -or -not (Test-Path $JarPath)) {
 Write-Host "  [OK] JAR: $JarPath" -ForegroundColor Green
 Write-Host "  [OK] DB: $($Config.SPRING_DATASOURCE_URL) ($($Config.SPRING_DATASOURCE_USERNAME))" -ForegroundColor Green
 Write-Host "  [OK] TESSERACT: $($Config.TESSERACT_DATAPATH)" -ForegroundColor Green
+if ($Config.TESSERACT_CMD) { Write-Host "  [OK] TESSERACT_CMD: $($Config.TESSERACT_CMD)" -ForegroundColor Green }
 Write-Host "  [OK] PORT: $($Config.SERVER_PORT)" -ForegroundColor Green
+Write-Host ""
+
+# --- Cek tesseract binary ---
+$tessFound = $false
+if ($Config.TESSERACT_CMD -and (Test-Path $Config.TESSERACT_CMD)) {
+    Write-Host "  [OK] tesseract binary: $($Config.TESSERACT_CMD)" -ForegroundColor Green
+    $tessFound = $true
+} elseif (Get-Command tesseract -ErrorAction SilentlyContinue) {
+    Write-Host "  [OK] tesseract binary di PATH" -ForegroundColor Green
+    try { tesseract --version 2>&1 | Select-Object -First 1 | ForEach-Object { Write-Host "       $_" -ForegroundColor DarkGray } } catch {}
+    $tessFound = $true
+}
+if (-not $tessFound) {
+    Write-Host "  [WARN] tesseract.exe tidak ditemukan!" -ForegroundColor Yellow
+    Write-Host "         Install: https://github.com/UB-Mannheim/tesseract/wiki" -ForegroundColor Yellow
+    Write-Host "         Atau: choco install tesseract / scoop install tesseract" -ForegroundColor Yellow
+    Write-Host "         Atau set TESSERACT_CMD di CONFIG." -ForegroundColor Yellow
+    Write-Host "         OCR via Python akan gagal sampai tesseract terinstall." -ForegroundColor Yellow
+}
 Write-Host ""
 Write-Host "  [INFO] Pastikan MySQL running. App auto-create DB jika belum ada." -ForegroundColor Cyan
 Write-Host ""
