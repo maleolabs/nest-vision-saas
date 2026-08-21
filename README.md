@@ -83,6 +83,39 @@ git tag v0.1.0 && git push origin v0.1.0  # trigger build + release workflows
 # atau via GitHub UI: Releases → Draft new release → Create tag v0.1.0
 ```
 
+## Windows — Run tanpa Docker (double-click)
+
+Butuh **JDK 17** + **MySQL** (via installer, bukan Docker). Tidak perlu set env manual — script sudah handle.
+
+**Cara 1: Double-click (paling gampang)**
+1. Edit `scripts\run.bat` pakai Notepad — ubah bagian `CONFIG` di atas (DB URL, password, `TESSERACT_DATAPATH`, dll) jika perlu
+2. Atau copy `.env.example` → `.env` lalu edit `.env` (dipakai otomatis oleh `run.ps1`)
+3. Double-click `scripts\run.bat` — window akan kebuka, log Spring Boot tampil. Buka `http://localhost:8080` setelah `Started OcrToolApplication`
+
+**Cara 2: PowerShell**
+```powershell
+# Right-click scripts\run.ps1 → Run with PowerShell
+# Atau dari terminal:
+.\scripts\run.ps1
+# Dengan jar custom:
+.\scripts\run.ps1 -JarPath "C:\path\to\ocr-tool-0.0.1-SNAPSHOT.jar"
+```
+
+**Cara 3: Manual CMD/PowerShell**
+```cmd
+:: CMD
+set SPRING_DATASOURCE_URL=jdbc:mysql://127.0.0.1:3306/ocr_tool?createDatabaseIfNotExist=true
+set SPRING_DATASOURCE_USERNAME=ocr
+java -jar target\ocr-tool-0.0.1-SNAPSHOT.jar
+```
+```powershell
+# PowerShell
+$env:SPRING_DATASOURCE_URL="jdbc:mysql://127.0.0.1:3306/ocr_tool?createDatabaseIfNotExist=true"
+java -jar target\ocr-tool-0.0.1-SNAPSHOT.jar
+```
+
+> `TESSERACT_DATAPATH` di Windows tidak ada default Linux — set ke `C:\tessdata` yang berisi `ind.traineddata` + `eng.traineddata` (download dari https://github.com/tesseract-ocr/tessdata_fast). Kalau tidak butuh OCR, biarkan — app tetap start.
+
 ## Environment Variables
 
 Semua key di `application.properties` punya default (`${VAR:default}`), jadi env var opsional untuk dev. Untuk override, export sebelum run atau set di `docker-compose.yml`:
