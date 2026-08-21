@@ -167,6 +167,17 @@ fi
 rm -rf "$BUNDLE/tesseract/share/man" "$BUNDLE/tesseract/share/doc" \
        "$BUNDLE/tesseract/share/cmake" 2>/dev/null || true
 
+# rescue tesseract configs (needed by some -c options) before dropping share/
+if [ -d "$BUNDLE/tesseract/share/tessdata/configs" ]; then
+    mkdir -p "$BUNDLE/tessdata"
+    cp -R "$BUNDLE/tesseract/share/tessdata/configs" "$BUNDLE/tessdata/" 2>/dev/null || true
+fi
+
+# aggressive prune: headers, pkgconfig, static/import libs, conda metadata extras
+rm -rf "$BUNDLE/tesseract/include" "$BUNDLE/tesseract/lib/pkgconfig" \
+       "$BUNDLE/tesseract/share" 2>/dev/null || true
+find "$BUNDLE/tesseract/lib" -maxdepth 1 \( -name '*.a' -o -name '*.la' \) -delete 2>/dev/null || true
+
 TESS_BIN="$BUNDLE/tesseract/bin/tesseract"
 [ "$OS_ID" = "windows" ] && TESS_BIN="$BUNDLE/tesseract/bin/tesseract.exe"
 [ -x "$TESS_BIN" ] || die "tesseract binary not found at $TESS_BIN"
@@ -187,6 +198,44 @@ cp opt/app/ocr/*.py "$BUNDLE/app/ocr/"
 cp opt/app/ocr/extractor/*.py "$BUNDLE/app/ocr/extractor/"
 find "$BUNDLE/app" -name '__pycache__' -type d -exec rm -rf {} + 2>/dev/null || true
 cp .env.example "$BUNDLE/.env.example"
+
+# --- 5b. Slim nested OpenCV jar (keep only target-platform natives) -------------
+# openpnp opencv jar ships natives for 6 platforms (~91MB). Keep one.
+slim_nested_opencv() {
+    local FAT="$BUNDLE/app/ocr-tool.jar"
+    local KEEP_DIR=""
+    case "$PLATFORM" in
+        linux-amd64)   KEEP_DIR="nu/pattern/opencv/linux/x86_64" ;;
+        windows-amd64) KEEP_DIR="nu/pattern/opencv/windows/x86_64" ;;
+        macos-arm64|macos-amd64) KEEP_DIR="nu/pattern/opencv/osx/x86_64" ;;
+        *) return 0 ;;
+    esac
+    local NESTED_REL
+    NESTED_REL="$("$JAVA_HOME/bin/jar" -tf "$FAT" | grep -E '^BOOT-INF/lib/opencv-.*\.jar$' | head -1)"
+    [ -n "$NESTED_REL" ] || { log "no nested opencv jar, skip slim"; return 0; }
+
+    local SJ="$WORK/jarsurgery"
+    mkdir -p "$SJ/inner"
+    (cd "$SJ" && "$JAVA_HOME/bin/jar" -xf "$FAT" "$NESTED_REL")
+    local INNER="$SJ/$NESTED_REL"
+    [ -f "$INNER" ] || { log "nested extract failed, skip slim"; return 0; }
+
+    (cd "$SJ/inner" && "$JAVA_HOME/bin/jar" -xf "$INNER")
+    # delete every opencv native dir except KEEP_DIR
+    find "$SJ/inner/nu/pattern/opencv" -mindepth 1 -maxdepth 1 -type d | while read -r d; do
+        [ "$(basename "$d")" = "$(basename "$KEEP_DIR")" ] || rm -rf "$d"
+    done
+    # parent dirs of other platforms may remain as empty shells; drop them
+    find "$SJ/inner/nu/pattern/opencv" -mindepth 1 -type d -empty -delete 2>/dev/null || true
+
+    local NEW_INNER="$SJ/opencv-slim.jar"
+    (cd "$SJ/inner" && "$JAVA_HOME/bin/jar" -cf "$NEW_INNER" .)
+    mv "$NEW_INNER" "$INNER"
+    (cd "$SJ" && "$JAVA_HOME/bin/jar" -uf "$FAT" "$NESTED_REL")
+
+    log "slimmed nested $(basename "$NESTED_REL") -> kept $KEEP_DIR ($(du -sh "$INNER" | cut -f1))"
+}
+slim_nested_opencv
 
 # --- 6. Launchers ----------------------------------------------------------------
 log "launchers (start.sh, start.bat)"
