@@ -134,8 +134,14 @@ MM_URL="https://micro.mamba.pm/api/micromamba/${MM_SUBDIR}/latest"
 fetch "$MM_URL" "$WORK/mm.tar.bz2"
 mkdir -p "$WORK/mm"
 tar -xjf "$WORK/mm.tar.bz2" -C "$WORK/mm"
-MM_BIN="$(find "$WORK/mm" -name 'micromamba*' -type f | head -1)"
-[ -n "$MM_BIN" ] || die "micromamba binary not extracted"
+# exact path — do NOT use find by name prefix: newer tarballs ship
+# info/test fixtures like micromamba_windows_allowed_dlls.tsv that match
+if [ "$OS_ID" = "windows" ]; then
+    MM_BIN="$WORK/mm/bin/micromamba.exe"
+else
+    MM_BIN="$WORK/mm/bin/micromamba"
+fi
+[ -f "$MM_BIN" ] || die "micromamba binary not found at $MM_BIN"
 chmod +x "$MM_BIN"
 
 export MAMBA_ROOT_PREFIX="$WORK/mamba-root"
