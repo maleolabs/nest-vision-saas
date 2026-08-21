@@ -1,117 +1,64 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml" class="h-full bg-white">
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ocr Tool | Account Verification</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tw-elements/css/tw-elements.min.css" />
-    <script src="https://cdn.tailwindcss.com/3.3.0"></script>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifikasi Akun — Nestara Vision</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif']}}}}</script>
 </head>
-<body class="h-full">
-<div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
-    <div class="sm:mx-auto sm:w-full sm:max-w-sm">
-        <h2 class="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900">Verifikasi akun anda</h2>
-    </div>
+<body class="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-6 py-12">
+    <a th:href="@{/}" class="inline-flex items-center gap-2 mb-8">
+        <span class="w-9 h-9 rounded-xl bg-blue-600 text-white grid place-items-center font-black">NV</span>
+        <span class="font-bold">Nestara Vision</span><span class="text-xs bg-slate-900 text-white px-2 py-1 rounded-full">OCR</span>
+    </a>
 
-    <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+    <div class="w-full max-w-md bg-white border border-slate-200 rounded-[24px] shadow-xl shadow-slate-200/50 p-8">
+        <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 grid place-items-center text-xl mx-auto">✉️</div>
+        <h1 class="mt-4 text-center text-2xl font-extrabold tracking-tight">Verifikasi email kamu</h1>
+        <p class="mt-2 text-center text-sm text-slate-600">Kami kirim 6 digit kode ke email kamu. Masukkan di bawah — kode kadaluarsa dalam 10 menit.</p>
 
-        <div th:if="${errorMessage}" th:text="${errorMessage}" class="p-4 my-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert"></div>
+        <div th:if="${errorMessage}" th:text="${errorMessage}" class="mt-5 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700 text-center"></div>
 
-        <form class="space-y-6" th:action="@{/account/verify}" method="POST">
-            <div class="flex mb-2 space-x-2 rtl:space-x-reverse justify-center">
-                <div>
-                    <label for="code-1" class="sr-only">First code</label>
-                    <input type="text" maxlength="1" data-focus-input-init data-focus-input-next="code-2" id="code-1" class="block w-9 h-9 py-3 text-sm font-extrabold text-center text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" required />
-                </div>
-                <div>
-                    <label for="code-2" class="sr-only">Second code</label>
-                    <input type="text" maxlength="1" data-focus-input-init data-focus-input-prev="code-1" data-focus-input-next="code-3" id="code-2" class="block w-9 h-9 py-3 text-sm font-extrabold text-center text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" required />
-                </div>
-                <div>
-                    <label for="code-3" class="sr-only">Third code</label>
-                    <input type="text" maxlength="1" data-focus-input-init data-focus-input-prev="code-2" data-focus-input-next="code-4" id="code-3" class="block w-9 h-9 py-3 text-sm font-extrabold text-center text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" required />
-                </div>
-                <div>
-                    <label for="code-4" class="sr-only">Fourth code</label>
-                    <input type="text" maxlength="1" data-focus-input-init data-focus-input-prev="code-3" data-focus-input-next="code-5" id="code-4" class="block w-9 h-9 py-3 text-sm font-extrabold text-center text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" required />
-                </div>
-                <div>
-                    <label for="code-5" class="sr-only">Fifth code</label>
-                    <input type="text" maxlength="1" data-focus-input-init data-focus-input-prev="code-4" data-focus-input-next="code-6" id="code-5" class="block w-9 h-9 py-3 text-sm font-extrabold text-center text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" required />
-                </div>
-                <div>
-                    <label for="code-6" class="sr-only">Sixth code</label>
-                    <input type="text" maxlength="1" data-focus-input-init data-focus-input-prev="code-5" id="code-6" class="block w-9 h-9 py-3 text-sm font-extrabold text-center text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500" required />
-                </div>
+        <form th:action="@{/account/verify}" method="POST" class="mt-6">
+            <div class="flex justify-center gap-2">
+                <input type="text" maxlength="1" data-focus-input-init data-focus-input-next="code-2" id="code-1" class="w-12 h-14 text-center text-xl font-bold rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none" required />
+                <input type="text" maxlength="1" data-focus-input-init data-focus-input-prev="code-1" data-focus-input-next="code-3" id="code-2" class="w-12 h-14 text-center text-xl font-bold rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 outline-none" required />
+                <input type="text" maxlength="1" data-focus-input-init data-focus-input-prev="code-2" data-focus-input-next="code-4" id="code-3" class="w-12 h-14 text-center text-xl font-bold rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 outline-none" required />
+                <input type="text" maxlength="1" data-focus-input-init data-focus-input-prev="code-3" data-focus-input-next="code-5" id="code-4" class="w-12 h-14 text-center text-xl font-bold rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 outline-none" required />
+                <input type="text" maxlength="1" data-focus-input-init data-focus-input-prev="code-4" data-focus-input-next="code-6" id="code-5" class="w-12 h-14 text-center text-xl font-bold rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 outline-none" required />
+                <input type="text" maxlength="1" data-focus-input-init data-focus-input-prev="code-5" id="code-6" class="w-12 h-14 text-center text-xl font-bold rounded-xl border border-slate-200 focus:ring-2 focus:ring-blue-600 outline-none" required />
                 <input type="hidden" name="verificationCode" id="verificationCode" />
             </div>
-            <p id="helper-text-explanation" class="mt-2 text-sm text-gray-500 dark:text-gray-400 text-center">Silahkan masukkan 6 digit kode yang telah dikirimkan lewat email.</p>
+            <p class="mt-3 text-center text-xs text-slate-500">Tip: paste 6 digit sekaligus — otomatis terisi.</p>
 
-            <div>
-                <button type="submit" class="flex w-full justify-center rounded-md bg-blue-600 px-3 py-1.5 text-sm/6 font-semibold
-                text-white shadow-sm hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
-                focus-visible:outline-blue-600">Verifikasi</button>
-            </div>
+            <button type="submit" class="mt-6 w-full rounded-xl bg-blue-600 py-3 text-sm font-semibold text-white hover:bg-blue-700 shadow">Verifikasi & Aktifkan Akun</button>
         </form>
 
-        <p class="mt-5 text-center text-sm/6 text-gray-500">
-            Tidak menerima kode? <a th:href="@{/account/verification/resend}" class="font-bold text-gray-800 hover:text-blue-600">KIRIM ULANG</a>
-        </p>
-
-        <p class="mt-10 text-center text-sm/6 text-gray-500">
-            <a th:href="@{/auth/logout}" class="font-semibold text-red-600 hover:text-red-500">Keluar</a>
-        </p>
+        <div class="mt-6 flex items-center justify-center gap-2 text-sm">
+            <span class="text-slate-600">Tidak menerima kode?</span>
+            <a th:href="@{/account/verification/resend}" class="font-bold text-blue-600 hover:text-blue-700">Kirim ulang</a>
+        </div>
+        <div class="mt-3 text-center"><a th:href="@{/auth/logout}" class="text-sm font-semibold text-slate-500 hover:text-red-600">Keluar</a></div>
     </div>
-</div>
+
+    <p class="mt-6 text-xs text-slate-400">© 2026 Nestara Vision • Cek folder spam jika email tidak masuk</p>
 
 <script>
     function focusNextInput(el, prevId, nextId) {
-        if (el.value.length === 0) {
-            if (prevId) {
-                document.getElementById(prevId).focus();
-            }
-        } else {
-            if (nextId) {
-                document.getElementById(nextId).focus();
-            }
-        }
+        if (el.value.length === 0) { if (prevId) document.getElementById(prevId).focus(); }
+        else { if (nextId) document.getElementById(nextId).focus(); }
     }
-
-    document.querySelectorAll('[data-focus-input-init]').forEach(function(element) {
-        element.addEventListener('keyup', function() {
-            const prevId = this.getAttribute('data-focus-input-prev');
-            const nextId = this.getAttribute('data-focus-input-next');
-            focusNextInput(this, prevId, nextId);
-        });
-
-        element.addEventListener('paste', function(event) {
-            event.preventDefault();
-            const pasteData = (event.clipboardData || window.clipboardData).getData('text');
-            const digits = pasteData.replace(/\D/g, '');
-
+    document.querySelectorAll('[data-focus-input-init]').forEach(function(el){
+        el.addEventListener('keyup', function(){ focusNextInput(this, this.getAttribute('data-focus-input-prev'), this.getAttribute('data-focus-input-next')); });
+        el.addEventListener('paste', function(e){
+            e.preventDefault();
+            const digits = (e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'');
             const inputs = document.querySelectorAll('[data-focus-input-init]');
-
-            inputs.forEach((input, index) => {
-                if (digits[index]) {
-                    input.value = digits[index];
-                    const nextId = input.getAttribute('data-focus-input-next');
-                    if (nextId) {
-                        document.getElementById(nextId).focus();
-                    }
-                }
-            });
+            inputs.forEach((input, idx)=>{ if(digits[idx]){ input.value=digits[idx]; const nid=input.getAttribute('data-focus-input-next'); if(nid) document.getElementById(nid).focus(); }});
         });
     });
-
-    document.querySelector("form").addEventListener("submit", function(event) {
-        let code = "";
-        document.querySelectorAll("[data-focus-input-init]").forEach(input => {
-            code += input.value;
-        });
-        document.getElementById("verificationCode").value = code;
-    });
+    document.querySelector("form").addEventListener("submit", function(){ let c=""; document.querySelectorAll("[data-focus-input-init]").forEach(i=>c+=i.value); document.getElementById("verificationCode").value=c; });
 </script>
 </body>
 </html>

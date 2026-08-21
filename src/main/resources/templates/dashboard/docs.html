@@ -1,357 +1,187 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml" class="h-full bg-white">
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ocr Tool | Documentation</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tw-elements/css/tw-elements.min.css" />
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dokumentasi — Nestara Vision</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-          theme: {
-            extend: {
-              fontFamily: {
-                inter: ['Inter Tight', 'sans-serif'],
-              },
-            },
-          },
-        }
-    </script>
+    <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'], mono:['JetBrains Mono','monospace']}}}}</script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script>
 </head>
-<body class="bg-gray-800 font-inter">
-
-<aside id="default-sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
-    <div class="h-full px-3 py-4 overflow-y-auto bg-gray-700">
-        <a th:href="@{/}" class="flex items-center ps-2.5 mb-5">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 33 33" width="33" height="33">
-                <circle cx="16.5" cy="16.5" r="15" fill="#3B82F6" />
-
-                <rect x="10" y="10" width="13" height="16.5" rx="1.65" ry="1.65" fill="#FFFFFF" />
-                <rect x="11.5" y="11.5" width="10" height="3.3" rx="0.8" ry="0.8" fill="#E5E7EB" />
-                <rect x="11.5" y="16.5" width="10" height="1.65" rx="0.8" ry="0.8" fill="#E5E7EB" />
-                <rect x="11.5" y="20" width="10" height="1.65" rx="0.8" ry="0.8" fill="#E5E7EB" />
-
-                <circle cx="16.5" cy="25" r="1" fill="#3B82F6" />
-                <path d="M 15.5 26 Q 16.5 26.5 17.5 26" stroke="#3B82F6" stroke-width="0.7" fill="none" />
-                <text x="16.5" y="30" font-size="3.3" fill="#FFFFFF" text-anchor="middle" font-family="Arial, sans-serif">OCR</text>
-            </svg>
-            <span class="ms-2 self-center text-xl font-semibold whitespace-nowrap text-white">API OCR Tool</span>
-        </a>
-        <ul class="space-y-2 font-medium">
-            <li>
-                <a th:href="@{/dashboard}" class="flex items-center p-2 text-gray-200 rounded-lg hover:bg-gray-600 hover:bg-gray-600 group">
-                    <svg class="w-5 h-5 text-gray-400 transition duration-75 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 22 21">
-                        <path d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z"/>
-                        <path d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z"/>
-                    </svg>
-                    <span class="ms-3 font-semibold whitespace-nowrap">Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a th:href="@{/dashboard/docs}" class="flex items-center p-2 text-white bg-gray-600 rounded-lg group">
-                    <svg class="w-6 h-6 text-white transition duration-75 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.35709 16V5.78571c0-.43393.34822-.78571.77777-.78571H18.5793c.4296 0 .7778.35178.7778.78571V16M5.35709 16h-1c-.55229 0-1 .4477-1 1v1c0 .5523.44771 1 1 1H20.3571c.5523 0 1-.4477 1-1v-1c0-.5523-.4477-1-1-1h-1M5.35709 16H19.3571M9.35709 8l2.62501 2.5L9.35709 13m4.00001 0h2"/>
-                    </svg>
-                    <span class="flex-1 ms-3 whitespace-nowrap font-semibold">Dokumentasi</span>
-                </a>
-            </li>
-            <li>
-                <a th:href="@{/dashboard/logs}" class="flex items-center p-2 text-gray-200 rounded-lg hover:bg-gray-600 hover:bg-gray-600 group">
-                    <svg class="w-6 h-6 text-gray-400 transition duration-75 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                        <path fill-rule="evenodd" d="M9 2.221V7H4.221a2 2 0 0 1 .365-.5L8.5 2.586A2 2 0 0 1 9 2.22ZM11 2v5a2 2 0 0 1-2 2H4v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-7ZM8 16a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1Zm1-5a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2H9Z" clip-rule="evenodd"/>
-                    </svg>
-                    <span class="flex-1 ms-3 whitespace-nowrap font-semibold">Log</span>
-                </a>
-            </li>
-            <li>
-                <a th:href="@{/dashboard/profile}" class="flex items-center p-2 text-gray-200 rounded-lg hover:bg-gray-600 hover:bg-gray-600 group">
-                    <svg class="w-6 h-6 text-gray-400 transition duration-75 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                        <path fill-rule="evenodd" d="M12 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4h-4Z" clip-rule="evenodd"/>
-                    </svg>
-                    <span class="flex-1 ms-3 whitespace-nowrap font-semibold">Profil</span>
-                </a>
-            </li>
-            <li>
-                <a th:href="@{/auth/logout}" class="flex items-center p-2 text-gray-200 rounded-lg hover:bg-gray-600 hover:bg-gray-600 group">
-                    <svg class="w-6 h-6 text-gray-400 transition duration-75 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H8m12 0-4 4m4-4-4-4M9 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h2"/>
-                    </svg>
-                    <span class="flex-1 ms-3 whitespace-nowrap">Keluar</span>
-                </a>
-            </li>
-        </ul>
-    </div>
+<body class="bg-slate-50 font-sans antialiased" x-data="{open:false}">
+<aside class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 hidden sm:flex flex-col">
+    <div class="h-16 flex items-center gap-3 px-6 border-b border-slate-100"><span class="w-9 h-9 rounded-xl bg-blue-600 text-white grid place-items-center font-black text-sm">NV</span><span class="font-bold">Nestara Vision</span></div>
+    <nav class="flex-1 p-4 space-y-1">
+        <a th:href="@{/dashboard}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-sm font-medium"><span class="w-8 h-8 rounded-lg bg-slate-100 grid place-items-center">◧</span> Dashboard</a>
+        <a th:href="@{/ocr/extract}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-sm font-medium"><span class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 grid place-items-center">↗</span> Ekstraksi OCR</a>
+        <a th:href="@{/dashboard/docs}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-slate-900 text-white font-semibold text-sm"><span class="w-8 h-8 rounded-lg bg-white/15 grid place-items-center">≡</span> Dokumentasi</a>
+        <a th:href="@{/dashboard/logs}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-sm font-medium"><span class="w-8 h-8 rounded-lg bg-slate-100 grid place-items-center">◫</span> Log Aktivitas</a>
+        <a th:href="@{/dashboard/profile}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-sm font-medium"><span class="w-8 h-8 rounded-lg bg-slate-100 grid place-items-center">◎</span> Profil</a>
+    </nav>
+    <div class="p-4 border-t border-slate-100"><a th:href="@{/auth/logout}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-slate-600 hover:bg-red-50 hover:text-red-600">↩ Keluar</a></div>
 </aside>
+<div class="sm:hidden sticky top-0 z-30 bg-white border-b border-slate-200 flex items-center justify-between px-4 h-14"><span class="font-bold flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-blue-600 text-white grid place-items-center font-black">NV</span> Nestara</span><button @click="open=!open" class="p-2 rounded-lg border border-slate-200">☰</button></div>
+<div x-show="open" class="sm:hidden mx-4 mt-3 bg-white border border-slate-200 rounded-xl p-2 space-y-1"><a th:href="@{/dashboard}" class="block px-3 py-2 rounded-lg text-sm">Dashboard</a><a th:href="@{/dashboard/docs}" class="block px-3 py-2 rounded-lg bg-slate-900 text-white text-sm">Dokumentasi</a><a th:href="@{/dashboard/logs}" class="block px-3 py-2 rounded-lg text-sm">Log</a></div>
 
-<div class="p-4 sm:ml-64">
-    <div class="w-full px-20 py-10 bg-gray-700 rounded">
-        <div class="flex justify-between items-start">
-            <div>
-                <h5 class="mb-2 text-3xl font-bold text-white">
-                    Dokumentasi API & Panduan Integrasi
-                </h5>
-                <p class="mb-5 text-base text-gray-400 sm:text-lg">
-                    Jelajahi dokumentasi lengkap tentang API OCR kami, termasuk endpoint, parameter, contoh respons, dan panduan implementasi untuk integrasi yang optimal.
-                </p>
+<main class="sm:ml-64">
+    <div class="max-w-5xl mx-auto px-6 lg:px-8 py-8">
+        <div class="bg-slate-900 rounded-[24px] p-8 text-white relative overflow-hidden">
+            <div class="absolute -top-20 -right-20 w-72 h-72 bg-blue-600/30 rounded-full blur-3xl"></div>
+            <div class="relative">
+                <div class="inline-flex items-center gap-2 text-xs font-semibold bg-white/10 border border-white/15 px-3 py-1 rounded-full">📘 API Reference • v2.0</div>
+                <h1 class="mt-3 text-3xl font-extrabold tracking-tight">Dokumentasi API & Panduan Integrasi</h1>
+                <p class="mt-2 text-sm leading-6 text-slate-300 max-w-2xl">Semua yang kamu butuh untuk integrasi: otentikasi, endpoint, contoh request/response, dan penanganan error. Copy-paste ready.</p>
+                <div class="mt-4 flex flex-wrap gap-2 text-xs">
+                    <span class="bg-white text-slate-900 px-3 py-1.5 rounded-full font-semibold">Base URL: <span class="font-mono" th:text="${#httpServletRequest != null ? #httpServletRequest.getRequestURL().toString().replace(#httpServletRequest.getRequestURI(),'') : 'https://api.nestara.id'}">https://api.nestara.id</span></span>
+                    <span class="bg-emerald-500 text-white px-3 py-1.5 rounded-full font-semibold">● Operational</span>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="p-10">
-        <ol class="relative text-gray-200 border-s-4 border-gray-600">
-            <li class="mb-10 ms-6">
-                <span class="absolute flex items-center justify-center w-8 h-8 bg-gray-700 rounded-full -start-4 ring-4 ring-gray-600">
-                    🔑
-                </span>
-                <h3 class="ms-5 font-medium leading-tight mb-3">API Key Anda</h3>
-                <div class="ms-5 bg-gray-700 rounded-xl p-10">
-                    <p>Semua permintaan ke API harus disertai dengan API key yang dikirimkan dalam header.</p>
-                    <pre class="mt-2 bg-gray-600 text-white p-3 rounded text-sm">X-API-KEY: <span th:text="${apiKey}"></span></pre>
+        <!-- API Key -->
+        <div class="mt-6 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 flex items-center gap-3">
+                <span class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 grid place-items-center">🔑</span>
+                <div><h3 class="font-bold">API Key Anda</h3><p class="text-xs text-slate-500">Sertakan di setiap request via header X-API-KEY</p></div>
+                <span class="ml-auto hidden sm:inline text-xs font-medium bg-slate-900 text-white px-3 py-1 rounded-full">Required</span>
+            </div>
+            <div class="p-6">
+                <div class="flex flex-col sm:flex-row gap-3 items-stretch">
+                    <code class="flex-1 bg-slate-950 text-emerald-300 font-mono text-sm px-4 py-3 rounded-xl break-all" id="apiKeyCode" th:text="${apiKey} ?: '••••••••••••••••••••••••••••'">••••</code>
+                    <button onclick="navigator.clipboard.writeText(document.getElementById('apiKeyCode').innerText); this.innerText='Copied!'; setTimeout(()=>this.innerText='Copy',1500)" class="shrink-0 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold hover:bg-slate-50">Copy</button>
+                </div>
+                <pre class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-mono">X-API-KEY: <span th:text="${apiKey}">your_api_key</span></pre>
+                <div th:if="${apiKeyError}" th:text="${apiKeyError}" class="mt-3 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700"></div>
+                <form th:action="@{/dashboard/docs/create-new-api-key}" method="POST" th:if="${canGenerateApiKey}" class="mt-4">
+                    <button type="submit" class="rounded-xl bg-blue-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-blue-700">+ Buat API Key baru</button>
+                    <span class="ml-2 text-xs text-slate-500">Hanya 1 key aktif per akun.</span>
+                </form>
+            </div>
+        </div>
 
-                    <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-200 mt-5" th:if="${apiKeyError}" role="alert">
-                        <span class="font-medium" th:text="${apiKeyError}"></span>
+        <!-- Endpoint 1 -->
+        <div class="mt-6 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 flex items-center gap-3">
+                <span class="w-9 h-9 rounded-xl bg-blue-600 text-white grid place-items-center text-sm">POST</span>
+                <div><h3 class="font-bold">Ekstraksi Teks</h3><p class="font-mono text-xs text-slate-600">POST /api/ocr/do-ocr</p></div>
+                <span class="ml-auto text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-1 rounded-full">multipart/form-data</span>
+            </div>
+            <div class="p-6">
+                <div class="grid lg:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="text-sm font-semibold">Header</h4>
+                        <pre class="mt-2 bg-slate-950 text-slate-200 p-3 rounded-xl text-xs font-mono overflow-auto">Content-Type: multipart/form-data
+X-API-KEY: <span th:text="${apiKey}">key</span></pre>
+                        <h4 class="mt-4 text-sm font-semibold">Body (pilih salah satu)</h4>
+                        <table class="mt-2 w-full text-sm border border-slate-200 rounded-xl overflow-hidden">
+                            <thead class="bg-slate-50 text-xs text-slate-600"><tr><th class="text-left px-3 py-2">Field</th><th class="text-left px-3 py-2">Type</th><th class="text-left px-3 py-2">Desc</th></tr></thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <tr><td class="px-3 py-2 font-mono text-xs">image</td><td class="px-3 py-2 text-xs">file</td><td class="px-3 py-2 text-xs">JPG/PNG, max 5MB</td></tr>
+                                <tr><td class="px-3 py-2 font-mono text-xs">imageUrl</td><td class="px-3 py-2 text-xs">string</td><td class="px-3 py-2 text-xs">URL publik gambar</td></tr>
+                                <tr><td class="px-3 py-2 font-mono text-xs">requiredKeys</td><td class="px-3 py-2 text-xs">string[]</td><td class="px-3 py-2 text-xs">Filter key hasil (opsional)</td></tr>
+                            </tbody>
+                        </table>
                     </div>
-
-                    <form th:action="@{/dashboard/docs/create-new-api-key}" method="POST" th:if="${canGenerateApiKey}">
-                        <button type="submit"
-                                class="flex justify-center rounded-md bg-blue-600 px-3 py-1.5 text-sm/6 font-semibold
-                text-white shadow-sm hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
-                focus-visible:outline-blue-600 mt-8"
-                        >Buat API Key baru</button>
-                    </form>
+                    <div>
+                        <div class="flex items-center gap-2"><span class="text-xs font-bold bg-emerald-100 text-emerald-700 px-2 py-1 rounded">200 OK</span><span class="text-xs text-slate-500">async — return requestId</span></div>
+                        <pre class="mt-2 bg-slate-950 text-slate-200 p-4 rounded-xl text-xs font-mono overflow-auto">{
+  "data": {
+    "requestId": "3f2a4df5-bd72-9250-fef2cab06603",
+    "status": "WAITING",
+    "duration": null,
+    "extractedTexts": null
+  },
+  "success": true
+}</pre>
+                        <div class="mt-3 rounded-xl bg-blue-50 border border-blue-200 p-3 text-xs text-blue-800">💡 Gunakan <span class="font-mono">requiredKeys</span> untuk hanya ambil field yang dibutuhkan (mis. nik, nama) — mengurangi noise.</div>
+                    </div>
                 </div>
-            </li>
-            <li class="mb-10 ms-6">
-                <span class="absolute flex items-center justify-center w-8 h-8 bg-gray-700 rounded-full -start-4 ring-4 ring-gray-600">
-                    📝
-                </span>
-                <h3 class="ms-5 font-medium leading-tight mb-3">Endpoint Ekstraksi Teks</h3>
-                <div class="ms-5 bg-gray-700 rounded-xl p-10">
-                    <p><strong>Endpoint:</strong></p>
-                    <pre class="mt-2 bg-gray-600 text-white p-3 rounded text-sm">POST /api/ocr/do-ocr</pre>
-                    <p class="mt-3"><strong>Deskripsi:</strong> Mengunggah dokumen untuk diproses oleh sistem OCR.</p>
-                    <p class="mt-3"><strong>Header:</strong></p>
-                    <pre class="mt-2 bg-gray-600 text-white p-3 rounded text-sm">
-Content-Type: multipart/form-data
-X-API-KEY: <span th:text="${apiKey}"></span></pre>
+                <details class="mt-4 group">
+                    <summary class="cursor-pointer text-sm font-semibold text-blue-600 list-none flex items-center gap-2">Lihat contoh cURL <span class="group-open:rotate-180 transition">▾</span></summary>
+                    <pre class="mt-3 bg-slate-900 text-slate-100 p-4 rounded-xl text-xs font-mono overflow-auto">curl -X POST https://api.nestara.id/api/ocr/do-ocr \
+  -H "X-API-KEY: YOUR_KEY" \
+  -F image=@ktp.jpg \
+  -F requiredKeys=nik \
+  -F requiredKeys=nama</pre>
+                </details>
+            </div>
+        </div>
 
-                    <p class="mt-3"><strong>Body (Form-Data):</strong></p>
-                    <table class="w-full border mt-2">
-                        <thead>
-                            <tr class="bg-gray-600">
-                                <th class="border px-4 py-2">Nama</th>
-                                <th class="border px-4 py-2">Jenis</th>
-                                <th class="border px-4 py-2">Deskripsi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="border px-4 py-2">image</td>
-                                <td class="border px-4 py-2">file</td>
-                                <td class="border px-4 py-2">File gambar dokumen (JPG atau PNG)</td>
-                            </tr>
-                            <tr>
-                                <td class="border px-4 py-2">imageUrl</td>
-                                <td class="border px-4 py-2">string</td>
-                                <td class="border px-4 py-2">Url gambar dokumen</td>
-                            </tr>
-                            <tr>
-                                <td class="border px-4 py-2">requiredKeys</td>
-                                <td class="border px-4 py-2">string array</td>
-                                <td class="border px-4 py-2">List kata kunci yang ingin diambil dari hasil ekstraksi gambar (Opsional)</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <p class="text-sm my-3 ms-5">* Catatan: untuk
-                        <span class="bg-gray-600 text-gray-300 text-xs font-medium px-2.5 py-0.5 rounded-sm">image</span>
-                        dan
-                        <span class="bg-gray-600 text-gray-300 text-xs font-medium px-2.5 py-0.5 rounded-sm">imageUrl</span>
-                        bisa dipilih antara salah satu.
-                    </p>
-                    <p class="mt-3"><strong>Response :</strong></p>
-                    <p>
-                        &bull;
-                        <span class="text-sm font-bold px-2.5 py-0.5 rounded-sm bg-green-200 text-green-800">200 OK</span>
-                    </p>
-                    <pre class="mt-3 bg-gray-600 text-white p-3 rounded text-sm">{
-	"data": {
-		"requestId": "3f2a4df5-bd72-4837-9250-fef2cab06603",
-		"status": "WAITING",
-		"duration": null,
-		"originalExtractedText": null,
-		"extractedTexts": null
-	},
-	"success": true,
-	"errorMessage": null,
-	"statusCode": null
-}</pre>
-                </div>
-            </li>
-            <li class="mb-10 ms-6">
-            <span class="absolute flex items-center justify-center w-10 h-10 bg-gray-700 rounded-full -start-6 ring-4 ring-gray-600">
-                ⏳
-            </span>
-                <h3 class="ms-5 font-medium leading-tight mb-3">Mengecek status ekstraksi</h3>
-                <div class="ms-5 bg-gray-700 rounded-xl p-10">
-                    <p><strong>Endpoint:</strong></p>
-                    <pre class="mt-2 bg-gray-600 text-white p-3 rounded text-sm">GET /api/ocr/check-status/{requestId}</pre>
-                    <p class="mt-3"><strong>Deskripsi:</strong> Memeriksa apakah proses ekstraksi telah selesai.</p>
-                    <p class="mt-3"><strong>Header:</strong></p>
-                    <pre class="mt-2 bg-gray-600 text-white p-3 rounded text-sm">X-API-KEY: <span th:text="${apiKey}"></span></pre>
-                    <p class="mt-3"><strong>Response :</strong></p>
-                    <p>
-                        &bull;
-                        <span class="text-sm font-bold px-2.5 py-0.5 rounded-sm bg-green-200 text-green-800">200 OK</span>
-                    </p>
-                    <pre class="mt-2 bg-gray-600 text-white p-3 rounded text-sm">{
-	"data": {
-		"requestId": "3f2a4df5-bd72-4837-9250-fef2cab06603",
-		"status": "DONE",
-		"duration": 7.0,
-		"originalExtractedText": null,
-		"extractedTexts": null
-	},
-	"success": true,
-	"errorMessage": null,
-	"statusCode": null
-}</pre>
-                    <p class="mt-5">
-                        &bull;
-                        <span class="text-sm font-bold px-2.5 py-0.5 rounded-sm bg-red-200 text-red-800">400 Bad Request</span>
-                    </p>
-                    <pre class="mt-2 bg-gray-600 text-white p-3 rounded text-sm">{
-	"data": null,
-	"success": false,
-	"errorMessage": "Request with id : 3f2a4df5-bd72-4837-9250-fef2cab06603 not found!",
-	"statusCode": null
-}</pre>
-
-                    <table class="w-full border mt-5">
-                        <thead>
-                            <tr class="bg-gray-600">
-                                <th class="border px-4 py-2">Status Request</th>
-                                <th class="border px-4 py-2">Deskripsi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td class="border px-4 py-2">WAITING</td>
-                                <td class="border px-4 py-2">
-                                    Status ini menunjukkan bahwa permintaan OCR telah diterima tetapi belum diproses.
-                                    Biasanya terjadi ketika permintaan sedang dalam antrean sebelum dieksekusi oleh sistem.
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="border px-4 py-2">PROCESSING</td>
-                                <td class="border px-4 py-2">
-                                    Status ini menandakan bahwa sistem sedang memproses dokumen OCR.
-                                    Proses ini melibatkan ekstraksi teks dari gambar atau dokumen yang diunggah pengguna.
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="border px-4 py-2">DONE</td>
-                                <td class="border px-4 py-2">
-                                    Status ini berarti proses OCR telah selesai dan hasilnya sudah tersedia.
-                                    Teks yang diekstrak bisa langsung digunakan atau disimpan untuk keperluan selanjutnya.
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="border px-4 py-2">FAILURE</td>
-                                <td class="border px-4 py-2">
-                                    Status ini menunjukkan bahwa proses OCR gagal.
-                                    Kegagalan bisa terjadi karena beberapa alasan, seperti format dokumen tidak didukung, gambar buram, atau kesalahan sistem.
-                                </td>
-                            </tr>
+        <!-- Endpoint 2 -->
+        <div class="mt-6 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 flex items-center gap-3">
+                <span class="w-9 h-9 rounded-xl bg-slate-900 text-white grid place-items-center text-xs">GET</span>
+                <div><h3 class="font-bold">Cek Status</h3><p class="font-mono text-xs text-slate-600">GET /api/ocr/check-status/{requestId}</p></div>
+                <span class="ml-auto text-xs bg-amber-50 text-amber-700 border border-amber-200 px-2 py-1 rounded-full">polling 2s</span>
+            </div>
+            <div class="p-6 grid lg:grid-cols-2 gap-6">
+                <div>
+                    <pre class="bg-slate-950 text-slate-200 p-3 rounded-xl text-xs font-mono">X-API-KEY: <span th:text="${apiKey}">key</span></pre>
+                    <table class="mt-4 w-full text-sm border border-slate-200 rounded-xl overflow-hidden">
+                        <thead class="bg-slate-50 text-xs"><tr><th class="text-left px-3 py-2">Status</th><th class="text-left px-3 py-2">Arti</th></tr></thead>
+                        <tbody class="divide-y divide-slate-100 text-xs">
+                            <tr><td class="px-3 py-2"><span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold">WAITING</span></td><td class="px-3 py-2">Antre, belum diproses</td></tr>
+                            <tr><td class="px-3 py-2"><span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold">PROCESSING</span></td><td class="px-3 py-2">Sedang ekstraksi</td></tr>
+                            <tr><td class="px-3 py-2"><span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-semibold">DONE</span></td><td class="px-3 py-2">Selesai, siap ambil hasil</td></tr>
+                            <tr><td class="px-3 py-2"><span class="bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-semibold">FAILURE</span></td><td class="px-3 py-2">Gagal (format/buram/error)</td></tr>
                         </tbody>
                     </table>
                 </div>
-            </li>
-
-            <li class="mb-10 ms-6">
-            <span class="absolute flex items-center justify-center w-10 h-10 bg-gray-700 rounded-full -start-6 ring-4 ring-gray-600">
-                ✅
-            </span>
-                <h3 class="ms-5 font-medium leading-tight mb-3">Mengambil hasil ekstraksi</h3>
-                <div class="ms-5 bg-gray-700 rounded-xl p-10">
-                    <p><strong>Endpoint:</strong></p>
-                    <pre class="mt-2 bg-gray-600 text-white p-3 rounded text-sm">GET /api/ocr/get-result/{requestId}</pre>
-                    <p class="mt-3"><strong>Deskripsi:</strong> Mengambil hasil ekstraksi teks setelah proses selesai.</p>
-                    <p class="mt-3"><strong>Header:</strong></p>
-                    <pre class="mt-2 bg-gray-600 text-white p-3 rounded text-sm">X-API-KEY: <span th:text="${apiKey}"></span></pre>
-                    <p class="mt-3"><strong>Response :</strong></p>
-                    <p class="mt-5">
-                        &bull;
-                        <span class="text-sm font-bold px-2.5 py-0.5 rounded-sm bg-green-200 text-green-800">200 OK</span>
-                    </p>
-                    <pre class="mt-2 bg-gray-600 text-white p-3 rounded text-sm">"{
-	"data": {
-		"requestId": "3f2a4df5-bd72-4837-9250-fef2cab06603",
-		"status": "DONE",
-		"duration": 5.0,
-		"extractedTexts": {
-			"nik": "1234567890123",
-			"tempat/tgi lahir": "Gorontalo",
-			"status perkawinan": "KAWIN",
-			"jenis kelamin": "Laki-laki",
-			"nama": "John Doe",
-			"pekerjaan": "Mahasiswa"
-		}
-	},
-	"success": true,
-	"errorMessage": null,
-	"statusCode": null
+                <div>
+                    <div class="text-xs font-bold bg-emerald-100 text-emerald-700 inline-block px-2 py-1 rounded">200 OK</div>
+                    <pre class="mt-2 bg-slate-950 text-slate-200 p-4 rounded-xl text-xs font-mono overflow-auto">{
+  "data": {
+    "requestId": "3f2a4df5...",
+    "status": "DONE",
+    "duration": 7.0
+  },
+  "success": true
 }</pre>
                 </div>
-            </li>
+            </div>
+        </div>
 
-            <li class="mb-10 ms-6">
-            <span class="absolute flex items-center justify-center w-10 h-10 bg-gray-700 rounded-full -start-6 ring-4 ring-gray-600">
-                ⚠️
-            </span>
-                <h3 class="ms-5 font-medium leading-tight mb-3">Kesalahan umum</h3>
-                <div class="ms-5 bg-gray-700 rounded-xl p-10">
-                    <table class="w-full border mt-2">
-                        <thead>
-                        <tr class="bg-gray-600">
-                            <th class="border px-4 py-2">Kode</th>
-                            <th class="border px-4 py-2">Deskripsi</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td class="border px-4 py-2">400</td>
-                            <td class="border px-4 py-2">Permintaan tidak valid</td>
-                        </tr>
-                        <tr>
-                            <td class="border px-4 py-2">401</td>
-                            <td class="border px-4 py-2">API key tidak valid atau tidak diberikan</td>
-                        </tr>
-                        <tr>
-                            <td class="border px-4 py-2">404</td>
-                            <td class="border px-4 py-2">Data tidak ditemukan</td>
-                        </tr>
-                        <tr>
-                            <td class="border px-4 py-2">500</td>
-                            <td class="border px-4 py-2">Kesalahan server</td>
-                        </tr>
-                        </tbody>
-                    </table>
+        <!-- Endpoint 3 -->
+        <div class="mt-6 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-100 flex items-center gap-3">
+                <span class="w-9 h-9 rounded-xl bg-emerald-600 text-white grid place-items-center text-xs">GET</span>
+                <div><h3 class="font-bold">Ambil Hasil</h3><p class="font-mono text-xs text-slate-600">GET /api/ocr/get-result/{requestId}</p></div>
+            </div>
+            <div class="p-6">
+                <pre class="bg-slate-950 text-slate-200 p-4 rounded-xl text-xs font-mono overflow-auto">{
+  "data": {
+    "requestId": "3f2a4df5...",
+    "status": "DONE",
+    "duration": 5.0,
+    "extractedTexts": {
+      "nik": "1234567890123",
+      "nama": "John Doe",
+      "jenis_kelamin": "Laki-laki",
+      "tempat/tgl_lahir": "Gorontalo"
+    }
+  },
+  "success": true
+}</pre>
+                <div class="mt-4 grid sm:grid-cols-2 gap-3 text-xs">
+                    <div class="rounded-xl bg-emerald-50 border border-emerald-200 p-3 text-emerald-800">✓ Simpan <span class="font-mono">requestId</span> untuk audit & retry.</div>
+                    <div class="rounded-xl bg-slate-50 border border-slate-200 p-3 text-slate-700">↻ Jika <b>FAILURE</b>, ulangi dengan gambar lebih jelas (min 800px).</div>
                 </div>
-            </li>
-        </ol>
+            </div>
+        </div>
+
+        <!-- Errors -->
+        <div class="mt-6 bg-white border border-slate-200 rounded-2xl p-6">
+            <h3 class="font-bold flex items-center gap-2">⚠️ Kode Error Umum</h3>
+            <div class="mt-3 grid sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                <div class="rounded-xl border border-slate-200 p-4"><div class="font-mono font-bold">400</div><div class="text-xs text-slate-600">Bad request — param tidak valid</div></div>
+                <div class="rounded-xl border border-slate-200 p-4"><div class="font-mono font-bold">401</div><div class="text-xs text-slate-600">Unauthorized — API key salah</div></div>
+                <div class="rounded-xl border border-slate-200 p-4"><div class="font-mono font-bold">404</div><div class="text-xs text-slate-600">Not found — requestId tidak ada</div></div>
+                <div class="rounded-xl border border-slate-200 p-4"><div class="font-mono font-bold">500</div><div class="text-xs text-slate-600">Server error — coba lagi</div></div>
+            </div>
+        </div>
+
+        <div class="mt-8 text-center text-xs text-slate-400">© 2026 Nestara Vision • Butuh SDK? Hubungi tim integrasi.</div>
     </div>
-
-    <hr class="mb-6 border-gray-600 sm:mx-auto lg:my-8" />
-    <span class="block text-sm text-gray-400 sm:text-center">© 2025 <a href="https://marijmokoginta.com/" class="hover:underline">marijmokoginta™</a>. All Rights Reserved.</span>
-
-</div>
-
+</main>
 </body>
 </html>

@@ -1,53 +1,82 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml" class="h-full bg-white">
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ocr Tool | Login</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tw-elements/css/tw-elements.min.css" />
-    <script src="https://cdn.tailwindcss.com/3.3.0"></script>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masuk — Nestara Vision</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif']}}}}</script>
 </head>
-<body class="h-full">
-<div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
-    <div class="sm:mx-auto sm:w-full sm:max-w-sm">
-        <h2 class="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900">Masuk ke akun anda</h2>
+<body class="min-h-screen bg-slate-50">
+<div class="min-h-screen grid lg:grid-cols-2">
+    <!-- left branding -->
+    <div class="hidden lg:flex flex-col justify-between bg-slate-900 text-white p-10 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-blue-600 via-indigo-600 to-violet-600 opacity-90"></div>
+        <div class="absolute -top-32 -right-32 w-[520px] h-[520px] bg-white/10 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-32 -left-32 w-[520px] h-[520px] bg-blue-400/20 rounded-full blur-3xl"></div>
+        <div class="relative">
+            <a th:href="@{/}" class="inline-flex items-center gap-3">
+                <span class="w-9 h-9 rounded-xl bg-white text-slate-900 grid place-items-center font-black">NV</span>
+                <span class="font-bold">Nestara Vision</span><span class="text-xs bg-white/20 px-2 py-1 rounded-full">OCR API</span>
+            </a>
+        </div>
+        <div class="relative">
+            <h1 class="text-4xl font-extrabold leading-tight">Selamat datang<br>kembali.</h1>
+            <p class="mt-4 text-white/80 leading-6 max-w-md">Masuk untuk mengelola API key, pantau penggunaan, dan ekstrak dokumen 10× lebih cepat.</p>
+            <div class="mt-8 grid gap-3 max-w-md text-sm">
+                <div class="flex gap-3 bg-white/10 border border-white/10 rounded-xl p-3"><span>⚡</span><span><b>2.1s</b> rata-rata ekstraksi • 99.9% uptime</span></div>
+                <div class="flex gap-3 bg-white/10 border border-white/10 rounded-xl p-3"><span>🔒</span><span>Enkripsi API key & audit log lengkap</span></div>
+            </div>
+        </div>
+        <div class="relative text-sm text-white/60">© 2026 Nestara Vision • Secure OCR Platform</div>
     </div>
+    <!-- right form -->
+    <div class="flex flex-col justify-center px-6 py-12 lg:px-16 bg-white lg:bg-slate-50">
+        <div class="mx-auto w-full max-w-md">
+            <a th:href="@{/}" class="lg:hidden inline-flex items-center gap-2 mb-8">
+                <span class="w-9 h-9 rounded-xl bg-blue-600 text-white grid place-items-center font-black">NV</span>
+                <span class="font-bold">Nestara Vision</span>
+            </a>
+            <div class="bg-white lg:shadow-xl lg:shadow-slate-200/50 lg:border border-slate-200 rounded-[24px] p-8">
+                <h2 class="text-2xl font-extrabold tracking-tight">Masuk ke akun anda</h2>
+                <p class="mt-2 text-sm text-slate-600">Belum punya akun? <a th:href="@{/auth/register}" class="font-semibold text-blue-600 hover:text-blue-700">Daftar sekarang</a></p>
 
-    <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-
-        <div th:if="${errorMessage}" th:text="${errorMessage}" class="p-4 my-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert"></div>
-
-        <form class="space-y-6" th:action="@{/auth/login}" th:object="${loginRequest}" method="POST">
-            <div>
-                <label for="username" class="block text-sm/6 font-medium text-gray-900">Masukkan Username atau Email</label>
-                <div class="mt-2">
-                    <input th:field="*{username}" type="text" name="username" id="username" autocomplete="username" required
-                           placeholder="johndoe"
-                           class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-sm/6">
+                <div th:if="${errorMessage}" class="mt-6 flex gap-3 p-4 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700" role="alert">
+                    <span class="mt-0.5">⚠️</span><span th:text="${errorMessage}"></span>
                 </div>
-            </div>
 
-            <div>
-                <label for="password" class="block text-sm/6 font-medium text-gray-900">Masukkan Password</label>
-                <div class="mt-2">
-                    <input type="password" th:field="*{password}" name="password" id="password" autocomplete="current-password" required
-                           class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-sm/6">
-                </div>
+                <form class="mt-6 space-y-5" th:action="@{/auth/login}" th:object="${loginRequest}" method="POST">
+                    <div>
+                        <label for="username" class="block text-sm font-semibold text-slate-900">Username atau Email</label>
+                        <div class="mt-2 relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">👤</span>
+                            <input th:field="*{username}" type="text" id="username" name="username" autocomplete="username" required placeholder="johndoe atau email@kamu.com"
+                                   class="block w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 py-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <label for="password" class="block text-sm font-semibold text-slate-900">Password</label>
+                            <a href="#" class="text-xs font-semibold text-slate-500 hover:text-slate-700">Lupa password?</a>
+                        </div>
+                        <div class="mt-2 relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">🔒</span>
+                            <input th:field="*{password}" type="password" id="password" name="password" autocomplete="current-password" required placeholder="••••••••"
+                                   class="block w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 py-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                        </div>
+                    </div>
+                    <label class="flex items-center gap-2 text-sm">
+                        <input type="checkbox" class="rounded border-slate-300 text-blue-600 focus:ring-blue-600"> <span class="text-slate-600">Ingat saya</span>
+                    </label>
+                    <button type="submit" class="w-full inline-flex justify-center items-center gap-2 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow shadow-blue-600/20 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-offset-2 transition">
+                        Masuk →
+                    </button>
+                    <div class="relative py-2"><div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div><div class="relative flex justify-center"><span class="bg-white px-3 text-xs text-slate-500">atau</span></div></div>
+                    <a th:href="@{/auth/register}" class="w-full inline-flex justify-center rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold hover:bg-slate-50">Buat akun baru</a>
+                </form>
             </div>
-
-            <div>
-                <button type="submit" class="flex w-full justify-center rounded-md bg-blue-600 px-3 py-1.5 text-sm/6 font-semibold
-                text-white shadow-sm hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
-                focus-visible:outline-blue-600">Masuk</button>
-            </div>
-        </form>
-
-        <p class="mt-10 text-center text-sm/6 text-gray-500">
-            Belum mempunyai akun?
-            <a th:href="@{/auth/register}" class="font-semibold text-blue-600 hover:text-blue-700">Daftar</a>
-        </p>
+            <p class="mt-6 text-center text-xs text-slate-500">Dengan masuk, kamu menyetujui Syarat & Kebijakan Privasi.</p>
+        </div>
     </div>
 </div>
 </body>

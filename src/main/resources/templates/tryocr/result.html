@@ -1,68 +1,93 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>Try OCR | Result</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tw-elements/css/tw-elements.min.css" />
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasil Ekstraksi — Nestara Vision</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-          theme: {
-            extend: {
-              fontFamily: {
-                inter: ['Inter Tight', 'sans-serif'],
-              },
-            },
-          },
-        }
-    </script>
+    <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif'], mono:['JetBrains Mono','monospace']}}}}</script>
 </head>
-<body class="bg-gray-800 w-full min-h-screen py-16 font-inter">
+<body class="min-h-screen bg-slate-50">
+<header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-200">
+    <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+        <a th:href="@{/}" class="inline-flex items-center gap-2 font-bold"><span class="w-8 h-8 rounded-xl bg-blue-600 text-white grid place-items-center font-black text-sm">NV</span> Nestara Vision</a>
+        <div class="flex items-center gap-2">
+            <a th:href="@{/ocr/extract}" class="text-sm font-semibold bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700">+ Ekstraksi Baru</a>
+            <a th:href="@{/dashboard}" class="text-sm font-medium text-slate-600 hover:text-slate-900">Dashboard</a>
+        </div>
+    </div>
+</header>
 
-    <div class="max-w-2xl mx-auto">
-        <div class="p-6 bg-gray-700 rounded-lg shadow flex flex-col">
-            <a th:href="@{/}" class="flex items-center p-2.5 mb-5 self-center">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 33 33" width="33" height="33">
-                    <circle cx="16.5" cy="16.5" r="15" fill="#3B82F6" />
+<div class="max-w-4xl mx-auto px-6 py-8">
+    <div class="flex items-center gap-2 text-xs font-semibold mb-6 justify-center">
+        <span class="inline-flex items-center gap-2 bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full">1 Upload ✓</span>
+        <span class="w-6 h-px bg-slate-300"></span>
+        <span class="inline-flex items-center gap-2 bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full">2 Ekstraksi ✓</span>
+        <span class="w-6 h-px bg-slate-300"></span>
+        <span class="inline-flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-full">3 Hasil</span>
+    </div>
 
-                    <rect x="10" y="10" width="13" height="16.5" rx="1.65" ry="1.65" fill="#FFFFFF" />
-                    <rect x="11.5" y="11.5" width="10" height="3.3" rx="0.8" ry="0.8" fill="#E5E7EB" />
-                    <rect x="11.5" y="16.5" width="10" height="1.65" rx="0.8" ry="0.8" fill="#E5E7EB" />
-                    <rect x="11.5" y="20" width="10" height="1.65" rx="0.8" ry="0.8" fill="#E5E7EB" />
-
-                    <circle cx="16.5" cy="25" r="1" fill="#3B82F6" />
-                    <path d="M 15.5 26 Q 16.5 26.5 17.5 26" stroke="#3B82F6" stroke-width="0.7" fill="none" />
-                    <text x="16.5" y="30" font-size="3.3" fill="#FFFFFF" text-anchor="middle" font-family="Arial, sans-serif">OCR</text>
-                </svg>
-                <span class="ms-2 self-center text-xl font-bold whitespace-nowrap text-white">API OCR Tool</span>
-            </a>
-            <h4 class="text-xl font-bold mb-3 text-white">Hasil Ekstraksi</h4>
-            <h6 class="text-lg font-semibold mb-3 text-gray-200">Original Teks</h6>
-            <div class="rounded p-4 bg-gray-600">
-                <p th:text="${ocrResult.getOriginalExtractedText()}" class="text-gray-100"></p>
+    <div class="bg-white border border-slate-200 rounded-[24px] shadow-sm overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-7 text-white">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <div class="inline-flex items-center gap-2 bg-white/15 border border-white/20 px-3 py-1 rounded-full text-xs font-semibold">✓ Selesai • <span th:text="${ocrResult.getDuration()} + 's'">0s</span></div>
+                    <h1 class="mt-3 text-2xl font-extrabold tracking-tight">Hasil Ekstraksi</h1>
+                    <p class="text-sm text-white/80 mt-1">Berikut teks yang berhasil diekstrak. Salin atau export sebagai JSON.</p>
+                </div>
+                <div class="hidden sm:flex gap-2">
+                    <button onclick="copyAll()" class="bg-white text-slate-900 px-4 py-2 rounded-xl text-sm font-semibold">Copy JSON</button>
+                    <a th:href="@{/ocr/extract}" class="bg-white/15 border border-white/20 text-white px-4 py-2 rounded-xl text-sm font-semibold">Baru</a>
+                </div>
             </div>
-            <hr class="h-px my-8 bg-gray-600 border-0">
-            <h6 class="text-lg font-semibold mb-3 text-gray-200">Informasi yang dapat diambil dari teks</h6>
-            <ol class="space-y-1 list-decimal list-inside">
-                <li th:each="et : ${ocrResult.getExtractedTexts()}" class="text-gray-100">
-                    <span th:text="${et.getTextKey()}"></span>
-                    <span th:text="${et.getTextValue()}"></span>
-                </li>
-            </ol>
-            <hr class="h-px my-8 bg-gray-600 border-0">
-            <h6 class="text-lg font-semibold mb-3 text-gray-200">Waktu Ekstraksi <span th:text="${ocrResult.getDuration()}+s"></span></h6>
+        </div>
 
-            <span class="block text-sm text-gray-400 self-center mt-20">© 2024 - 2025 <a href="https://github.com/marijmokoginta" class="hover:underline">Marij Mokoginta™</a>. All Rights Reserved.</span>
+        <div class="p-7">
+            <!-- original text -->
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-slate-900 text-white grid place-items-center text-xs">≡</span> Teks Original</h3>
+                <button onclick="copyText('originalText')" class="text-xs font-semibold border border-slate-200 bg-white px-3 py-1.5 rounded-full hover:bg-slate-50">Copy</button>
+            </div>
+            <div id="originalText" class="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-4 max-h-64 overflow-auto">
+                <p th:text="${ocrResult.getOriginalExtractedText()}" class="text-sm leading-6 whitespace-pre-wrap text-slate-800">—</p>
+                <p th:if="${ocrResult.getOriginalExtractedText() == null or #strings.isEmpty(ocrResult.getOriginalExtractedText())}" class="text-sm text-slate-500">Tidak ada teks original (mungkin tidak tersedia).</p>
+            </div>
+
+            <h3 class="mt-8 font-bold flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-blue-600 text-white grid place-items-center text-xs">◧</span> Informasi Terstruktur</h3>
+            <p class="text-xs text-slate-500 mt-1">Field yang berhasil diparsing otomatis — gunakan untuk autofill form.</p>
+
+            <div th:if="${ocrResult.getExtractedTexts() != null and !#lists.isEmpty(ocrResult.getExtractedTexts())}" class="mt-4 grid sm:grid-cols-2 gap-3">
+                <div th:each="et : ${ocrResult.getExtractedTexts()}" class="rounded-xl border border-slate-200 bg-white p-4 flex flex-col">
+                    <div class="text-[11px] font-bold tracking-wide uppercase text-slate-500" th:text="${et.getTextKey()}">NIK</div>
+                    <div class="mt-1 font-semibold text-slate-900 break-words" th:text="${et.getTextValue()}">value</div>
+                    <button th:attr="data-value=${et.getTextValue()}" onclick="navigator.clipboard.writeText(this.getAttribute('data-value')); this.innerText='Copied!'; setTimeout(()=>this.innerText='Copy',1200)" class="mt-3 self-start text-xs font-semibold border border-slate-200 px-3 py-1 rounded-full hover:bg-slate-50">Copy</button>
+                </div>
+            </div>
+            <div th:if="${ocrResult.getExtractedTexts() == null or #lists.isEmpty(ocrResult.getExtractedTexts())}" class="mt-4 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">Tidak ada field terstruktur yang terdeteksi — lihat teks original di atas.</div>
+
+            <!-- JSON -->
+            <div class="mt-8">
+                <div class="flex items-center justify-between"><h4 class="font-bold text-sm">JSON Response</h4><span class="text-xs bg-slate-900 text-white px-2 py-1 rounded-full" th:text="${ocrResult.getDuration()} + 's'">0s</span></div>
+                <pre id="jsonBlock" class="mt-3 bg-slate-950 text-slate-200 p-4 rounded-xl text-xs font-mono overflow-auto max-h-80" th:text="${'{&quot;duration&quot;:' + ocrResult.getDuration() + ',&quot;original&quot;:&quot;…&quot;}'}">{"duration": 0.0}</pre>
+                <script th:inline="javascript">
+                    const extracted = /*[[${ocrResult.getExtractedTexts()}]]*/ [];
+                    const original = /*[[${ocrResult.getOriginalExtractedText()}]]*/ "";
+                    const duration = /*[[${ocrResult.getDuration()}]]*/ 0;
+                    const json = { duration, originalExtractedText: original, extractedTexts: Array.isArray(extracted) ? extracted.reduce((a,c)=>{a[c.textKey||c.textkey||c.key]=c.textValue||c.textvalue||c.value; return a;},{}) : extracted };
+                    document.getElementById('jsonBlock').textContent = JSON.stringify(json, null, 2);
+                    function copyAll(){ navigator.clipboard.writeText(document.getElementById('jsonBlock').textContent); const b=document.activeElement; if(b) b.innerText='Copied!'; }
+                    function copyText(id){ navigator.clipboard.writeText(document.getElementById(id).innerText); }
+                </script>
+            </div>
+
+            <div class="mt-8 flex flex-col sm:flex-row gap-3">
+                <a th:href="@{/ocr/extract}" class="flex-1 inline-flex justify-center items-center gap-2 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700">↻ Ekstraksi Lagi</a>
+                <a th:href="@{/dashboard}" class="flex-1 inline-flex justify-center items-center gap-2 bg-white border border-slate-200 py-3 rounded-xl font-semibold hover:bg-slate-50">Ke Dashboard</a>
+            </div>
         </div>
     </div>
 
-<script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
+    <div class="mt-6 text-center text-xs text-slate-400">© 2026 Nestara Vision • Hasil disimpan sementara • Jangan bagikan data sensitif</div>
+</div>
 </body>
 </html>

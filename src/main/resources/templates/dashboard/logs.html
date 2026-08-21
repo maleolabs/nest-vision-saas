@@ -1,196 +1,83 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml" class="h-full bg-white">
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ocr Tool | Logs</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tw-elements/css/tw-elements.min.css" />
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Aktivitas — Nestara Vision</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-          theme: {
-            extend: {
-              fontFamily: {
-                inter: ['Inter Tight', 'sans-serif'],
-              },
-            },
-          },
-        }
-    </script>
+    <script>tailwind.config={theme:{extend:{fontFamily:{sans:['Inter','sans-serif']}}}}</script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script>
 </head>
-<body class="bg-gray-800 font-inter min-h-screen">
-
-<aside id="default-sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
-    <div class="h-full px-3 py-4 overflow-y-auto bg-gray-700">
-        <a th:href="@{/}" class="flex items-center ps-2.5 mb-5">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 33 33" width="33" height="33">
-                <circle cx="16.5" cy="16.5" r="15" fill="#3B82F6" />
-
-                <rect x="10" y="10" width="13" height="16.5" rx="1.65" ry="1.65" fill="#FFFFFF" />
-                <rect x="11.5" y="11.5" width="10" height="3.3" rx="0.8" ry="0.8" fill="#E5E7EB" />
-                <rect x="11.5" y="16.5" width="10" height="1.65" rx="0.8" ry="0.8" fill="#E5E7EB" />
-                <rect x="11.5" y="20" width="10" height="1.65" rx="0.8" ry="0.8" fill="#E5E7EB" />
-
-                <circle cx="16.5" cy="25" r="1" fill="#3B82F6" />
-                <path d="M 15.5 26 Q 16.5 26.5 17.5 26" stroke="#3B82F6" stroke-width="0.7" fill="none" />
-                <text x="16.5" y="30" font-size="3.3" fill="#FFFFFF" text-anchor="middle" font-family="Arial, sans-serif">OCR</text>
-            </svg>
-            <span class="ms-2 self-center text-xl font-semibold whitespace-nowrap text-white">API OCR Tool</span>
-        </a>
-        <ul class="space-y-2 font-medium">
-            <li>
-                <a th:href="@{/dashboard}" class="flex items-center p-2 text-gray-200 rounded-lg hover:bg-gray-600 hover:bg-gray-600 group">
-                    <svg class="w-5 h-5 text-gray-400 transition duration-75 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 22 21">
-                        <path d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z"/>
-                        <path d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z"/>
-                    </svg>
-                    <span class="ms-3 font-semibold whitespace-nowrap">Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a th:href="@{/dashboard/docs}" class="flex items-center p-2 text-gray-200 rounded-lg hover:bg-gray-600 hover:bg-gray-600 group">
-                    <svg class="w-6 h-6 text-gray-400 transition duration-75 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.35709 16V5.78571c0-.43393.34822-.78571.77777-.78571H18.5793c.4296 0 .7778.35178.7778.78571V16M5.35709 16h-1c-.55229 0-1 .4477-1 1v1c0 .5523.44771 1 1 1H20.3571c.5523 0 1-.4477 1-1v-1c0-.5523-.4477-1-1-1h-1M5.35709 16H19.3571M9.35709 8l2.62501 2.5L9.35709 13m4.00001 0h2"/>
-                    </svg>
-                    <span class="flex-1 ms-3 whitespace-nowrap font-semibold">Dokumentasi</span>
-                </a>
-            </li>
-            <li>
-                <a th:href="@{/dashboard/logs}" class="flex items-center p-2 text-white bg-gray-600 rounded-lg group">
-                    <svg class="w-6 h-6 text-white transition duration-75 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                        <path fill-rule="evenodd" d="M9 2.221V7H4.221a2 2 0 0 1 .365-.5L8.5 2.586A2 2 0 0 1 9 2.22ZM11 2v5a2 2 0 0 1-2 2H4v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2h-7ZM8 16a1 1 0 0 1 1-1h6a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1Zm1-5a1 1 0 1 0 0 2h6a1 1 0 1 0 0-2H9Z" clip-rule="evenodd"/>
-                    </svg>
-                    <span class="flex-1 ms-3 whitespace-nowrap font-semibold">Log</span>
-                </a>
-            </li>
-            <li>
-                <a th:href="@{/dashboard/profile}" class="flex items-center p-2 text-gray-200 rounded-lg hover:bg-gray-600 hover:bg-gray-600 group">
-                    <svg class="w-6 h-6 text-gray-400 transition duration-75 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                        <path fill-rule="evenodd" d="M12 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm-2 9a4 4 0 0 0-4 4v1a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-1a4 4 0 0 0-4-4h-4Z" clip-rule="evenodd"/>
-                    </svg>
-                    <span class="flex-1 ms-3 whitespace-nowrap font-semibold">Profil</span>
-                </a>
-            </li>
-            <li>
-                <a th:href="@{/auth/logout}" class="flex items-center p-2 text-gray-200 rounded-lg hover:bg-gray-600 hover:bg-gray-600 group">
-                    <svg class="w-6 h-6 text-gray-400 transition duration-75 group-hover:text-gray-900 dark:group-hover:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H8m12 0-4 4m4-4-4-4M9 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h2"/>
-                    </svg>
-                    <span class="flex-1 ms-3 whitespace-nowrap">Keluar</span>
-                </a>
-            </li>
-        </ul>
-    </div>
+<body class="bg-slate-50 font-sans antialiased" x-data="{open:false}">
+<aside class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 hidden sm:flex flex-col">
+    <div class="h-16 flex items-center gap-3 px-6 border-b border-slate-100"><span class="w-9 h-9 rounded-xl bg-blue-600 text-white grid place-items-center font-black text-sm">NV</span><span class="font-bold">Nestara Vision</span></div>
+    <nav class="flex-1 p-4 space-y-1">
+        <a th:href="@{/dashboard}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-sm font-medium"><span class="w-8 h-8 rounded-lg bg-slate-100 grid place-items-center">◧</span> Dashboard</a>
+        <a th:href="@{/ocr/extract}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-sm font-medium"><span class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 grid place-items-center">↗</span> Ekstraksi OCR</a>
+        <a th:href="@{/dashboard/docs}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-sm font-medium"><span class="w-8 h-8 rounded-lg bg-slate-100 grid place-items-center">≡</span> Dokumentasi</a>
+        <a th:href="@{/dashboard/logs}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-slate-900 text-white font-semibold text-sm"><span class="w-8 h-8 rounded-lg bg-white/15 grid place-items-center">◫</span> Log Aktivitas</a>
+        <a th:href="@{/dashboard/profile}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 text-sm font-medium"><span class="w-8 h-8 rounded-lg bg-slate-100 grid place-items-center">◎</span> Profil</a>
+    </nav>
+    <div class="p-4 border-t border-slate-100"><a th:href="@{/auth/logout}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-slate-600 hover:bg-red-50 hover:text-red-600">↩ Keluar</a></div>
 </aside>
+<div class="sm:hidden sticky top-0 z-30 bg-white border-b border-slate-200 flex items-center justify-between px-4 h-14"><span class="font-bold flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-blue-600 text-white grid place-items-center font-black">NV</span> Nestara</span><button @click="open=!open" class="p-2 rounded-lg border border-slate-200">☰</button></div>
+<div x-show="open" class="sm:hidden mx-4 mt-3 bg-white border border-slate-200 rounded-xl p-2 space-y-1"><a th:href="@{/dashboard}" class="block px-3 py-2 rounded-lg text-sm">Dashboard</a><a th:href="@{/dashboard/logs}" class="block px-3 py-2 rounded-lg bg-slate-900 text-white text-sm">Log</a></div>
 
-<div class="p-4 sm:ml-64">
-    <div class="w-full px-20 py-10 bg-gray-700 rounded">
-        <div class="flex justify-between items-start">
-            <div>
-                <h5 class="mb-2 text-3xl font-bold text-white">
-                    Riwayat Aktivitas & Log Sistem
-                </h5>
-                <p class="mb-5 text-base text-gray-400 sm:text-lg">
-                    Lihat riwayat penggunaan API, pantau log aktivitas akun Anda, dan identifikasi potensi masalah dalam sistem untuk memastikan operasional yang optimal.
-                </p>
+<main class="sm:ml-64">
+    <div class="max-w-6xl mx-auto px-6 lg:px-8 py-8">
+        <div class="bg-white border border-slate-200 rounded-[24px] p-7 shadow-sm">
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl font-extrabold tracking-tight">Riwayat Aktivitas & Log Sistem</h1>
+                    <p class="mt-1 text-sm text-slate-600">Pantau setiap request API, status, dan IP — untuk audit & debugging.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs bg-slate-900 text-white px-3 py-1.5 rounded-full font-semibold" th:text="${totalPages != null ? totalPages + ' halaman' : ''}">—</span>
+                    <a href="#" onclick="location.reload()" class="text-sm font-semibold border border-slate-200 bg-white px-4 py-2 rounded-xl hover:bg-slate-50">↻ Refresh</a>
+                </div>
+            </div>
+            <div class="mt-4 flex gap-2 text-xs">
+                <span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-full"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> 200 OK</span>
+                <span class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1.5 rounded-full"><span class="w-2 h-2 rounded-full bg-amber-500"></span> 400</span>
+                <span class="inline-flex items-center gap-1.5 bg-red-50 text-red-700 border border-red-200 px-3 py-1.5 rounded-full"><span class="w-2 h-2 rounded-full bg-red-500"></span> 404/500</span>
             </div>
         </div>
-    </div>
 
-    <div class="relative overflow-x-auto mt-5">
-        <table class="w-full border" th:unless="${userError}">
-            <thead>
-            <tr class="bg-gray-700 text-gray-200">
-                <th scope="col" class="px-4 py-2 border">
-                    Waktu
-                </th>
-                <th scope="col" class="px-4 py-2 border">
-                    Endpoint
-                </th>
-                <th scope="col" class="px-4 py-2 border">
-                    Metode
-                </th>
-                <th scope="col" class="px-4 py-2 border">
-                    Status
-                </th>
-                <th scope="col" class="px-4 py-2 border">
-                    IP Pengguna
-                </th>
-            </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-700">
-                <tr th:each="requestLog: ${requestLogs}" class="hover:bg-gray-600 text-gray-400 hover:text-gray-100">
-                    <td class="border px-4 py-2 text-center" th:text="${#temporals.format(requestLog.getRequestTime(), 'dd-MM-yyyy HH:mm:ss ')}"></td>
-                    <td class="border px-4 py-2" th:text="${requestLog.getEndpoint()}"></td>
-                    <td class="border px-4 py-2 text-center" th:text="${requestLog.getHttpMethod()}"></td>
-                    <td class="border px-4 py-2 text-center">
-                        <span th:classappend="${requestLog.getResponseStatus() == 200
-                            ? 'bg-green-200 text-green-800'
-                            : (requestLog.getResponseStatus() == 400
-                                ? 'bg-orange-200 text-orange-800'
-                                : (requestLog.getResponseStatus() == 404 || requestLog.getResponseStatus() == 500
-                                    ? 'bg-red-200 text-red-800'
-                                    : 'bg-blue-200 text-blue-800'))
-                            }"
-                                th:text="${requestLog.getResponseStatus()}"
-                                class="text-sm font-medium me-2 px-2.5 py-0.5 rounded-sm"></span>
-                    </td>
-                    <td class="border px-4 py-2 text-center" th:text="${requestLog.getIpAddress()}"></td>
-                </tr>
-            </tbody>
-        </table>
+        <div th:if="${userError}" class="mt-6 flex gap-3 p-4 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">⚠️ Terjadi kesalahan saat mengambil data log! Silakan coba lagi nanti.</div>
 
-        <div class="flex justify-center my-5">
-            <nav aria-label="Page navigation">
-                <ul class="inline-flex -space-x-px text-sm">
-                    <li>
-                        <a th:href="@{/dashboard/logs(page=${currentPage > 1 ? (currentPage - 1) : 1})}"
-                           th:disabled="${currentPage <= 1}"
-                           th:classappend="${currentPage <= 1} ? 'cursor-not-allowed bg-gray-700 text-gray-400' : 'text-gray-200 bg-gray-600 hover:bg-gray-700 hover:text-gray-400'"
-                           class="flex items-center justify-center px-3 h-8 ms-0 leading-tight border border-e-0 border-gray-600 rounded-s-lg">
-                            Previous
-                        </a>
-                    </li>
-                    <li th:each="page: ${#numbers.sequence(1, totalPages)}">
-                        <a th:href="@{/dashboard/logs(page=${page})}"
-                           th:classappend="${page == currentPage} ? 'text-blue-600 border border-gray-600 bg-blue-50 hover:bg-blue-100 hover:text-blue-700' : 'leading-tight text-gray-200 bg-gray-600 border border-gray-300 hover:bg-gray-700 hover:text-gray-400'"
-                           class="flex items-center justify-center px-3 h-8"
-                           th:text="${page}"></a>
-                    </li>
-                    <li>
-                        <a th:href="@{/dashboard/logs(page=${currentPage < totalPages ? (currentPage + 1) : totalPages})}"
-                           th:disabled="${currentPage >= totalPages}"
-                           th:classappend="${currentPage >= totalPages} ? 'cursor-not-allowed bg-gray-700 text-gray-400' : 'text-gray-200 bg-gray-600 hover:bg-gray-700 hover:text-gray-400'"
-                           class="flex items-center justify-center px-3 h-8 leading-tight border border-gray-600 rounded-e-lg">
-                            Next
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
+        <div th:unless="${userError}" class="mt-6 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-slate-50 text-xs font-semibold text-slate-600 uppercase tracking-wide">
+                        <tr><th class="text-left px-5 py-3">Waktu</th><th class="text-left px-5 py-3">Endpoint</th><th class="text-center px-5 py-3">Method</th><th class="text-center px-5 py-3">Status</th><th class="text-center px-5 py-3">IP</th></tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr th:each="requestLog: ${requestLogs}" class="hover:bg-slate-50/70">
+                            <td class="px-5 py-3 whitespace-nowrap text-slate-700 font-medium" th:text="${#temporals.format(requestLog.getRequestTime(), 'dd MMM yyyy, HH:mm:ss')}">01 Jan 2026</td>
+                            <td class="px-5 py-3 font-mono text-xs text-slate-700" th:text="${requestLog.getEndpoint()}">/api/ocr/do-ocr</td>
+                            <td class="px-5 py-3 text-center"><span class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold border" th:classappend="${requestLog.getHttpMethod()=='GET' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-violet-50 text-violet-700 border-violet-200'}" th:text="${requestLog.getHttpMethod()}">GET</span></td>
+                            <td class="px-5 py-3 text-center">
+                                <span th:text="${requestLog.getResponseStatus()}" th:classappend="${requestLog.getResponseStatus() == 200 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (requestLog.getResponseStatus() == 400 ? 'bg-amber-50 text-amber-700 border-amber-200' : (requestLog.getResponseStatus() == 404 || requestLog.getResponseStatus() == 500 ? 'bg-red-50 text-red-700 border-red-200' : 'bg-slate-50 text-slate-700 border-slate-200'))}" class="inline-flex px-2.5 py-1 rounded-full text-xs font-bold border">200</span>
+                            </td>
+                            <td class="px-5 py-3 text-center font-mono text-xs text-slate-600" th:text="${requestLog.getIpAddress()}">127.0.0.1</td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(requestLogs)}"><td colspan="5" class="px-5 py-12 text-center text-slate-500">Belum ada log — coba lakukan request OCR pertama kamu.</td></tr>
+                    </tbody>
+                </table>
+            </div>
 
-        <div th:if="${userError}" class="flex items-center p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-200" role="alert">
-            <svg class="shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
-            </svg>
-            <span class="sr-only">Info</span>
-            <div>
-                Terjadi kesalahan saat mengambil data log! Silahkan kembali lagi nanti.
+            <div th:if="${totalPages != null and totalPages > 0}" class="flex items-center justify-between px-5 py-4 border-t border-slate-100 bg-slate-50/50">
+                <div class="text-xs text-slate-500">Halaman <b th:text="${currentPage}">1</b> dari <b th:text="${totalPages}">5</b></div>
+                <nav class="inline-flex rounded-xl border border-slate-200 bg-white overflow-hidden text-sm">
+                    <a th:href="@{/dashboard/logs(page=${currentPage > 1 ? (currentPage - 1) : 1})}" th:classappend="${currentPage <= 1} ? 'pointer-events-none opacity-50' : ''" class="px-4 py-2 hover:bg-slate-50 border-r border-slate-200">‹ Prev</a>
+                    <a th:each="page: ${#numbers.sequence(1, totalPages)}" th:href="@{/dashboard/logs(page=${page})}" th:text="${page}" th:classappend="${page == currentPage} ? 'bg-slate-900 text-white' : 'hover:bg-slate-50'" class="px-3 py-2 border-r border-slate-200 last:border-0">1</a>
+                    <a th:href="@{/dashboard/logs(page=${currentPage < totalPages ? (currentPage + 1) : totalPages})}" th:classappend="${currentPage >= totalPages} ? 'pointer-events-none opacity-50' : ''" class="px-4 py-2 hover:bg-slate-50">Next ›</a>
+                </nav>
             </div>
         </div>
+
+        <div class="mt-6 text-center text-xs text-slate-400">© 2026 Nestara Vision • Log disimpan 30 hari • Export CSV coming soon</div>
     </div>
-
-    <hr class="mb-6 border-gray-600 sm:mx-auto lg:my-8" />
-    <span class="block text-sm text-gray-500 sm:text-center dark:text-gray-400">© 2025 <a href="https://marijmokoginta.com/" class="hover:underline">marijmokoginta™</a>. All Rights Reserved.</span>
-
-</div>
-
+</main>
 </body>
 </html>
