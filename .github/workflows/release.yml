@@ -37,7 +37,9 @@ jobs:
           - { os: ubuntu-latest,  target: linux-amd64   }
           - { os: windows-latest, target: windows-amd64 }
           - { os: macos-14,       target: macos-arm64   }  # Apple Silicon
-          - { os: macos-13,       target: macos-x64     }  # Intel
+          # macos-13 (Intel) dropped: runner pool saturated/EOL.
+          # Intel Mac users: run `anvil pipeline bundle` locally on the
+          # target machine — build-bundle.sh builds host-native.
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
