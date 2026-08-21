@@ -5,7 +5,7 @@
 
 OCR SaaS berbasis Spring Boot — ekstraksi teks dari gambar (KTP & dokumen umum) melalui REST API dengan autentikasi API key, kuota harian per klien, dan dashboard manajemen.
 
-Dirancang untuk tahan terhadap **gambar berkualitas rendah**: blur, pencahayaan buruk, kontras rendah, kemiringan hingga 45°, hingga distorsi perspektif.
+Menyediakan preprocessing otomatis untuk **gambar berkualitas rendah**: blur, pencahayaan buruk, kontras rendah, kemiringan hingga 45°, dan distorsi perspektif.
 
 ---
 
@@ -202,7 +202,7 @@ Semua key punya default (`${VAR:default}` di `application.properties`). Override
 | `OCR_SR_ENABLED` | `false` | Super-resolution blur ekstrem |
 | `OCR_LLM_ENABLED` | `false` | LLM vision fallback (butuh API key, berbayar) |
 
-Daftar lengkap (28+ keys): `.env.example`.
+Daftar lengkap (31 keys): `.env.example`.
 
 ---
 
