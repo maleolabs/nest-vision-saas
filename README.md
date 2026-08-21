@@ -1,139 +1,248 @@
-# perizinan-ocr-tool
+# Nestara Vision SaaS
 
-Proyek ini menyediakan layanan pengenalan teks dari gambar menggunakan teknologi Optical Character Recognition (OCR) berbasis API. API ini memungkinkan pengguna untuk mengunggah gambar dan menerima teks yang dihasilkan dari proses OCR, memungkinkan integrasi mudah ke dalam aplikasi atau sistem yang membutuhkan kemampuan pengenalan teks dari gambar.
+![Build](https://github.com/maleolabs/nest-vision-saas/actions/workflows/ci.yml/badge.svg)
+![Release](https://github.com/maleolabs/nest-vision-saas/actions/workflows/release.yml/badge.svg)
 
-## Prasyarat
+OCR SaaS berbasis Spring Boot — ekstraksi teks dari gambar (KTP & dokumen umum) melalui REST API dengan autentikasi API key, kuota harian per klien, dan dashboard manajemen.
 
-- **JDK 17** — Temurin 17 (`curl -sL https://api.adoptium.net/v3/binary/latest/17/ga/linux/x64/jdk/hotspot/normal/eclipse | tar xz -C ~/.local/opt/jdk-17 --strip-components=1`)
-- **Docker** — untuk MySQL dev container dan `docker compose up`
-- **Maven Wrapper** — `./mvnw` (sudah included, tidak perlu install Maven global)
+Dirancang untuk tahan terhadap **gambar berkualitas rendah**: blur, pencahayaan buruk, kontras rendah, kemiringan hingga 45°, hingga distorsi perspektif.
 
-> `application.properties` sudah punya default value untuk semua env var, jadi `mvn verify` dan `spring-boot:run` bisa jalan tanpa export manual — cukup pastikan MySQL up dan `JAVA_HOME` mengarah ke JDK 17.
+---
 
-## Setup Development
+## Fitur
 
-```bash
-# 1. Set environment + start MySQL container (idempotent)
-source scripts/dev-env.sh
+### Pipeline OCR
 
-# 2. Verifikasi
-./mvnw verify          # build + test (butuh MySQL di 127.0.0.1:3307)
-./mvnw spring-boot:run # start app di http://localhost:8080
+| Kemampuan | Detail |
+|---|---|
+| Ensemble engine | pyTesseract → native Tesseract (tess4j) → PaddleOCR (opsional). Engine dipilih otomatis berdasarkan confidence score |
+| Quality gate | Deteksi blur (Laplacian variance), brightness, contrast — preprocessing diaktifkan otomatis |
+| Preprocessing | Upscale 300 DPI, CLAHE, fastNlMeans denoising, deskew Hough 10–45°, koreksi perspektif 4-titik, koreksi orientasi 90/180/270 |
+| Multi-PSM retry | 5 strategi page segmentation × 3 varian citra, dipilih via confidence scoring |
+| KTP extractor | Fuzzy key matching (Levenshtein), alias field, koreksi typo NIK (`O→0`, `I→1`, `B→8`), regex NIK 16-digit global |
+| Parser toleran | Multi-delimiter (`:`, `;`, `|`, spasi ganda) — tidak lagi bergantung pada satu karakter `:` |
+| Observability | Confidence, blur score, engine yang dipakai, durasi — tercatat per request |
+
+### Platform SaaS
+
+- Autentikasi API key (terenkripsi, TTL 180 hari) + verifikasi akun via email
+- Kuota harian per tipe akun (personal / organisasi)
+- Dashboard: pembuatan API key, log request, profil
+- WebSocket notification untuk progress OCR
+
+---
+
+## Arsitektur Pipeline
+
+```
+Gambar input
+     │
+     ▼
+┌─────────────────────────────────────────────┐
+│ Quality Gate (blur / brightness / contrast) │
+└──────────────┬──────────────────────────────┘
+               ▼
+┌─────────────────────────────────────────────┐
+│ Preprocessing                               │
+│ perspective → OSD → upscale → CLAHE →       │
+│ denoise → deskew(Hough) → threshold         │
+└──────────────┬──────────────────────────────┘
+               ▼
+┌─────────────────────────────────────────────┐
+│ Ensemble OCR                                │
+│ 1. pyTesseract (multi-PSM + confidence)     │
+│ 2. native Tesseract/tess4j   [conf < 60]    │
+│ 3. PaddleOCR                [opsional]      │
+│ 4. LLM Vision              [scaffold]       │
+└──────────────┬──────────────────────────────┘
+               ▼
+┌─────────────────────────────────────────────┐
+│ Post-processing                             │
+│ NIK typo fix → KTP/generic parser →         │
+│ fuzzy key match → filter required keys      │
+└─────────────────────────────────────────────┘
 ```
 
-`scripts/dev-env.sh` otomatis:
-- Set `JAVA_HOME` ke `~/.local/opt/jdk-17` (fallback `/opt/phpstorm/jbr`)
-- Set `TESSERACT_DATAPATH` ke `~/.local/share/tessdata` (butuh `ind.traineddata` + `eng.traineddata`)
-- Set `SPRING_DATASOURCE_*` ke MySQL container `ocr-tool-mysql` (127.0.0.1:3307, db `ocr_tool`, user `ocr`/`ocr`)
-- Start container MySQL jika belum jalan
+---
 
-Jika `ind.traineddata` belum ada:
+## Quick Start (Development)
+
+Prasyarat: JDK 17, Docker (MySQL), Tesseract binary + tessdata.
+
+```bash
+# 1. Environment + MySQL container (idempotent)
+source scripts/dev-env.sh
+
+# 2. Build + test
+./mvnw verify
+
+# 3. Jalankan
+./mvnw spring-boot:run   # http://localhost:8080
+```
+
+`scripts/dev-env.sh` menyiapkan `JAVA_HOME`, `TESSERACT_DATAPATH`, kredensial DB, dan men-start container MySQL `ocr-tool-mysql` (port 3307) secara otomatis.
+
+Jika `ind.traineddata` belum tersedia:
 
 ```bash
 mkdir -p ~/.local/share/tessdata
-curl -sL https://github.com/tesseract-ocr/tessdata_fast/raw/main/ind.traineddata -o ~/.local/share/tessdata/ind.traineddata
-cp /usr/share/tesseract/tessdata/eng.traineddata ~/.local/share/tessdata/ 2>/dev/null || true
+curl -sL https://github.com/tesseract-ocr/tessdata_fast/raw/main/ind.traineddata \
+  -o ~/.local/share/tessdata/ind.traineddata
 ```
 
-## Build & Test
+---
+
+## API
+
+Semua endpoint memerlukan header `X-API-KEY`.
+
+| Method | Endpoint | Deskripsi |
+|---|---|---|
+| `POST` | `/api/ocr/do-ocr` | Submit OCR. Multipart: `image` (file) *atau* `imageUrl`, opsional `requiredKeys` |
+| `GET` | `/api/ocr/check-status/{requestId}` | Cek status proses |
+| `GET` | `/api/ocr/get-result/{requestId}` | Ambil hasil ekstraksi |
+
+Contoh:
 
 ```bash
-./mvnw clean package -DskipTests   # package saja (jar di target/*.jar, ~171MB)
-./mvnw verify                       # package + test (butuh MySQL)
-./mvnw test                         # test saja
+curl -X POST https://host/api/ocr/do-ocr \
+  -H "X-API-KEY: <key>" \
+  -F "image=@ktp.jpg" \
+  -F "requiredKeys=nik,nama,tempat/tgl lahir"
 ```
 
-## Docker Compose
+Response berisi `requestId`; hasil akhir berupa pasangan key-value per field yang terdeteksi.
+
+Dashboard web tersedia di `/dashboard` (registrasi, login, buat API key, lihat log).
+
+---
+
+## Deployment
+
+### Opsi 1 — Self-Contained Bundle (tanpa install dependency)
+
+Bundle berisi JRE + Python + Tesseract + tessdata dalam satu folder. Tidak perlu instalasi apa pun selain MySQL.
+
+Unduh dari [GitHub Releases](https://github.com/maleolabs/nest-vision-saas/releases):
+
+| Platform | File |
+|---|---|
+| Linux x64 | `ocr-tool-<ver>-linux-amd64.tar.gz` |
+| Windows x64 | `ocr-tool-<ver>-windows-amd64.zip` |
+| macOS Apple Silicon | `ocr-tool-<ver>-macos-arm64.tar.gz` |
 
 ```bash
-docker compose up -d        # start db + ocr-api (build dari Dockerfile)
-docker compose logs -f      # lihat log
-docker compose down         # stop
-docker compose config       # validasi compose file
+tar -xzf ocr-tool-*.tar.gz && cd ocr-tool-*
+cp .env.example .env        # isi kredensial DB
+./start.sh                  # Windows: double-click start.bat
 ```
 
-`docker-compose.yml` berisi service `db` (mysql:8, healthcheck, volume `ocr-tool-db-data`) dan `ocr-api` (build `.`, depends_on `db` healthy, env lengkap).
+> macOS first run: `xattr -cr .` (binary unsigned).
+
+### Opsi 2 — Docker Compose
+
+```bash
+docker compose up -d --build
+docker compose logs -f
+```
+
+### Opsi 3 — Jar manual
+
+Butuh JDK 17, Python 3 + `opencv-python-headless pytesseract numpy`, Tesseract binary.
+
+```bash
+java -jar ocr-tool-*.jar    # konfigurasi via env var / .env
+```
+
+Skrip bantu Windows: `scripts/run.bat` (double-click) atau `scripts/run.ps1`.
+
+---
+
+## Release & Versioning
+
+Versi canonical ada di `anvil.yaml` (`project.version`) dan disinkronkan ke `pom.xml` oleh script bump — nama file bundle mengikuti versi ini.
+
+```bash
+scripts/bump-version.sh patch   # 0.5.0 -> 0.5.1
+scripts/bump-version.sh minor   # 0.5.0 -> 0.6.0
+scripts/bump-version.sh major   # 0.5.0 -> 1.0.0
+scripts/bump-version.sh minor --dry-run   # preview tanpa eksekusi
+```
+
+Script akan: bump versi → commit `chore(release): vX.Y.Z` → tag → push → workflow Release membangun jar + bundle semua platform dan mem-publish ke GitHub Releases.
+
+---
+
+## Konfigurasi
+
+Semua key punya default (`${VAR:default}` di `application.properties`). Override via environment variable atau file `.env` (lihat [.env.example](.env.example)).
+
+### Inti
+
+| Key | Default | Keterangan |
+|---|---|---|
+| `SPRING_DATASOURCE_URL` | `jdbc:mysql://127.0.0.1:3307/...` | JDBC URL MySQL |
+| `SPRING_DATASOURCE_USERNAME/PASSWORD` | `ocr` / `ocr` | Kredensial DB |
+| `TESSERACT_DATAPATH` | `/usr/share/tesseract/tessdata` | Lokasi traineddata |
+| `TESSERACT_CMD` | *(auto-detect)* | Path binary tesseract |
+| `OCR_PYTHON_PATH` | `python3` | Interpreter Python |
+| `OCR_SCRIPT_PATH` | `opt/app/ocr/tesseract_ocr.py` | Skrip bridge OCR |
+
+### Tuning OCR
+
+| Key | Default | Keterangan |
+|---|---|---|
+| `OCR_PREPROCESSING_ENABLED` | `true` | Auto-preprocess gambar buram |
+| `OCR_ENSEMBLE_FALLBACK` | `true` | Fallback antar engine |
+| `OCR_CONF_THRESHOLD` | `60` | Ambang confidence untuk fallback |
+| `OCR_PERSPECTIVE_ENABLED` | `true` | Koreksi trapesium/perspektif |
+| `OCR_OSD_ENABLED` | `true` | Koreksi rotasi 90/180/270 |
+| `OCR_DESKEW_MAX_ANGLE` | `45` | Sudut deskew maksimum (derajat) |
+| `OCR_PADDLE_ENABLED` | `false` | Fallback PaddleOCR (`pip install paddlepaddle paddleocr`) |
+| `OCR_SR_ENABLED` | `false` | Super-resolution blur ekstrem |
+| `OCR_LLM_ENABLED` | `false` | LLM vision fallback (butuh API key, berbayar) |
+
+Daftar lengkap (28+ keys): `.env.example`.
+
+---
 
 ## Anvil Pipeline
 
-Project ini sudah di-init sebagai Anvil project (`anvil.yaml`, `anvil init ocr-tool`).
-
 ```bash
-anvil config validate        # validasi anvil.yaml
-anvil pipeline build         # build pipeline: mvn dependency:go-offline → package → copy jar
-anvil pipeline build -o dist # build + copy jar ke dist/
-anvil pipeline ci            # CI pipeline: mvn verify (butuh MySQL di 3307) → test report
+anvil pipeline build          # mvn package → copy jar
+anvil pipeline ci             # mvn verify + test report
+anvil pipeline bundle         # build self-contained bundle utk OS lokal
 ```
 
-Pipeline definitions: `.anvil/pipelines/build.yaml` dan `.anvil/pipelines/ci.yaml`.
-State lokal `.anvil/state/` di-ignore (tidak di-commit).
+Definisi: `.anvil/pipelines/{build,ci,bundle}.yaml`.
 
 ## GitHub Workflows
 
-| Workflow | Trigger | Apa yang dilakukan |
-|----------|---------|-------------------|
-| `ci.yml` | push `master`/`feat/**`/`security/**` + PR ke `master` | `setup-java` Temurin 17 + MySQL service + `./mvnw verify` |
-| `build.yml` | push `master` + tag `v*` | `./mvnw clean package -DskipTests` + upload artifact `ocr-tool-jar` |
-| `release.yml` | push tag `v*` | package + hitung `sha256` + `softprops/action-gh-release` → GitHub Release dengan `*.jar` + `*.jar.sha256` |
+| Workflow | Trigger | Fungsi |
+|---|---|---|
+| `ci.yml` | push `master`/`feat/**` + PR | Build + test (MySQL service) |
+| `build.yml` | push `master`, tag `v*` | Package jar + artifact |
+| `release.yml` | tag `v*` | Jar + bundle 3 platform → GitHub Release |
 
-Buat release:
+## Struktur Proyek
 
-```bash
-git tag v0.1.0 && git push origin v0.1.0  # trigger build + release workflows
-# atau via GitHub UI: Releases → Draft new release → Create tag v0.1.0
+```
+├── src/main/java/m2codes/ocr_tool/
+│   ├── application/          # service OCR, ensemble, quality assessor, parser
+│   ├── domain/               # entity, repository, domain service
+│   ├── infrastructure/       # security (API key), python executor, websocket
+│   └── interfaces/           # controller, DTO, validator
+├── opt/app/ocr/              # skrip Python: tesseract_ocr.py, paddle_ocr.py,
+│   └── extractor/            # postprocessor, ktp_extractor
+├── scripts/
+│   ├── bundle/build-bundle.sh  # builder self-contained bundle
+│   ├── bump-version.sh         # release versioning
+│   ├── dev-env.sh              # setup dev linux/mac
+│   └── run.ps1 / run.bat       # launcher windows
+├── .github/workflows/        # ci, build, release
+└── anvil.yaml                # project identity + canonical version
 ```
 
-## Windows — Run tanpa Docker (double-click)
+## Lisensi
 
-Butuh **JDK 17** + **MySQL** (via installer, bukan Docker). Tidak perlu set env manual — script sudah handle.
-
-**Cara 1: Double-click (paling gampang)**
-1. Edit `scripts\run.bat` pakai Notepad — ubah bagian `CONFIG` di atas (DB URL, password, `TESSERACT_DATAPATH`, dll) jika perlu
-2. Atau copy `.env.example` → `.env` lalu edit `.env` (dipakai otomatis oleh `run.ps1`)
-3. Double-click `scripts\run.bat` — window akan kebuka, log Spring Boot tampil. Buka `http://localhost:8080` setelah `Started OcrToolApplication`
-
-**Cara 2: PowerShell**
-```powershell
-# Right-click scripts\run.ps1 → Run with PowerShell
-# Atau dari terminal:
-.\scripts\run.ps1
-# Dengan jar custom:
-.\scripts\run.ps1 -JarPath "C:\path\to\ocr-tool-0.0.1-SNAPSHOT.jar"
-```
-
-**Cara 3: Manual CMD/PowerShell**
-```cmd
-:: CMD
-set SPRING_DATASOURCE_URL=jdbc:mysql://127.0.0.1:3306/ocr_tool?createDatabaseIfNotExist=true
-set SPRING_DATASOURCE_USERNAME=ocr
-java -jar target\ocr-tool-0.0.1-SNAPSHOT.jar
-```
-```powershell
-# PowerShell
-$env:SPRING_DATASOURCE_URL="jdbc:mysql://127.0.0.1:3306/ocr_tool?createDatabaseIfNotExist=true"
-java -jar target\ocr-tool-0.0.1-SNAPSHOT.jar
-```
-
-> `TESSERACT_DATAPATH` di Windows tidak ada default Linux — set ke `C:\tessdata` yang berisi `ind.traineddata` + `eng.traineddata` (download dari https://github.com/tesseract-ocr/tessdata_fast). Kalau tidak butuh OCR, biarkan — app tetap start.
-
-## Environment Variables
-
-Semua key di `application.properties` punya default (`${VAR:default}`), jadi env var opsional untuk dev. Untuk override, export sebelum run atau set di `docker-compose.yml`:
-
-| Key | Default | Keterangan |
-|-----|---------|------------|
-| `SPRING_DATASOURCE_URL` | `jdbc:mysql://127.0.0.1:3307/ocr_tool?createDatabaseIfNotExist=true` | JDBC URL |
-| `SPRING_DATASOURCE_USERNAME` / `PASSWORD` | `ocr` / `ocr` | DB credentials |
-| `TESSERACT_DATAPATH` | `/usr/share/tesseract/tessdata` | tessdata dir (override ke `~/.local/share/tessdata` untuk dev) |
-| `OCR_SCRIPT_PATH` | `opt/app/ocr/tesseract_ocr.py` | path script Python OCR |
-| `KEYSTORE_PASSWORD` / `ALIAS` | `changeit` / `ocr` | JCEKS keystore (`keystore.jks`) |
-| `PERIZINAN_DPMTPST_API_BASE_URL` | `http://localhost:8080` | base URL untuk test `perizinan-dpmptsp` |
-
-Lihat `application.properties` dan `scripts/dev-env.sh` untuk daftar lengkap (28 keys).
-
-## Catatan
-
-- `keystore.jks` di-regenerate dengan password `changeit`, alias `ocr` (AES 256, JCEKS). File lama dengan password tidak diketahui sudah diganti.
-- `maven-shade-plugin` sudah dihapus dari `pom.xml` (konflik dengan `spring-boot-maven-plugin` repackage → jar hybrid 360MB). Jar sekarang murni Spring Boot fat jar (~171MB).
-- `docker-compose.yml.example` sudah diganti `docker-compose.yml` yang valid (env pakai underscore, hapus `SPRING_CONFIG_ADDITIONAL_LOCATION=/lib/x86_64-linux-gnu` yang salah, TESSERACT path untuk Debian image).
-- `tessdata` untuk bahasa Indonesia (`ind.traineddata`) perlu di-download manual (lihat Setup).
+Lihat [LICENSE](LICENSE).
