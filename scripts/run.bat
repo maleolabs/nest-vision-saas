@@ -43,6 +43,23 @@ REM ============================================================
 REM --- Set working dir ke repo root (parent dari scripts) ---
 pushd "%~dp0.."
 
+REM --- Load .env jika ada (override CONFIG) ---
+if exist ".env" (
+    echo  [INFO] Load .env dari %CD%\.env
+    for /f "usebackq eol=# tokens=1,* delims==" %%a in (".env") do (
+        if not "%%a"=="" (
+            for /f "tokens=*" %%c in ("%%a") do for /f "tokens=*" %%d in ("%%b") do set "%%c=%%d"
+        )
+    )
+    REM Strip quotes jika value pakai " atau ' (mis: KEY="value")
+    for %%k in (SPRING_DATASOURCE_URL SPRING_DATASOURCE_USERNAME SPRING_DATASOURCE_PASSWORD TESSERACT_DATAPATH TESSERACT_CMD KEYSTORE_PASSWORD KEYSTORE_ALIAS SPRING_MAIL_HOST SPRING_MAIL_USERNAME SPRING_MAIL_PASSWORD) do (
+        if defined %%k (
+            set "%%k=!%%k:"=!"
+            set "%%k=!%%k:'=!"
+        )
+    )
+)
+
 title OCR Tool - Spring Boot
 
 echo.
