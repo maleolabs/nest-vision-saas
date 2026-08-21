@@ -21,6 +21,31 @@ $Config = @{
     SPRING_JPA_HIBERNATE_DDL_AUTO = "update"
     TESSERACT_DATAPATH      = "C:\tessdata"
     TESSERACT_CMD           = ""  # kosong = auto-detect; atau "C:\Program Files\Tesseract-OCR\tesseract.exe"
+    # Python OCR bridge
+    OCR_PYTHON_PATH         = "python"  # windows: python/py; linux: python3
+    OCR_SCRIPT_PATH         = "opt/app/ocr/tesseract_ocr.py"
+    # Preprocessing (blur/gelap/kontras rendah)
+    OCR_PREPROCESSING_ENABLED = "true"
+    OCR_UPSCALE_THRESHOLD   = "1000"
+    OCR_BLUR_THRESHOLD      = "100"
+    # Ensemble fallback
+    OCR_ENSEMBLE_FALLBACK   = "true"
+    OCR_CONF_THRESHOLD      = "60"
+    # PaddleOCR fallback (butuh pip install paddlepaddle paddleocr)
+    OCR_PADDLE_ENABLED      = "false"
+    OCR_PADDLE_SCRIPT       = "opt/app/ocr/paddle_ocr.py"
+    # Super-resolution
+    OCR_SR_ENABLED          = "false"
+    ESRGAN_MODEL            = ""
+    # Koreksi miring / perspective / orientasi
+    OCR_PERSPECTIVE_ENABLED = "true"
+    OCR_OSD_ENABLED         = "true"
+    OCR_DESKEW_MAX_ANGLE    = "45"
+    # LLM Vision fallback (opsional, berbayar)
+    OCR_LLM_ENABLED         = "false"
+    OCR_LLM_API_KEY         = ""
+    OCR_LLM_BASE_URL        = "https://api.openai.com/v1"
+    OCR_LLM_MODEL           = "gpt-4o-mini"
     KEYSTORE_PASSWORD       = "changeit"
     KEYSTORE_ALIAS          = "ocr"
     SPRING_MAIL_HOST        = "smtp.gmail.com"
@@ -93,6 +118,7 @@ Write-Host "  [OK] JAR: $JarPath" -ForegroundColor Green
 Write-Host "  [OK] DB: $($Config.SPRING_DATASOURCE_URL) ($($Config.SPRING_DATASOURCE_USERNAME))" -ForegroundColor Green
 Write-Host "  [OK] TESSERACT: $($Config.TESSERACT_DATAPATH)" -ForegroundColor Green
 if ($Config.TESSERACT_CMD) { Write-Host "  [OK] TESSERACT_CMD: $($Config.TESSERACT_CMD)" -ForegroundColor Green }
+Write-Host "  [OK] OCR preprocess: $($Config.OCR_PREPROCESSING_ENABLED) | ensemble: $($Config.OCR_ENSEMBLE_FALLBACK) | perspective: $($Config.OCR_PERSPECTIVE_ENABLED) | OSD: $($Config.OCR_OSD_ENABLED)" -ForegroundColor Green
 Write-Host "  [OK] PORT: $($Config.SERVER_PORT)" -ForegroundColor Green
 Write-Host ""
 

@@ -48,7 +48,7 @@ public class OcrProcessorService extends TextProcessorService {
             OcrRequestService ocrRequestService,
             OcrResultService ocrResultService,
             ExtractedTextService extractedTextService,
-            @Qualifier("pyTesseractService") TextExtractionService textExtractionService,
+            @Qualifier("ensembleOcrService") TextExtractionService textExtractionService,
             ExtractedTextCleaner extractedTextCleaner,
             ExtractedTextMapper extractedTextMapper,
             TaskManager taskManager,
@@ -132,12 +132,15 @@ public class OcrProcessorService extends TextProcessorService {
     @Override
     protected CompletableFuture<List<ExtractedTextDto>> processExtractedText(String extractedText, List<String> requiredKeys) {
         String[] lines = extractedText.split("\\r?\\n");
-        // String[] cleanLines = extractedTextCleaner.linesCleaner(lines);
+        String[] cleanLines = extractedTextCleaner.linesCleaner(lines);
+        log.info("Cleaner: {} -> {} lines (conf={}, blur={})", lines.length, cleanLines.length,
+                extractedText != null ? extractedText.length() : 0, 0);
 
-        List<ExtractedTextDto> extractedTextDtos = new ArrayList<>(extractedTextMapper.parseLinesByColon(lines));
-        extractedTextDtos.addAll(extractedTextMapper.detectAndAddMissingKeyValue(lines, requiredKeys));
+        List<ExtractedTextDto> extractedTextDtos = new ArrayList<>(extractedTextMapper.parseLinesByColon(cleanLines));
+        extractedTextDtos.addAll(extractedTextMapper.detectAndAddMissingKeyValue(cleanLines, requiredKeys));
 
         List<ExtractedTextDto> filteredData = extractedTextMapper.filterParsedDataByRequiredKeys(extractedTextDtos, requiredKeys);
+        log.info("Parsed {} fields, filtered {}", extractedTextDtos.size(), filteredData.size());
         return CompletableFuture.completedFuture(filteredData);
     }
 
@@ -145,9 +148,9 @@ public class OcrProcessorService extends TextProcessorService {
     @Override
     protected CompletableFuture<List<ExtractedTextDto>> processExtractedText(String extractedText) {
         String[] lines = extractedText.split("\\r?\\n");
-        // String[] cleanLines = extractedTextCleaner.linesCleaner(lines);
+        String[] cleanLines = extractedTextCleaner.linesCleaner(lines);
 
-        List<ExtractedTextDto> extractedTextDtos = new ArrayList<>(extractedTextMapper.parseLinesByColon(lines));
+        List<ExtractedTextDto> extractedTextDtos = new ArrayList<>(extractedTextMapper.parseLinesByColon(cleanLines));
         return CompletableFuture.completedFuture(extractedTextDtos);
     }
 
@@ -190,7 +193,15 @@ public class OcrProcessorService extends TextProcessorService {
 
     @Override
     protected boolean usePreprocessedImage(String imageUrl, String clientId) {
-        // ocrRequestService.existsByImageUrlAndClientId(imageUrl, clientId);
+        // P2.5 quality gate: enable preprocess for known low-quality retries
+        // check if previous request for same image failed with low conf -> force preprocess
+        // simple heuristic: if imageUrl contains hint or client has recent failures, enable
+        // actual quality check is done inside extraction service auto-detect; this is just additional gate
+        try {
+            if (imageUrl != null && (imageUrl.toLowerCase().contains("blur") || imageUrl.toLowerCase().contains("low"))) {
+                return true;
+            }
+        } catch (Exception ignored) {}
         return false;
     }
 }

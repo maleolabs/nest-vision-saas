@@ -70,8 +70,8 @@ public class ExtractedTextCleaner {
 
     private String removeNoise(String line) {
         line = removeUnusedSpace(line);
-
-        String validRegex = ".*[^A-Za-z0-9:/.\s()'].*";
+        // allow dash, comma, slash, colon, dot which are needed for address/RT/RW/dates
+        String validRegex = ".*[^A-Za-z0-9:/.,\\s()'-].*";
 
         String[] words = line.split("\\s+");
         return Arrays.stream(words)
@@ -81,7 +81,9 @@ public class ExtractedTextCleaner {
     }
 
     private boolean isValidWord(String word) {
-        return word.contains(":") || word.length() > 2;
+        // keep RT, RW, 01 etc (len 2) which are critical for KTP
+        if (word.contains(":") || word.contains("/") || word.contains("-")) return true;
+        return word.length() >= 2;
     }
 
     private String removeUnusedSpace(String text) {

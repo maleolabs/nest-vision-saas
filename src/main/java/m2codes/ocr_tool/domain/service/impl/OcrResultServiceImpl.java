@@ -29,6 +29,12 @@ public class OcrResultServiceImpl implements OcrResultService {
     @Override
     public OcrResult save(OcrResultDto ocrResultDto, @NonNull OcrRequest ocrRequest) {
         UUID savedOcrResultId = ocrResultRepository.findFirstByOcrRequest(ocrRequest).map(OcrResult::getId).orElse(null);
+        // P3.11 observability logging
+        log.info("OCR result: req={} success={} dur={} conf={} blur={} engine={} len={}",
+                ocrRequest.getId(), ocrResultDto.isSuccess(), ocrResultDto.getDuration(),
+                ocrResultDto.getConfidence(), ocrResultDto.getBlurScore(), ocrResultDto.getEngineUsed(),
+                ocrResultDto.getExtractedText() != null ? ocrResultDto.getExtractedText().length() : 0);
+
         OcrResult ocrResult = OcrResult.builder()
                 .id(savedOcrResultId)
                 .ocrRequest(ocrRequest)

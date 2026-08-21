@@ -44,3 +44,7 @@ build/
 
 ### Docker ###
 # docker-compose.yml is tracked (dev + prod compose)
+
+### Python ###
+__pycache__/
+*.pyc

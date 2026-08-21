@@ -21,11 +21,13 @@ public class PythonOcrExcecutor {
         String scriptPath = Paths.get(this.scriptPath).toAbsolutePath().toString();
 
         ProcessBuilder builder = new ProcessBuilder(pythonPath, scriptPath, imagePath);
-        builder.redirectErrorStream(true);
+        builder.redirectErrorStream(false); // separate stderr for observability
 
         Process process = builder.start();
 
         String output;
+        StringBuilder stderr = new StringBuilder();
+        // read stdout
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             StringBuilder result = new StringBuilder();
             String line;
@@ -34,13 +36,36 @@ public class PythonOcrExcecutor {
             }
             output = result.toString();
         }
+        // read stderr for [OCR] metrics
+        try (BufferedReader errReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+            String line;
+            while ((line = errReader.readLine()) != null) {
+                stderr.append(line).append("\n");
+                // log observability line
+                if (line.contains("[OCR]")) {
+                    org.slf4j.LoggerFactory.getLogger(PythonOcrExcecutor.class).info(line);
+                }
+            }
+        }
 
         int exitCode = process.waitFor();
         if (exitCode != 0) {
-            throw new RuntimeException("Python script exited with code " + exitCode + ". Output: \n" + output);
+            throw new RuntimeException("Python script exited with code " + exitCode + ". Output: \n" + output + "\nStderr: " + stderr);
         }
 
         return output.trim();
+    }
+
+    public record OcrMetrics(double blur, double brightness, double contrast, double conf, int psm, boolean sr) {}
+    public OcrMetrics parseMetrics(String stderr) {
+        try {
+            // parse "[OCR] blur=... brightness=... contrast=... conf=... psm=... sr=..."
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("blur=([0-9.]+).*brightness=([0-9.]+).*contrast=([0-9.]+).*conf=([0-9.]+).*psm=(\\d+).*sr=(\\w+)").matcher(stderr);
+            if (m.find()) {
+                return new OcrMetrics(Double.parseDouble(m.group(1)), Double.parseDouble(m.group(2)), Double.parseDouble(m.group(3)), Double.parseDouble(m.group(4)), Integer.parseInt(m.group(5)), Boolean.parseBoolean(m.group(6)));
+            }
+        } catch (Exception ignored) {}
+        return null;
     }
 
 }
