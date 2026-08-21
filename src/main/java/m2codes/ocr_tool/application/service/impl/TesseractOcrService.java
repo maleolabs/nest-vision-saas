@@ -16,6 +16,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDouble;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
@@ -23,6 +24,7 @@ import org.opencv.core.Size;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.CLAHE;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.photo.Photo;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -238,7 +240,7 @@ public class TesseractOcrService implements TextExtractionService {
 
         // 3. Denoise (fastNlMeans) - preserves edges better than Gaussian
         Mat denoised = new Mat();
-        Imgproc.fastNlMeansDenoising(gray, denoised, 10, 7, 21);
+        Photo.fastNlMeansDenoising(gray, denoised, 10, 7, 21);
         gray.release();
         gray = denoised;
 
@@ -314,7 +316,7 @@ public class TesseractOcrService implements TextExtractionService {
             Mat blurred = new Mat();
             Imgproc.GaussianBlur(src, blurred, new Size(5,5), 0);
             Mat edged = new Mat();
-            Imgproc.Canny(blurred, 50, 150, 3, false);
+            Imgproc.Canny(blurred, edged, 50, 150, 3, false);
             Mat dilated = new Mat();
             Mat k = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(5,5));
             Imgproc.dilate(edged, dilated, k);
@@ -334,7 +336,7 @@ public class TesseractOcrService implements TextExtractionService {
                 MatOfPoint cnt = contours.get(i);
                 double area = Imgproc.contourArea(cnt);
                 if (area < imgArea*0.15 || area > imgArea*0.95) continue;
-                MatOfPoint approx = new MatOfPoint();
+                MatOfPoint2f approx = new MatOfPoint2f();
                 double peri = Imgproc.arcLength(new org.opencv.core.MatOfPoint2f(cnt.toArray()), true);
                 Imgproc.approxPolyDP(new org.opencv.core.MatOfPoint2f(cnt.toArray()), approx, 0.02*peri, true);
                 if (approx.rows() == 4) {
@@ -445,7 +447,7 @@ public class TesseractOcrService implements TextExtractionService {
             Mat binary = new Mat();
             Imgproc.threshold(src, binary, 0, 255, Imgproc.THRESH_BINARY_INV + Imgproc.THRESH_OTSU);
             Mat edges = new Mat();
-            Imgproc.Canny(binary, 50, 150, 3, false);
+            Imgproc.Canny(binary, edges, 50, 150, 3, false);
             Mat lines = new Mat();
             Imgproc.HoughLinesP(edges, lines, 1, Math.PI/180, 100, src.cols()*0.4, 10);
             Double medianAngle = null;
