@@ -19,9 +19,9 @@
             <h1 class="text-4xl font-extrabold leading-tight">Mulai gratis,<br>langsung coba.</h1>
             <p class="mt-4 text-white/80 leading-6">Daftar, verifikasi email, dapatkan API key — langsung coba OCR.</p>
             <ul class="mt-8 space-y-3 text-sm">
-                <li class="flex gap-3"><span class="w-7 h-7 rounded-full bg-white/15 grid place-items-center">✓</span><span><b>Daily limit</b> Personal 20 & Organization 50 request/hari</span></li>
-                <li class="flex gap-3"><span class="w-7 h-7 rounded-full bg-white/15 grid place-items-center">✓</span><span>Dokumentasi lengkap + contoh cURL/JS</span></li>
-                <li class="flex gap-3"><span class="w-7 h-7 rounded-full bg-white/15 grid place-items-center">✓</span><span>Riwayat request & monitoring penggunaan</span></li>
+                <li class="flex gap-3"><span class="w-7 h-7 rounded-full bg-white/15 grid place-items-center"><i data-lucide="check" class="w-4 h-4"></i></span><span><b>Daily limit</b> Personal 20 & Organization 50 request/hari</span></li>
+                <li class="flex gap-3"><span class="w-7 h-7 rounded-full bg-white/15 grid place-items-center"><i data-lucide="check" class="w-4 h-4"></i></span><span>Dokumentasi lengkap + contoh cURL/JS</span></li>
+                <li class="flex gap-3"><span class="w-7 h-7 rounded-full bg-white/15 grid place-items-center"><i data-lucide="check" class="w-4 h-4"></i></span><span>Riwayat request & monitoring penggunaan</span></li>
             </ul>
         </div>
         <div class="relative text-sm text-white/60">© 2026 Nestara Vision</div>
@@ -112,12 +112,14 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow hover:bg-blue-700 transition">Buat Akun & Lanjutkan →</button>
+                    <button type="submit" class="w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white shadow hover:bg-blue-700 transition">Buat Akun &amp; Lanjutkan <i data-lucide="arrow-right" class="w-4 h-4"></i></button>
                     <p class="text-center text-xs text-slate-500">Dengan mendaftar, kamu setuju dengan Syarat Layanan.</p>
                 </form>
             </div>
         </div>
     </div>
 </div>
+<script th:src="@{/js/vendor/lucide.min.js}"></script>
+<script>lucide.createIcons();</script>
 </body>
 </html>

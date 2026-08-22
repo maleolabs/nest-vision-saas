@@ -19,9 +19,9 @@
 
 <div class="max-w-4xl mx-auto px-6 py-8">
     <div class="flex items-center gap-2 text-xs font-semibold mb-6 justify-center">
-        <span class="inline-flex items-center gap-2 bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full">1 Upload ✓</span>
+        <span class="inline-flex items-center gap-2 bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full">1 Upload <i data-lucide="check" class="w-3.5 h-3.5 inline align-middle"></i></span>
         <span class="w-6 h-px bg-slate-300"></span>
-        <span class="inline-flex items-center gap-2 bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full">2 Ekstraksi ✓</span>
+        <span class="inline-flex items-center gap-2 bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full">2 Ekstraksi <i data-lucide="check" class="w-3.5 h-3.5 inline align-middle"></i></span>
         <span class="w-6 h-px bg-slate-300"></span>
         <span class="inline-flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-full">3 Hasil</span>
     </div>
@@ -30,7 +30,7 @@
         <div class="bg-white border-b border-slate-200 p-7">
             <div class="flex items-start justify-between gap-4">
                 <div>
-                    <div class="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full text-xs font-semibold text-emerald-700">✓ Selesai • <span th:text="${ocrResult.getDuration()} + 's'">0s</span></div>
+                    <div class="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full text-xs font-semibold text-emerald-700"><i data-lucide="check-circle-2" class="w-3.5 h-3.5 inline align-middle"></i> Selesai • <span th:text="${ocrResult.getDuration()} + 's'">0s</span></div>
                     <h1 class="mt-3 text-2xl font-extrabold tracking-tight">Hasil Ekstraksi</h1>
                     <p class="text-sm text-slate-600 mt-1">Berikut teks yang berhasil diekstrak. Salin atau export sebagai JSON.</p>
                 </div>
@@ -44,7 +44,7 @@
         <div class="p-7">
             <!-- original text -->
             <div class="flex items-center justify-between">
-                <h3 class="font-bold flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-slate-900 text-white grid place-items-center text-xs">≡</span> Teks Original</h3>
+                <h3 class="font-bold flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-slate-900 text-white grid place-items-center"><i data-lucide="align-left" class="w-4 h-4"></i></span> Teks Original</h3>
                 <button onclick="copyText('originalText')" class="text-xs font-semibold border border-slate-200 bg-white px-3 py-1.5 rounded-full hover:bg-slate-50">Copy</button>
             </div>
             <div id="originalText" class="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-4 max-h-64 overflow-auto">
@@ -52,7 +52,7 @@
                 <p th:if="${ocrResult.getOriginalExtractedText() == null or #strings.isEmpty(ocrResult.getOriginalExtractedText())}" class="text-sm text-slate-500">Tidak ada teks original (mungkin tidak tersedia).</p>
             </div>
 
-            <h3 class="mt-8 font-bold flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-blue-600 text-white grid place-items-center text-xs">◧</span> Informasi Terstruktur</h3>
+            <h3 class="mt-8 font-bold flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-blue-600 text-white grid place-items-center"><i data-lucide="table-2" class="w-4 h-4"></i></span> Informasi Terstruktur</h3>
             <p class="text-xs text-slate-500 mt-1">Field yang berhasil diparsing otomatis — gunakan untuk autofill form.</p>
 
             <div th:if="${ocrResult.getExtractedTexts() != null and !#lists.isEmpty(ocrResult.getExtractedTexts())}" class="mt-4 grid sm:grid-cols-2 gap-3">
@@ -80,7 +80,7 @@
             </div>
 
             <div class="mt-8 flex flex-col sm:flex-row gap-3">
-                <a th:href="@{/ocr/extract}" class="flex-1 inline-flex justify-center items-center gap-2 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700">↻ Ekstraksi Lagi</a>
+                <a th:href="@{/ocr/extract}" class="flex-1 inline-flex justify-center items-center gap-2 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700"><i data-lucide="rotate-cw" class="w-4 h-4"></i> Ekstraksi Lagi</a>
                 <a th:href="@{/dashboard}" class="flex-1 inline-flex justify-center items-center gap-2 bg-white border border-slate-200 py-3 rounded-xl font-semibold hover:bg-slate-50">Ke Dashboard</a>
             </div>
         </div>
@@ -88,5 +88,7 @@
 
     <div class="mt-6 text-center text-xs text-slate-400">© 2026 Nestara Vision • Hasil disimpan sementara • Jangan bagikan data sensitif</div>
 </div>
+<script th:src="@{/js/vendor/lucide.min.js}"></script>
+<script>lucide.createIcons();</script>
 </body>
 </html>
