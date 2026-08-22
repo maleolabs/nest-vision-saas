@@ -30,6 +30,11 @@ jobs:
           distribution: temurin
           java-version: "17"
           cache: maven
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Check Tailwind CSS is up to date
+        run: scripts/build-css.sh --check
       - name: Build and test
         run: ./mvnw -B verify
         env:

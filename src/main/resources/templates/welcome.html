@@ -3,26 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
     <title>Nestara Vision — Solusi OCR Terintegrasi</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter','sans-serif'],
-                        display: ['Plus Jakarta Sans','Inter','sans-serif'],
-                    },
-                    colors: {
-                        brand: { 50:'#eff6ff', 600:'#2563eb', 700:'#1d4ed8' }
-                    }
-                }
-            }
-        }
-    </script>
     <style>
         .mesh { background: radial-gradient(600px 300px at 20% -10%, #dbeafe 0%, transparent 60%), radial-gradient(800px 400px at 90% 0%, #e0e7ff 0%, transparent 60%), linear-gradient(#f8fafc,#fff); }
         .glass { backdrop-filter: blur(12px); background: rgba(255,255,255,0.8); }
@@ -153,20 +138,26 @@
 
 <!-- How it works -->
 <section id="how" class="max-w-7xl mx-auto px-6 lg:px-8 pb-14">
-    <div class="bg-slate-900 rounded-[28px] p-8 lg:p-10 text-white">
-        <h2 class="font-display font-bold text-2xl">Integrasi dalam 3 langkah</h2>
+    <div class="bg-white border border-slate-200 rounded-[28px] p-8 lg:p-10">
+        <h2 class="font-display font-bold text-2xl tracking-tight">Integrasi dalam 3 langkah</h2>
+        <p class="mt-2 text-sm text-slate-600 max-w-xl">Dari registrasi sampai response JSON pertama — tanpa konfigurasi rumit.</p>
         <div class="mt-8 grid md:grid-cols-3 gap-6">
-            <div class="bg-white/5 border border-white/10 rounded-2xl p-6"><div class="text-sm font-bold text-blue-300">01</div><div class="mt-2 font-semibold">Dapatkan API Key</div><p class="text-sm text-slate-300 mt-1">Daftar → verifikasi email → API key aktif otomatis.</p></div>
-            <div class="bg-white/5 border border-white/10 rounded-2xl p-6"><div class="text-sm font-bold text-blue-300">02</div><div class="mt-2 font-semibold">POST /api/ocr/do-ocr</div><p class="text-sm text-slate-300 mt-1">Kirim image / imageUrl + optional requiredKeys.</p></div>
-            <div class="bg-white/5 border border-white/10 rounded-2xl p-6"><div class="text-sm font-bold text-blue-300">03</div><div class="mt-2 font-semibold">Poll & Get Result</div><p class="text-sm text-slate-300 mt-1">GET /check-status → GET /get-result. Selesai.</p></div>
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6"><div class="text-sm font-bold text-blue-600">01</div><div class="mt-2 font-semibold">Dapatkan API Key</div><p class="text-sm text-slate-600 mt-1">Daftar → verifikasi email → buat API key dari dashboard.</p></div>
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6"><div class="text-sm font-bold text-blue-600">02</div><div class="mt-2 font-semibold">POST /api/ocr/do-ocr</div><p class="text-sm text-slate-600 mt-1">Kirim image / imageUrl + optional requiredKeys.</p></div>
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6"><div class="text-sm font-bold text-blue-600">03</div><div class="mt-2 font-semibold">Poll &amp; Get Result</div><p class="text-sm text-slate-600 mt-1">GET /check-status → GET /get-result. Selesai.</p></div>
         </div>
     </div>
 </section>
 
 <footer class="border-t border-slate-200 bg-white">
-    <div class="max-w-7xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between text-sm text-slate-500">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm text-slate-500">
         <span>© 2024–2026 Nestara Vision. All rights reserved.</span>
-        <span class="hidden sm:inline">Crafted by <a href="https://github.com/marijmokoginta" class="underline hover:text-slate-900">Marij Mokoginta</a> • Made in Indonesia</span>
+        <nav class="flex items-center gap-5">
+            <a th:href="@{/privacy}" class="hover:text-slate-900">Privasi</a>
+            <a th:href="@{/terms}" class="hover:text-slate-900">Syarat Layanan</a>
+            <a th:href="@{/dashboard/docs}" class="hover:text-slate-900">Dokumentasi</a>
+        </nav>
+        <span class="hidden sm:inline">Made in Indonesia</span>
     </div>
 </footer>
 </body>

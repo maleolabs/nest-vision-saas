@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <title>Kebijakan Privasi — Nestara Vision</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased font-sans">
+<header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-200">
+    <div class="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
+        <a th:href="@{/}" class="inline-flex items-center gap-2 font-bold"><span class="w-8 h-8 rounded-xl bg-blue-600 text-white grid place-items-center font-black text-sm">NV</span> Nestara Vision</a>
+        <a th:href="@{/dashboard/docs}" class="text-sm font-medium text-slate-600 hover:text-slate-900">Dokumentasi</a>
+    </div>
+</header>
+
+<main class="max-w-3xl mx-auto px-6 py-10">
+    <h1 class="text-3xl font-extrabold tracking-tight">Kebijakan Privasi</h1>
+    <p class="mt-2 text-sm text-slate-500">Terakhir diperbarui: 21 Agustus 2026</p>
+
+    <div class="mt-8 space-y-8 text-[15px] leading-7 text-slate-700">
+        <section>
+            <h2 class="font-bold text-lg text-slate-900">Data yang kami proses</h2>
+            <ul class="mt-3 list-disc pl-5 space-y-2">
+                <li><b>Data akun:</b> nama, email, dan tipe akun saat registrasi. Email digunakan untuk verifikasi akun.</li>
+                <li><b>Gambar yang diunggah:</b> file gambar yang kamu kirim untuk diekstraksi disimpan di server (direktori <code class="text-sm bg-slate-100 rounded px-1.5 py-0.5">uploads/ocr-request</code>).</li>
+                <li><b>Hasil ekstraksi:</b> teks asli dan field terstruktur hasil OCR, terkait dengan request ID kamu.</li>
+                <li><b>Log request:</b> timestamp, endpoint, status, dan durasi setiap panggilan API untuk keperluan kuota harian dan audit.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="font-bold text-lg text-slate-900">Cara kami menggunakan data</h2>
+            <ul class="mt-3 list-disc pl-5 space-y-2">
+                <li>Menjalankan fitur OCR yang kamu minta.</li>
+                <li>Menerapkan batas kuota harian per akun.</li>
+                <li>Menampilkan riwayat penggunaan di dashboard kamu.</li>
+            </ul>
+            <p class="mt-3">Kami <b>tidak</b> menjual atau membagikan data kamu kepada pihak ketiga untuk tujuan iklan atau pemasaran.</p>
+        </section>
+
+        <section>
+            <h2 class="font-bold text-lg text-slate-900">Retensi &amp; keamanan</h2>
+            <ul class="mt-3 list-disc pl-5 space-y-2">
+                <li>API key disimpan dalam bentuk terenkripsi dan memiliki masa berlaku.</li>
+                <li>Gambar dan hasil ekstraksi tersimpan di server selama akun aktif. Hubungi operator layanan untuk penghapusan permanen.</li>
+                <li>Akses ke server dibatasi untuk operasional layanan.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="font-bold text-lg text-slate-900">Tanggung jawab kamu atas data</h2>
+            <p class="mt-3">Jika kamu mengunggah dokumen yang berisi data pribadi orang lain (misalnya KTP), pastikan kamu memiliki dasar hukum untuk memprosesnya dan sesuai dengan peraturan perlindungan data yang berlaku (termasuk UU PDP No. 27/2022).</p>
+        </section>
+
+        <section>
+            <h2 class="font-bold text-lg text-slate-900">Perubahan kebijakan</h2>
+            <p class="mt-3">Kebijakan ini dapat diperbarui seiring perkembangan layanan. Perubahan material akan diumumkan melalui halaman ini.</p>
+        </section>
+    </div>
+
+    <div class="mt-10 pt-6 border-t border-slate-200 flex gap-6 text-sm">
+        <a th:href="@{/terms}" class="font-semibold text-blue-600 hover:text-blue-700">Syarat Layanan</a>
+        <a th:href="@{/}" class="font-semibold text-slate-600 hover:text-slate-900">← Kembali ke Beranda</a>
+    </div>
+</main>
+</body>
+</html>

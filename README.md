@@ -206,6 +206,17 @@ Daftar lengkap (31 keys): `.env.example`.
 
 ---
 
+## Frontend (Tailwind CSS)
+
+Styling memakai Tailwind yang dikompilasi ke file statis (`static/css/app.css`) — tanpa CDN, tanpa Node di runtime.
+
+```bash
+scripts/build-css.sh          # regenerate setelah mengubah class di template
+scripts/build-css.sh --check  # CI: gagal jika app.css stale
+```
+
+Butuh Node.js + npm (fallback: standalone binary otomatis di-download). CSS hasil generate di-commit agar `mvn spring-boot:run` lokal jalan tanpa langkah tambahan.
+
 ## Anvil Pipeline
 
 ```bash

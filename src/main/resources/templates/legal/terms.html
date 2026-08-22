@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <title>Syarat Layanan — Nestara Vision</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased font-sans">
+<header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-200">
+    <div class="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
+        <a th:href="@{/}" class="inline-flex items-center gap-2 font-bold"><span class="w-8 h-8 rounded-xl bg-blue-600 text-white grid place-items-center font-black text-sm">NV</span> Nestara Vision</a>
+        <a th:href="@{/dashboard/docs}" class="text-sm font-medium text-slate-600 hover:text-slate-900">Dokumentasi</a>
+    </div>
+</header>
+
+<main class="max-w-3xl mx-auto px-6 py-10">
+    <h1 class="text-3xl font-extrabold tracking-tight">Syarat Layanan</h1>
+    <p class="mt-2 text-sm text-slate-500">Terakhir diperbarui: 21 Agustus 2026</p>
+
+    <div class="mt-8 space-y-8 text-[15px] leading-7 text-slate-700">
+        <section>
+            <h2 class="font-bold text-lg text-slate-900">1. Layanan</h2>
+            <p class="mt-3">Nestara Vision menyediakan API OCR untuk ekstraksi teks dari gambar. Akun gratis dengan kuota harian sesuai tipe akun (lihat halaman registrasi untuk angka berlaku). Kuota di-reset setiap hari.</p>
+        </section>
+
+        <section>
+            <h2 class="font-bold text-lg text-slate-900">2. Akun &amp; API key</h2>
+            <ul class="mt-3 list-disc pl-5 space-y-2">
+                <li>Kamu bertanggung jawab menjaga kerahasiaan API key dan seluruh aktivitas yang terjadi melaluinya.</li>
+                <li>API key memiliki masa berlaku dan dapat dicabut dari dashboard.</li>
+                <li>Satu orang/organisasi tidak boleh membuat beberapa akun untuk menghindari kuota harian.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="font-bold text-lg text-slate-900">3. Penggunaan yang diperbolehkan</h2>
+            <ul class="mt-3 list-disc pl-5 space-y-2">
+                <li>Hanya unggah dokumen yang kamu miliki hak untuk memproses.</li>
+                <li>Dilarang menggunakan layanan untuk aktivitas ilegal, termasuk memproses dokumen palsu atau data pribadi tanpa dasar hukum.</li>
+                <li>Dilarang mencoba melewati batas kuota, menyalahgunakan endpoint, atau mengganggu ketersediaan layanan.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="font-bold text-lg text-slate-900">4. Akurasi hasil</h2>
+            <p class="mt-3">OCR bersifat probabilistik — hasil ekstraksi dapat mengandung kesalahan, terutama pada gambar berkualitas rendah. Selalu verifikasi hasil sebelum digunakan untuk keputusan penting (misalnya verifikasi identitas atau pengisian dokumen resmi). Layanan ini tidak dimaksudkan sebagai satu-satunya sumber verifikasi identitas.</p>
+        </section>
+
+        <section>
+            <h2 class="font-bold text-lg text-slate-900">5. Ketersediaan &amp; perubahan</h2>
+            <p class="mt-3">Layanan disediakan "sebagaimana adanya" tanpa jaminan ketersediaan tertentu. Kami dapat mengubah fitur, kuota, atau menghentikan layanan dengan pemberitahuan yang wajar.</p>
+        </section>
+
+        <section>
+            <h2 class="font-bold text-lg text-slate-900">6. Batasan tanggung jawab</h2>
+            <p class="mt-3">Sejauh diizinkan oleh hukum yang berlaku, Nestara Vision tidak bertanggung jawab atas kerugian tidak langsung yang timbul dari penggunaan atau ketidakmampuan menggunakan layanan, termasuk keputusan yang diambil berdasarkan hasil OCR.</p>
+        </section>
+    </div>
+
+    <div class="mt-10 pt-6 border-t border-slate-200 flex gap-6 text-sm">
+        <a th:href="@{/privacy}" class="font-semibold text-blue-600 hover:text-blue-700">Kebijakan Privasi</a>
+        <a th:href="@{/}" class="font-semibold text-slate-600 hover:text-slate-900">← Kembali ke Beranda</a>
+    </div>
+</main>
+</body>
+</html>
