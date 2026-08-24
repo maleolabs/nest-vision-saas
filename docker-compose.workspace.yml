@@ -1,0 +1,161 @@
+# Nestara Workspace — Unified compose untuk DEV di Windows/Linux/macOS
+# Menjalankan 3 app sekaligus: web (Laravel) + vision (Spring Boot) + DB
+# Penggunaan:
+#   docker compose up -d                # jalanin semua (web + vision + db)
+#   docker compose up -d ocr-api        # cuma vision
+#   docker compose logs -f web
+#   docker compose down
+#
+# Catatan Windows:
+#   - Docker Desktop harus running (WSL2 backend)
+#   - Port 8000/8080/3306/3307 di-forward otomatis ke Windows host
+#   - Mobile tetap pakai tool/run_dev.dart — nggak lewat compose
+#   - web -> vision via http://ocr-api:8080/api (internal Docker DNS), bukan localhost
+
+services:
+  # --- DB untuk Laravel web (MySQL 8) ---
+  nestara-db:
+    image: mysql:8
+    container_name: nestara-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: nestara_dev
+      MYSQL_USER: nestara
+      MYSQL_PASSWORD: nestara
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - nestara-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-unestara", "-pnestara"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # --- DB untuk Vision SaaS (MySQL 8) — sama dengan vision/docker-compose.yml ---
+  ocr-db:
+    image: mysql:8
+    container_name: ocr-tool-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ocr_tool
+      MYSQL_USER: ocr
+      MYSQL_PASSWORD: ocr
+    ports:
+      - "127.0.0.1:3307:3306"
+    volumes:
+      - ocr-tool-db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # --- Vision SaaS (Spring Boot) ---
+  ocr-api:
+    build:
+      context: ./nestara-vision-saas
+      network: host
+    container_name: ocr-tool-api
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_SERVLET_SESSION_TIMEOUT=1500m
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=com.mysql.cj.jdbc.Driver
+      - SPRING_DATASOURCE_USERNAME=ocr
+      - SPRING_DATASOURCE_PASSWORD=ocr
+      - SPRING_DATASOURCE_URL=jdbc:mysql://ocr-db:3306/ocr_tool?createDatabaseIfNotExist=true
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - TESSERACT_DATAPATH=/usr/share/tesseract-ocr/5/tessdata/
+      - OCR_PYTHON_PATH=python3
+      - OCR_SCRIPT_PATH=/app/opt/app/ocr/tesseract_ocr.py
+      - OCR_PREPROCESSING_ENABLED=true
+      - OCR_UPSCALE_THRESHOLD=1000
+      - OCR_BLUR_THRESHOLD=100
+      - OCR_ENSEMBLE_FALLBACK=true
+      - OCR_CONF_THRESHOLD=55
+      - OCR_TIME_BUDGET=60
+      - OCR_PADDLE_ENABLED=false
+      - OCR_PADDLE_SCRIPT=/app/opt/app/ocr/paddle_ocr.py
+      - OCR_RAPID_ENABLED=true
+      - OCR_RAPID_SCRIPT=/app/opt/app/ocr/rapid_ocr.py
+      - OCR_SR_ENABLED=true
+      - ESRGAN_MODEL=
+      - OCR_PERSPECTIVE_ENABLED=true
+      - OCR_OSD_ENABLED=true
+      - OCR_DESKEW_MAX_ANGLE=45
+      - OCR_LLM_ENABLED=false
+      - OCR_LLM_API_KEY=
+      - OCR_LLM_BASE_URL=https://api.openai.com/v1
+      - OCR_LLM_MODEL=gpt-4o-mini
+      - APP_API_KEY_LENGTH=32
+      - APP_API_KEY_LIFETIME=180
+      - PHYSICAL_DEVICE_CORE_POOL=3
+      - PHYSICAL_DEVICE_MAX_POOL=5
+      - PHYSICAL_DEVICE_QUEUE_CAPACITY=50
+      - FILE_UPLOAD_METHOD=local
+      - FILE_UPLOAD_DIR=uploads/ocr-request
+      - FILE_EXTERNAL_API_URL=
+      - FILE_EXTERNAL_API_KEY=
+      - KEYSTORE_PASSWORD=changeit
+      - KEYSTORE_ALIAS=ocr
+      - ACCOUNT_PERSONAL_DAILY_LIMIT=20
+      - ACCOUNT_ORGANIZATION_DAILY_LIMIT=50
+      - SPRING_MAIL_HOST=smtp.gmail.com
+      - SPRING_MAIL_PORT=587
+      - SPRING_MAIL_USERNAME=dev@example.com
+      - SPRING_MAIL_PASSWORD=dev
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
+      - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
+    depends_on:
+      ocr-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # --- Web Laravel (PHP 8.4 + artisan serve) ---
+  # Alternatif native `php artisan serve` — pakai ini kalau mau semua via Docker
+  # Env diambil dari nestara-web/.env; override OCR_API_BASE_URL ke internal DNS
+  web:
+    image: php:8.4-cli
+    container_name: nestara-web
+    working_dir: /app
+    volumes:
+      - ./nestara-web:/app
+      - nestara-web-vendor:/app/vendor
+    ports:
+      - "8000:8000"
+    environment:
+      # Docker internal DNS: web -> ocr-api via service name, bukan localhost
+      - OCR_API_BASE_URL=http://ocr-api:8080/api/
+      - DB_HOST=nestara-db
+      - DB_PORT=3306
+      - DB_DATABASE=nestara_dev
+      - DB_USERNAME=nestara
+      - DB_PASSWORD=nestara
+      - APP_URL=http://localhost:8000
+    command: >
+      bash -c "
+        if [ ! -f vendor/autoload.php ]; then composer install --no-interaction; fi
+        && php artisan migrate --force
+        && php artisan serve --host=0.0.0.0 --port=8000
+      "
+    depends_on:
+      nestara-db:
+        condition: service_healthy
+      ocr-api:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  nestara-db-data:
+  ocr-tool-db-data:
+  nestara-web-vendor:
+
+# Untuk dev native (tanpa compose web service), cukup:
+#   docker compose up -d ocr-db ocr-api   # atau: cd nestara-vision-saas && docker compose up -d
+#   cd nestara-web && php artisan serve --host=0.0.0.0 --port=8000
+# Maka web native akan pakai OCR_API_BASE_URL=http://localhost:8080 (default .env)
