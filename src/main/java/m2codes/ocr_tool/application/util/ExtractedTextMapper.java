@@ -23,7 +23,15 @@ public class ExtractedTextMapper {
                 .map(this::robustSplit)
                 .filter(parts -> parts != null && parts.length == 2)
                 .map(parts -> {
-                    String key = normalizeKey(parts[0].trim().toLowerCase());
+                    String rawKey = parts[0].trim();
+                    String rawKeyLow = rawKey.toLowerCase();
+                    // F: trust Python if already known key (single source)
+                    String key;
+                    if (isKnownKey(rawKeyLow)) {
+                        key = rawKeyLow;
+                    } else {
+                        key = normalizeKey(rawKeyLow);
+                    }
                     String value = correctValue(parts[1].trim(), key);
                     return ExtractedTextDto.builder()
                             .textKey(key)
@@ -74,12 +82,32 @@ public class ExtractedTextMapper {
 
     private String correctValue(String value, String key) {
         if (key.contains("nik")) {
-            // P1.4 whitelist correction
+            // P1.4 whitelist correction + checksum-aware: don't truncate valid 16 prematurely
             value = value.replace("O","0").replace("o","0").replace("I","1").replace("l","1").replace("L","1").replace("B","8").replace("S","5").replace("Z","2").replace(" ","").replace("-","");
             value = value.replaceAll("[^0-9]", "");
             if (value.length() > 16) value = value.substring(0,16);
+            // if still not 16, keep as is for ensemble NIK validator to discard
+        }
+        // F: don't over-clean other fields — preserve original case for names/addresses but trim
+        if (key.contains("nama") || key.contains("alamat") || key.contains("kelurahan") || key.contains("kecamatan")) {
+            // title-case later via postprocessor; keep raw
+            value = value.trim();
         }
         return value;
+    }
+
+    /**
+     * F: Single source of truth — Python postprocessor already did fuzzy key normalization with cutoff 0.75.
+     * This Java layer should be thin: trust "key: value" from Python if key already in EXPECTED_KEYS.
+     * Only fallback to levenshtein if key is unknown.
+     */
+    public boolean isKnownKey(String raw) {
+        java.util.List<String> known = java.util.List.of(
+                "provinsi","kabupaten","kota","nik","nama","tempat/tgl lahir","jenis kelamin",
+                "gol. darah","alamat","rt/rw","kelurahan","kecamatan","agama","status perkawinan",
+                "pekerjaan","kewarganegaraan","berlaku hingga"
+        );
+        return known.contains(raw.toLowerCase().trim());
     }
 
     private int levenshtein(String a, String b) {

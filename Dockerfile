@@ -36,11 +36,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       python3 \
       python3-pip \
       libglib2.0-0t64 \
+      libgl1 \
       fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/* \
     && pip3 install --no-cache-dir --break-system-packages \
       --retries 10 --timeout 180 \
-      opencv-python-headless numpy pytesseract
+      opencv-python-headless numpy pytesseract onnxruntime pyclipper shapely pyyaml rapidocr_onnxruntime
 
 COPY --from=builder /app/target/*.jar app.jar
 

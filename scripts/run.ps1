@@ -30,12 +30,16 @@ $Config = @{
     OCR_BLUR_THRESHOLD      = "100"
     # Ensemble fallback
     OCR_ENSEMBLE_FALLBACK   = "true"
-    OCR_CONF_THRESHOLD      = "60"
-    # PaddleOCR fallback (butuh pip install paddlepaddle paddleocr)
+    OCR_CONF_THRESHOLD      = "55"
+    OCR_TIME_BUDGET         = "60"
+    # PaddleOCR fallback (legacy, prefer Rapid)
     OCR_PADDLE_ENABLED      = "false"
     OCR_PADDLE_SCRIPT       = "opt/app/ocr/paddle_ocr.py"
-    # Super-resolution
-    OCR_SR_ENABLED          = "false"
+    # RapidOCR ONNX fallback (preferred untuk KTP buram)
+    OCR_RAPID_ENABLED       = "true"
+    OCR_RAPID_SCRIPT        = "opt/app/ocr/rapid_ocr.py"
+    # Super-resolution (capped 2200px, cubic+sharpen jika tanpa model)
+    OCR_SR_ENABLED          = "true"
     ESRGAN_MODEL            = ""
     # Koreksi miring / perspective / orientasi
     OCR_PERSPECTIVE_ENABLED = "true"

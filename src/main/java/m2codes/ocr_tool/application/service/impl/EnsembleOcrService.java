@@ -20,20 +20,23 @@ public class EnsembleOcrService implements TextExtractionService {
     private final TextExtractionService primary; // pyTesseract
     private final TextExtractionService nativeTesseract;
     private final TextExtractionService paddle;
+    private final TextExtractionService rapid;
 
     @Value("${ocr.ensemble.fallback-enabled:true}")
     private boolean fallbackEnabled;
 
-    @Value("${ocr.ensemble.conf-threshold:60}")
+    @Value("${ocr.ensemble.conf-threshold:55}")
     private int confThreshold;
 
     public EnsembleOcrService(
             @Qualifier("pyTesseractService") TextExtractionService primary,
             @Qualifier("nativeTesseractService") TextExtractionService nativeTesseract,
-            @Qualifier("paddleOcrService") TextExtractionService paddle) {
+            @Qualifier("paddleOcrService") TextExtractionService paddle,
+            @Qualifier("rapidOcrService") TextExtractionService rapid) {
         this.primary = primary;
         this.nativeTesseract = nativeTesseract;
         this.paddle = paddle;
+        this.rapid = rapid;
     }
 
     @Override
@@ -58,7 +61,9 @@ public class EnsembleOcrService implements TextExtractionService {
     public OcrResultDto extractTextFromImage(File file, boolean preprocessed) {
         OcrResultDto r1 = guardedExtract(primary, "pytesseract", file, preprocessed);
         log.info("[Ensemble File] primary success={} conf={} len={} blur={}", r1.isSuccess(), r1.getConfidence(), r1.getExtractedText() != null ? r1.getExtractedText().length() : 0, r1.getBlurScore());
-        if (isGood(r1)) return withEngine(r1, "pytesseract");
+        // NIK validity check: if primary has valid 16-digit NIK, treat as good even if conf slightly below threshold
+        if (isGood(r1) && hasValidNik(r1)) return withEngine(r1, "pytesseract");
+        if (isGood(r1) && r1.getConfidence() != null && r1.getConfidence() >= confThreshold + 10) return withEngine(r1, "pytesseract");
 
         if (!fallbackEnabled) return r1;
 
@@ -66,16 +71,23 @@ public class EnsembleOcrService implements TextExtractionService {
         OcrResultDto r2 = guardedExtract(nativeTesseract, "native-tesseract", file, true);
         log.info("[Ensemble File] native conf={} len={}", r2.getConfidence(), r2.getExtractedText() != null ? r2.getExtractedText().length() : 0);
 
-        // paddle if enabled and both low
+        // rapid (preferred for blur) — try before paddle
+        OcrResultDto rRapid = guardedExtract(rapid, "rapid", file, preprocessed);
+        log.info("[Ensemble File] rapid success={} conf={} len={}", rRapid.isSuccess(), rRapid.getConfidence(), rRapid.getExtractedText() != null ? rRapid.getExtractedText().length() : 0);
+
+        // paddle legacy if rapid not good
         OcrResultDto r3 = guardedExtract(paddle, "paddle", file, preprocessed);
         log.info("[Ensemble File] paddle success={} len={}", r3.isSuccess(), r3.getExtractedText() != null ? r3.getExtractedText().length() : 0);
 
         OcrResultDto best = r1;
         if (isBetter(r2, best)) best = withEngine(r2, "native-tesseract");
+        if (rRapid.isSuccess() && isBetter(rRapid, best)) best = withEngine(rRapid, "rapid");
+        // also consider NIK validity boost: rapid with valid NIK beats everything if others invalid
+        if (rRapid.isSuccess() && hasValidNik(rRapid) && !hasValidNik(best)) best = withEngine(rRapid, "rapid");
         if (r3.isSuccess() && isBetter(r3, best)) best = withEngine(r3, "paddle");
 
         // log observability
-        log.info("[Ensemble] chosen engine={} conf={} dur={} best len={}", best.getEngineUsed(), best.getConfidence(), best.getDuration(), best.getExtractedText() != null ? best.getExtractedText().length() : 0);
+        log.info("[Ensemble] chosen engine={} conf={} dur={} best len={} nikValid={}", best.getEngineUsed(), best.getConfidence(), best.getDuration(), best.getExtractedText() != null ? best.getExtractedText().length() : 0, hasValidNik(best));
         return best;
     }
 
@@ -118,9 +130,20 @@ public class EnsembleOcrService implements TextExtractionService {
         return r.isSuccess() && r.getExtractedText() != null && r.getExtractedText().length() > 20 && (r.getConfidence() == null || r.getConfidence() >= confThreshold);
     }
 
+    private boolean hasValidNik(OcrResultDto r) {
+        if (r.getExtractedText() == null) return false;
+        // look for 16 consecutive digits
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("\\b\\d{16}\\b").matcher(r.getExtractedText());
+        return m.find();
+    }
+
     private boolean isBetter(OcrResultDto cand, OcrResultDto current) {
         if (!cand.isSuccess() || cand.getExtractedText() == null) return false;
         if (!current.isSuccess()) return true;
+        // NIK validity is king for KTP
+        boolean candNik = hasValidNik(cand);
+        boolean curNik = hasValidNik(current);
+        if (candNik != curNik) return candNik;
         int candConf = cand.getConfidence() != null ? cand.getConfidence() : 0;
         int curConf = current.getConfidence() != null ? current.getConfidence() : 0;
         if (candConf != curConf) return candConf > curConf;

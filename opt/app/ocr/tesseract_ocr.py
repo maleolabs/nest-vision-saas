@@ -34,23 +34,25 @@ for _k in ("TESSDATA_PREFIX", "TESSERACT_DATAPATH"):
         os.environ["TESSDATA_PREFIX"] = _v
         break
 
-# --- Wall-clock budget (OCR_TIME_BUDGET, seconds, default 45) ---
+# --- Wall-clock budget (OCR_TIME_BUDGET, seconds, default 60) ---
 def get_time_budget():
     try:
-        v = float(os.environ.get("OCR_TIME_BUDGET", "45"))
-        return v if v > 0 else 45.0
+        v = float(os.environ.get("OCR_TIME_BUDGET", "60"))
+        return v if v > 0 else 60.0
     except (TypeError, ValueError):
-        return 45.0
+        return 60.0
 
 def deadline_exceeded(deadline):
     """True when the monotonic deadline has passed (None deadline = unlimited)."""
     return deadline is not None and time.monotonic() >= deadline
 
-def ts_timeout(deadline, cap=15):
-    """pytesseract timeout capped by remaining budget (min 1s)."""
+def ts_timeout(deadline, cap=8):
+    """pytesseract timeout capped by remaining budget (min 2s), budget sliced /3 to avoid starving sweep."""
     if deadline is None:
         return cap
-    return max(1, min(cap, int(deadline - time.monotonic())))
+    remaining = deadline - time.monotonic()
+    # reserve budget across remaining passes; never 1s (tesseract needs >=2s for 1600px)
+    return max(2, min(cap, int(max(2, remaining / 3))))
 
 # --- Quality assessment ---
 def laplacian_variance(gray):
@@ -97,8 +99,8 @@ def perspective_correction(gray):
         img_area = h*w
         for cnt in contours[:5]:
             area = cv2.contourArea(cnt)
-            # KTP should be large: 15% - 95% of image
-            if area < img_area*0.15 or area > img_area*0.95:
+            # KTP should be large: 5% - 97% of image (relaxed for phone photos with background)
+            if area < img_area*0.05 or area > img_area*0.97:
                 continue
             peri = cv2.arcLength(cnt, True)
             approx = cv2.approxPolyDP(cnt, 0.02*peri, True)
@@ -180,15 +182,36 @@ def deskew_hough(gray):
 
 # --- C: OSD orientation 0/90/180/270 ---
 def correct_orientation(gray, lang="ind", deadline=None):
-    """Detect 90/180/270 rotation via Tesseract OSD, else brute-force max 3 rotations by confidence."""
+    """Detect 90/180/270 rotation via Tesseract OSD. Brute-force guarded: skip if blurry or budget low."""
     try:
         if deadline_exceeded(deadline):
             sys.stderr.write("[OSD] budget exhausted before orientation check, skip\n")
             return gray, 0
+        # Guard: if very blurry, OSD is unreliable and brute will waste budget -> skip
+        try:
+            bv = laplacian_variance(gray)
+            if bv < 50:
+                sys.stderr.write(f"[OSD] skip brute, too blurry (var={bv:.1f})\n")
+                # still try single OSD, but no brute
+                try:
+                    osd = pytesseract.image_to_osd(gray, output_type=pytesseract.Output.DICT, config='--psm 0', timeout=ts_timeout(deadline, cap=6))
+                    angle = int(osd.get('orientation', 0))
+                    conf = float(osd.get('orientation_conf', 0))
+                    sys.stderr.write(f"[OSD] angle={angle} conf={conf:.1f} (blurry guard)\n")
+                    if angle != 0 and conf > 3.0:
+                        if angle == 90: gray = cv2.rotate(gray, cv2.ROTATE_90_CLOCKWISE)
+                        elif angle == 180: gray = cv2.rotate(gray, cv2.ROTATE_180)
+                        elif angle == 270: gray = cv2.rotate(gray, cv2.ROTATE_90_COUNTERCLOCKWISE)
+                        return gray, angle
+                except Exception as e:
+                    sys.stderr.write(f"[OSD] pytesseract failed (blurry): {e}\n")
+                return gray, 0
+        except Exception:
+            pass
         # Try OSD via pytesseract
         osd_confident_upright = False
         try:
-            osd = pytesseract.image_to_osd(gray, output_type=pytesseract.Output.DICT, config='--psm 0', timeout=ts_timeout(deadline))
+            osd = pytesseract.image_to_osd(gray, output_type=pytesseract.Output.DICT, config='--psm 0', timeout=ts_timeout(deadline, cap=6))
             # osd dict: 'orientation': 0/90/180/270, 'orientation_conf': float
             angle = int(osd.get('orientation', 0))
             conf = float(osd.get('orientation_conf', 0))
@@ -208,39 +231,38 @@ def correct_orientation(gray, lang="ind", deadline=None):
             sys.stderr.write(f"[OSD] pytesseract failed: {e}\n")
         if osd_confident_upright:
             return gray, 0
-        # Fallback brute-force: try at most 3 rotations (90/180/270) and pick best by text length heuristic.
-        # Capped at 3 OCR passes and bounded by the wall-clock deadline; on deadline stop,
-        # whatever angle scored best so far is used (thresholds below still apply).
+        # Fallback brute-force: only if we have >15s budget left, and max 2 candidates (90,180) not 3
+        remaining = (deadline - time.monotonic()) if deadline else 60
+        if remaining < 15:
+            sys.stderr.write(f"[OSD-BRUTE] skip, remaining {remaining:.1f}s <15s\n")
+            return gray, 0
         h, w = gray.shape[:2]
         best = gray
         best_len = 0
         best_angle = 0
-        # Test angles only if not already corrected by Hough? We do quick check
-        # Use small thumbnail for speed
         thumb = cv2.resize(gray, (400, int(400*h/w))) if w>h else cv2.resize(gray, (int(400*w/h), 400))
         brute_attempts = 0
-        for ang, code in [(90, cv2.ROTATE_90_CLOCKWISE), (180, cv2.ROTATE_180), (270, cv2.ROTATE_90_COUNTERCLOCKWISE)]:
+        for ang, code in [(90, cv2.ROTATE_90_CLOCKWISE), (180, cv2.ROTATE_180)]:  # 270 rarely needed for KTP
             if deadline_exceeded(deadline):
                 sys.stderr.write(f"[OSD-BRUTE] deadline reached after {brute_attempts} candidate(s), keep best so far\n")
                 break
             brute_attempts += 1
             try:
                 rot = cv2.rotate(thumb, code)
-                txt = pytesseract.image_to_string(rot, config='--oem 1 --psm 6 -l ind', timeout=ts_timeout(deadline))
+                txt = pytesseract.image_to_string(rot, config='--oem 1 --psm 6 -l ind', timeout=ts_timeout(deadline, cap=5))
                 l = len(txt.strip())
                 if l > best_len and l > 20:
                     best_len = l
                     best_angle = ang
             except Exception:
                 pass
-        if best_angle != 0 and best_len > 30:
+        # require stronger evidence: len>40 (was 30)
+        if best_angle != 0 and best_len > 40:
             sys.stderr.write(f"[OSD-BRUTE] chose angle={best_angle} len={best_len}\n")
             if best_angle == 90:
                 return cv2.rotate(gray, cv2.ROTATE_90_CLOCKWISE), 90
             elif best_angle == 180:
                 return cv2.rotate(gray, cv2.ROTATE_180), 180
-            elif best_angle == 270:
-                return cv2.rotate(gray, cv2.ROTATE_90_COUNTERCLOCKWISE), 270
         return gray, 0
     except Exception as e:
         sys.stderr.write(f"[OSD] failed: {e}\n")
@@ -276,9 +298,10 @@ def preprocess_image_v2(img_path, apply_sr=False, deadline=None):
     # upscale for DPI 300
     img = upscale_if_needed(img)
 
-    # optional super-resolution for extreme blur (P2.7)
+    # optional super-resolution for extreme blur (P2.7) — capped to avoid 3200px blowup
     if apply_sr or q["needs_sr"]:
         try:
+            h, w = img.shape[:2]
             sr_model_path = os.environ.get("ESRGAN_MODEL", "")
             if sr_model_path and os.path.isfile(sr_model_path):
                 sr = cv2.dnn_superres.DnnSuperResImpl_create()
@@ -286,9 +309,26 @@ def preprocess_image_v2(img_path, apply_sr=False, deadline=None):
                 sr.setModel("edsr", 2)
                 img = sr.upsample(img)
             else:
-                img = cv2.resize(img, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
-                kernel = np.array([[0,-1,0],[-1,5,-1],[0,-1,0]])
-                img = cv2.filter2D(img, -1, kernel)
+                # For large images (>1500px), don't 2x upscale — just sharpen in place
+                if max(h, w) > 1500:
+                    kernel = np.array([[0,-1,0],[-1,5,-1],[0,-1,0]])
+                    img = cv2.filter2D(img, -1, kernel)
+                    # light contrast boost instead of size doubling
+                    img = cv2.convertScaleAbs(img, alpha=1.1, beta=5)
+                elif max(h, w) > 1000:
+                    # moderate 1.5x for medium images
+                    img = cv2.resize(img, None, fx=1.5, fy=1.5, interpolation=cv2.INTER_CUBIC)
+                    kernel = np.array([[0,-1,0],[-1,5,-1],[0,-1,0]])
+                    img = cv2.filter2D(img, -1, kernel)
+                else:
+                    img = cv2.resize(img, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+                    kernel = np.array([[0,-1,0],[-1,5,-1],[0,-1,0]])
+                    img = cv2.filter2D(img, -1, kernel)
+            # cap max dimension to 2200 to keep tesseract fast
+            h2, w2 = img.shape[:2]
+            if max(h2, w2) > 2200:
+                scale = 2200 / max(h2, w2)
+                img = cv2.resize(img, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
         except Exception as e:
             sys.stderr.write(f"SR failed: {e}\n")
 
@@ -359,11 +399,14 @@ def score_text(text):
     return ratio*70 + len_score - noisy*2
 
 def ocr_with_confidence(img, config, deadline=None):
-    """One OCR pass. Each tesseract invocation gets its own timeout derived from
-    the remaining wall-clock budget, so the data+string pair cannot jointly
-    overshoot the deadline by more than one invocation."""
+    """One OCR pass. Timeout generous enough for 1600px; budget checked before call."""
     def _timeout():
-        return None if deadline is None else max(1, int(deadline - time.monotonic()))
+        if deadline is None: return 12
+        remaining = deadline - time.monotonic()
+        # if <3s left, give whatever remains (min 3s), else 10s
+        if remaining < 4:
+            return max(3, int(remaining))
+        return min(12, int(remaining))
     try:
         data = pytesseract.image_to_data(img, config=config, output_type=pytesseract.Output.DICT, timeout=_timeout())
         confs = [int(c) for c in data['conf'] if int(c) != -1]
@@ -378,16 +421,17 @@ def ocr_with_confidence(img, config, deadline=None):
             return "", 0
 
 def ocr_multi_psm(images, lang="ind", deadline=None):
-    """Sweep image variants x PSM modes. Quality-first order [6,4,3,1,11], early-exit on
-    high confidence. Bounded by wall-clock deadline: when it passes, stop sweeping and
-    return the best result collected so far (never empty if any text was captured)."""
-    psms = [6,4,3,1,11]
+    """Sweep image variants x PSM modes. Limited to 4 passes max to fit budget: primary[6,3] + clahe[6,3].
+    Early-exit on high confidence. Bounded by deadline."""
+    # trimmed to 2 PSM x 2 variants = 4 passes (was 15 passes) to allow 10s per pass within 60s
+    variants = [("primary", [6, 3]), ("clahe", [6, 3])]
+    # include adaptive only if primary failed and budget remains
     best_text, best_conf, best_psm = "", -1, 6
     oem = 1
     passes = 0
     early_exit = False
     budget_hit = False
-    for img_key in ["primary", "adaptive", "clahe"]:
+    for img_key, psms in variants:
         img = images.get(img_key)
         if img is None:
             continue
@@ -395,8 +439,6 @@ def ocr_multi_psm(images, lang="ind", deadline=None):
             if deadline_exceeded(deadline):
                 budget_hit = True
                 break
-            # Single config per PSM: executed directly so the early-exit break
-            # below exits the PSM sweep itself (a wrapper loop would swallow it).
             cfg = f'--oem {oem} --psm {psm} -l {lang} -c preserve_interword_spaces=1 -c user_defined_dpi=300'
             passes += 1
             text, conf = ocr_with_confidence(img, cfg, deadline=deadline)
@@ -412,6 +454,21 @@ def ocr_multi_psm(images, lang="ind", deadline=None):
                 break
         if early_exit or best_conf > 85:
             break
+    # fallback adaptive only if nothing good yet and budget left >10s
+    if not early_exit and best_conf < 60 and not deadline_exceeded(deadline):
+        remaining = (deadline - time.monotonic()) if deadline else 60
+        if remaining > 10 and images.get("adaptive") is not None:
+            for psm in [6]:
+                if deadline_exceeded(deadline): break
+                cfg = f'--oem {oem} --psm {psm} -l {lang} -c preserve_interword_spaces=1 -c user_defined_dpi=300'
+                passes += 1
+                text, conf = ocr_with_confidence(images["adaptive"], cfg, deadline=deadline)
+                if conf < 10: conf = score_text(text)
+                text_corr = correct_nik_typos(text)
+                if any(k in text_corr.upper() for k in ["NIK","PROVINSI","KABUPATEN"]):
+                    conf += 5
+                if conf > best_conf and len(text_corr.strip()) > 5:
+                    best_conf, best_text, best_psm = conf, text_corr, psm
     stats = {"passes": passes, "early_exit": early_exit, "budget_hit": budget_hit}
     return best_text, best_conf, best_psm, stats
 
@@ -428,11 +485,14 @@ def main(image_path):
     text, conf, psm, sweep = ocr_multi_psm(images, deadline=deadline)
 
     if not text.strip():
-        # Emergency single pass: only fires when nothing was captured at all,
-        # so the "never return empty if any text was captured" guarantee holds.
-        text = pytesseract.image_to_string(
-            images["primary"], config='--oem 1 --psm 6 -l ind',
-            timeout=ts_timeout(deadline, cap=20))
+        # Emergency single pass: use remaining budget directly (not sliced)
+        remaining = int(max(5, (deadline - time.monotonic()) if deadline else 20))
+        try:
+            text = pytesseract.image_to_string(
+                images["primary"], config='--oem 1 --psm 6 -l ind',
+                timeout=remaining)
+        except Exception:
+            text = ""
 
     text = correct_nik_typos(text)
     data_text = postprocess_ocr_text(text)

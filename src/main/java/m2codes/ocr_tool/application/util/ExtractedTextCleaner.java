@@ -70,20 +70,26 @@ public class ExtractedTextCleaner {
 
     private String removeNoise(String line) {
         line = removeUnusedSpace(line);
-        // allow dash, comma, slash, colon, dot which are needed for address/RT/RW/dates
-        String validRegex = ".*[^A-Za-z0-9:/.,\\s()'-].*";
-
+        // C fix: don't strip colon-bearing keys, RT/RW, or short tokens that matter for KTP
+        // Only remove control chars and normalize spaces; keep original delimiters
+        line = line.replaceAll("[\\x00-\\x1F\\x7F]", "");
+        line = line.replaceAll("\\s+", " ").trim();
+        // light word filter: keep everything except pure garbage (<2 chars without :/ -)
+        // Previously used validRegex that removed words with any invalid char — too aggressive for ":" and "/"
         String[] words = line.split("\\s+");
         return Arrays.stream(words)
-                .filter(word -> !word.matches(validRegex) && isValidWord(word))
+                .filter(word -> !word.isBlank() && isValidWord(word))
                 .map(String::trim)
                 .collect(Collectors.joining(" "));
     }
 
     private boolean isValidWord(String word) {
-        // keep RT, RW, 01 etc (len 2) which are critical for KTP
-        if (word.contains(":") || word.contains("/") || word.contains("-")) return true;
-        return word.length() >= 2;
+        // keep colon/slash/dash tokens, RT/RW, numbers, and 2-char codes
+        if (word.contains(":") || word.contains("/") || word.contains("-") || word.contains(".")) return true;
+        // keep all tokens length >=2, and single-digit numbers
+        if (word.length() >= 2) return true;
+        // keep single char if it's digit
+        return word.length() == 1 && Character.isDigit(word.charAt(0));
     }
 
     private String removeUnusedSpace(String text) {

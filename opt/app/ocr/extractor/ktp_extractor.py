@@ -73,23 +73,61 @@ def normalize_key(raw_key: str) -> str:
                 return canonical
     return key
 
+VALID_PROVINCES = {11,12,13,14,15,16,17,18,19,21,31,32,33,34,35,36,51,52,53,61,62,63,64,65,71,72,73,74,75,76,81,82,91,92}
+
+def is_valid_nik(nik: str) -> bool:
+    """Checksum NIK: 16 digits, province code, date DDMMYY valid, not all same digit"""
+    if nik is None or len(nik) != 16 or not nik.isdigit():
+        return False
+    # not all same digit (e.g. 0000000000000000)
+    if len(set(nik)) == 1:
+        return False
+    try:
+        prov = int(nik[0:2])
+        if prov not in VALID_PROVINCES:
+            return False
+        # date part: nik[6:12] = DDMMYY (with gender offset: female +40 on DD)
+        dd = int(nik[6:8])
+        mm = int(nik[8:10])
+        yy = int(nik[10:12])
+        # adjust female
+        if dd > 40:
+            dd -= 40
+        if not (1 <= dd <= 31 and 1 <= mm <= 12):
+            return False
+        # yy 00-99 is ok
+        return True
+    except Exception:
+        return False
+
+
 def extract_nik_regex(text: str) -> str:
-    """Robust NIK extraction: 16 digits with typo tolerance"""
-    # clean typo first
-    # find 16 consecutive digits with possible OCR misreads
+    """Robust NIK extraction: 16 digits with typo tolerance + checksum validation"""
     candidates = re.findall(r'[\dOIlBZS\-\s]{14,20}', text)
+    best_valid = None
+    best_any = None
     for cand in candidates:
         fixed = cand.replace('O','0').replace('o','0').replace('I','1').replace('l','1').replace('L','1').replace('B','8').replace('S','5').replace('Z','2').replace(' ','').replace('-','')
         fixed = re.sub(r'[^0-9]', '', fixed)
-        if len(fixed) == 16:
-            # validate Indonesian NIK: starts with plausible province code
-            return fixed
         if len(fixed) >= 16:
-            return fixed[:16]
-    # stricter 16 digits
+            fixed16 = fixed[:16]
+            if len(fixed16) == 16:
+                if best_any is None:
+                    best_any = fixed16
+                if is_valid_nik(fixed16):
+                    return fixed16  # return first valid immediately
+                if best_valid is None and len(fixed) == 16:
+                    best_valid = fixed
+    if best_valid:
+        return best_valid
+    if best_any:
+        return best_any
     m = re.search(r'\b\d{16}\b', text)
     if m:
-        return m.group(0)
+        cand = m.group(0)
+        if is_valid_nik(cand):
+            return cand
+        return cand
     return None
 
 def extract_ktp_header(line: str, extracted: dict):

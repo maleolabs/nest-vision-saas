@@ -35,16 +35,21 @@ export OCR_PREPROCESSING_ENABLED="${OCR_PREPROCESSING_ENABLED:-true}"
 export OCR_UPSCALE_THRESHOLD="${OCR_UPSCALE_THRESHOLD:-1000}"
 export OCR_BLUR_THRESHOLD="${OCR_BLUR_THRESHOLD:-100}"
 
-# --- OCR ensemble fallback (pyTesseract -> native Tesseract -> PaddleOCR) ---
+# --- OCR ensemble fallback (pyTesseract -> native Tesseract -> RapidOCR -> PaddleOCR) ---
 export OCR_ENSEMBLE_FALLBACK="${OCR_ENSEMBLE_FALLBACK:-true}"
-export OCR_CONF_THRESHOLD="${OCR_CONF_THRESHOLD:-60}"
+export OCR_CONF_THRESHOLD="${OCR_CONF_THRESHOLD:-55}"
+export OCR_TIME_BUDGET="${OCR_TIME_BUDGET:-60}"
 
-# --- PaddleOCR fallback (butuh pip install paddlepaddle paddleocr) ---
+# --- PaddleOCR fallback (legacy, prefer Rapid) ---
 export OCR_PADDLE_ENABLED="${OCR_PADDLE_ENABLED:-false}"
 export OCR_PADDLE_SCRIPT="${OCR_PADDLE_SCRIPT:-$REPO_ROOT/opt/app/ocr/paddle_ocr.py}"
 
-# --- Super-resolution (blur ekstrem; EDSR model opsional .pb) ---
-export OCR_SR_ENABLED="${OCR_SR_ENABLED:-false}"
+# --- RapidOCR ONNX fallback (preferred untuk KTP buram) ---
+export OCR_RAPID_ENABLED="${OCR_RAPID_ENABLED:-true}"
+export OCR_RAPID_SCRIPT="${OCR_RAPID_SCRIPT:-$REPO_ROOT/opt/app/ocr/rapid_ocr.py}"
+
+# --- Super-resolution (blur ekstrem; EDSR model opsional .pb, capped 2200px) ---
+export OCR_SR_ENABLED="${OCR_SR_ENABLED:-true}"
 export ESRGAN_MODEL="${ESRGAN_MODEL:-}"
 
 # --- Koreksi miring / perspective / orientasi ---
@@ -103,7 +108,7 @@ echo "  JAVA_HOME=$JAVA_HOME ($("$JAVA_HOME/bin/java" -version 2>&1 | head -1))"
 echo "  TESSERACT_DATAPATH=$TESSERACT_DATAPATH"
 echo "  DB: $SPRING_DATASOURCE_URL ($SPRING_DATASOURCE_USERNAME)"
 echo "  OCR_SCRIPT_PATH=$OCR_SCRIPT_PATH"
-echo "  OCR: preprocess=$OCR_PREPROCESSING_ENABLED ensemble=$OCR_ENSEMBLE_FALLBACK perspective=$OCR_PERSPECTIVE_ENABLED osd=$OCR_OSD_ENABLED paddle=$OCR_PADDLE_ENABLED llm=$OCR_LLM_ENABLED"
+echo "  OCR: preprocess=$OCR_PREPROCESSING_ENABLED ensemble=$OCR_ENSEMBLE_FALLBACK conf=$OCR_CONF_THRESHOLD budget=$OCR_TIME_BUDGET rapid=$OCR_RAPID_ENABLED paddle=$OCR_PADDLE_ENABLED sr=$OCR_SR_ENABLED perspective=$OCR_PERSPECTIVE_ENABLED osd=$OCR_OSD_ENABLED llm=$OCR_LLM_ENABLED"
 echo "  KEYSTORE: alias=$KEYSTORE_ALIAS"
 echo ""
 echo "Next: ./mvnw verify  |  ./mvnw spring-boot:run  |  anvil pipeline build  |  anvil pipeline ci"
