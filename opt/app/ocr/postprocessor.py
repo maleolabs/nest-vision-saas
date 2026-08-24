@@ -50,8 +50,12 @@ def split_robust(line: str):
 def postprocess_ocr_text(raw_text: str) -> dict:
     cleaned_text = clean_text(raw_text)
     result = {}
+    # Document-type awareness
+    from extractor.ktp_extractor import detect_document_type
+    doc_type = detect_document_type(cleaned_text)
+    result["_document_type"] = doc_type
 
-    if is_ktp_document(cleaned_text):
+    if doc_type == "KTP" or is_ktp_document(cleaned_text):
         # Also try global NIK regex as fallback
         nik = extract_nik_regex(cleaned_text)
         if nik:
@@ -60,7 +64,7 @@ def postprocess_ocr_text(raw_text: str) -> dict:
         for line in cleaned_text.splitlines():
             if not line.strip():
                 continue
-            # header extraction (PROVINSI etc)
+            # header extraction (PROVINSI etc) — must run before split_robust
             extract_ktp_header(line, result)
 
             split = split_robust(line)
@@ -68,29 +72,48 @@ def postprocess_ocr_text(raw_text: str) -> dict:
                 key_raw, value = split[0], split[1]
                 key = normalize_key(key_raw)
                 value = correct_common_typos(value, key)
-                # only accept if key is known or close match, or value not empty
                 if value and len(value) >= 1:
-                    # avoid overwriting high-confidence NIK from regex with short garbage
                     if key == "nik" and "nik" in result and len(result["nik"]) == 16 and len(value) < 16:
+                        continue
+                    # dont overwrite already extracted header province/kabupaten with garbage
+                    if key in ("provinsi", "kabupaten", "kota") and key in result and len(value) < 3:
                         continue
                     result[key] = value
             else:
-                # line without known delimiter but contains key fuzzy inside
                 low = line.lower()
                 for exp in EXPECTED_KEYS:
                     if exp in low:
-                        # try extract after key
                         idx = low.find(exp)
                         val = line[idx+len(exp):].strip(" :.-\t")
                         if val:
                             val = correct_common_typos(val, exp)
-                            if exp not in result:
+                            if exp not in result or len(result[exp]) < len(val):
                                 result[exp] = val
                         break
 
         # ensure NIK from regex wins if missing/short
         if nik and ( "nik" not in result or len(result["nik"]) < 16):
             result["nik"] = nik
+
+        # post-fix: if provinsi still missing but kabupaten contains province hint (rare)
+        # keep raw for debug
+        if "provinsi" not in result:
+            # try to find PROVINSI in cleaned_text globally
+            m = re.search(r'PROVINSI\s*[:\-]?\s*([A-Z ]{3,})', cleaned_text, flags=re.IGNORECASE)
+            if m:
+                result["provinsi"] = _clean_header_fallback(m.group(1))
+    elif doc_type in ("KK", "SIM", "PASPOR"):
+        # For other known docs, do generic but keep doc_type
+        generic = {}
+        for line in cleaned_text.splitlines():
+            split = split_robust(line)
+            if split:
+                k, v = split[0].strip().lower(), split[1].strip()
+                if k and v and len(v) > 1:
+                    generic[k] = v
+        if generic:
+            result.update(generic)
+        result["raw_text"] = cleaned_text
     else:
         # Generic document: try to extract colon-based with robust split
         generic = {}
@@ -105,3 +128,10 @@ def postprocess_ocr_text(raw_text: str) -> dict:
         result["raw_text"] = cleaned_text
 
     return result
+
+def _clean_header_fallback(val: str) -> str:
+    val = re.sub(r'^[\s:;\-\.]+', '', val)
+    val = re.sub(r'\s+', ' ', val).strip(" :.-\t")
+    if val:
+        return val.title().strip()
+    return val

@@ -472,6 +472,61 @@ def ocr_multi_psm(images, lang="ind", deadline=None):
     stats = {"passes": passes, "early_exit": early_exit, "budget_hit": budget_hit}
     return best_text, best_conf, best_psm, stats
 
+def try_rapid_ocr(image_path, deadline=None):
+    """Try RapidOCR as ensemble fallback for KTP; returns (data_text, raw_text) or (None,None) if not available."""
+    try:
+        if os.environ.get("OCR_RAPID_ENABLED", "true").lower() == "false":
+            return None, None
+        # check budget with grace: rapid is faster for glare images, allow -5s over
+        if deadline is not None:
+            remaining = deadline - time.monotonic()
+            if remaining < -8:
+                sys.stderr.write(f"[RAPID] skip, budget exhausted {remaining:.1f}s over\n")
+                return None, None
+        from rapid_ocr import get_ocr as rapid_get_ocr
+        engine = rapid_get_ocr()
+        result, elapse = engine(image_path)
+        lines = []
+        for box, text, score in result if result else []:
+            if score is not None and float(score) < 0.3:
+                continue
+            lines.append(text)
+        rapid_text = "\n".join(lines)
+        # reuse same heuristics as rapid_ocr.py
+        import re
+        from extractor.ktp_extractor import EXPECTED_KEYS
+        expected_norm = {k.lower(): k for k in EXPECTED_KEYS}
+        expected_nospace = {k.lower().replace(" ", "").replace("/", "").replace(".", ""): k for k in EXPECTED_KEYS}
+        merged = []
+        i = 0
+        while i < len(lines):
+            cur = lines[i].strip()
+            cur_low = cur.lower().strip()
+            cur_nospace = cur_low.replace(" ", "").replace("/", "").replace(".", "")
+            is_key = cur_low in expected_norm or cur_nospace in expected_nospace
+            has_delim = ":" in cur or ";" in cur or "·" in cur or "|" in cur
+            if is_key and not has_delim and i + 1 < len(lines):
+                nxt = lines[i+1].strip()
+                nxt_low = nxt.lower().strip()
+                nxt_nospace = nxt_low.replace(" ", "").replace("/", "").replace(".", "")
+                nxt_is_key = nxt_low in expected_norm or nxt_nospace in expected_nospace or ":" in nxt
+                if not nxt_is_key and len(nxt) > 0:
+                    canon = expected_norm.get(cur_low) or expected_nospace.get(cur_nospace) or cur
+                    merged.append(f"{canon}: {nxt}")
+                    i += 2
+                    continue
+            merged.append(cur)
+            i += 1
+        rapid_text = "\n".join(merged)
+        rapid_text = correct_nik_typos(rapid_text)
+        from postprocessor import postprocess_ocr_text as pp
+        rapid_data = pp(rapid_text)
+        sys.stderr.write(f"[RAPID] rapid_data keys={list(rapid_data.keys())} elapse={elapse}\n")
+        return rapid_data, rapid_text
+    except Exception as e:
+        sys.stderr.write(f"[RAPID] failed: {e}\n")
+        return None, None
+
 def main(image_path):
     t0 = time.monotonic()
     budget = get_time_budget()
@@ -485,7 +540,6 @@ def main(image_path):
     text, conf, psm, sweep = ocr_multi_psm(images, deadline=deadline)
 
     if not text.strip():
-        # Emergency single pass: use remaining budget directly (not sliced)
         remaining = int(max(5, (deadline - time.monotonic()) if deadline else 20))
         try:
             text = pytesseract.image_to_string(
@@ -496,6 +550,43 @@ def main(image_path):
 
     text = correct_nik_typos(text)
     data_text = postprocess_ocr_text(text)
+    # Ensemble: if KTP and tesseract result is weak (NIK invalid/missing or conf < 75 or too few fields), try RapidOCR and merge
+    try:
+        from extractor.ktp_extractor import detect_document_type, is_valid_nik
+        doc_type = data_text.get("_document_type", detect_document_type(text))
+        nik_ok = "nik" in data_text and is_valid_nik(data_text.get("nik",""))
+        few_fields = len([k for k in data_text.keys() if not k.startswith("_")]) < 6
+        should_try_rapid = (doc_type == "KTP" and (not nik_ok or conf < 75 or few_fields)) or conf < 50 or doc_type == "GENERIC"
+        # allow rapid even if slightly over budget (give 5s grace) — rapid is faster for high-res glare cases like KTP2
+        remaining_rapid = (deadline - time.monotonic()) if deadline else 60
+        if should_try_rapid and remaining_rapid > -10:
+            rapid_data, rapid_text = try_rapid_ocr(image_path, deadline=deadline)
+            if rapid_data:
+                # merge: rapid wins for nik if nik_ok false, and for any missing field
+                for k, v in rapid_data.items():
+                    if k.startswith("_"):
+                        continue
+                    if k not in data_text or (k == "nik" and not nik_ok and is_valid_nik(v)):
+                        data_text[k] = v
+                    elif k in ("provinsi","kabupaten","kota","kecamatan","kelurahan","nama","alamat","tempat/tgl lahir"):
+                        # for KTP region/text fields, prefer rapid if rapid is clean and tesseract has typo/short
+                        # e.g. GORGNTALG vs GORONTALO, or "EMARNMOKOGINTA NI" vs "MA'RIJ MOKOGINTA"
+                        cur = str(data_text.get(k,""))
+                        # if tesseract has known typo markers or rapid is longer and contains only valid chars
+                        if ("GORGNT" in cur.upper() and "GORONTALO" in str(v).upper()) or len(str(v)) > len(cur) or cur.strip() in ("", "TT", "-"):
+                            data_text[k] = v
+                        elif k == "provinsi" and cur.upper() != str(v).upper() and "GORONTALO" in str(v).upper():
+                            data_text[k] = v
+                # prefer KTP if rapid detected KTP (fixes GENERIC mis-detect on glare images)
+                rapid_type = rapid_data.get("_document_type", "GENERIC")
+                final_type = "KTP" if rapid_type == "KTP" or doc_type == "KTP" else rapid_type
+                data_text["_document_type"] = final_type
+                # for GENERIC that becomes KTP via rapid, remove raw_text if KTP fields present
+                if final_type == "KTP" and "raw_text" in data_text and len([k for k in data_text if not k.startswith("_") and k != "raw_text"]) >= 5:
+                    data_text.pop("raw_text", None)
+                sys.stderr.write(f"[ENSEMBLE] merged rapid into tesseract data; final nik={data_text.get('nik')} type={final_type} fields={len(data_text)}\n")
+    except Exception as e:
+        sys.stderr.write(f"[ENSEMBLE] rapid merge failed: {e}\n")
 
     elapsed = time.monotonic() - t0
     sys.stderr.write(f"[OCR] blur={images['blur']:.1f} brightness={images['brightness']:.1f} contrast={images['contrast']:.1f} conf={conf:.1f} psm={psm} sr={need_sr} persp={images.get('perspective')} osd={images.get('osd_angle')} deskew={images.get('deskew_angle'):.1f}\n")

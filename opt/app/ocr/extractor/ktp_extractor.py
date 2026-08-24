@@ -7,46 +7,65 @@ EXPECTED_KEYS = [
     "pekerjaan", "kewarganegaraan", "berlaku hingga"
 ]
 
+# Generic document keys fallback (for non-KTP)
+GENERIC_KEYS = [
+    "nama", "nik", "nomor", "alamat", "tempat/tgl lahir", "tanggal lahir", "jenis kelamin",
+    "agama", "pekerjaan", "status", "kewarganegaraan"
+]
+
 # Aliases for fuzzy matching (common OCR misreads and abbreviations)
 ALIASES = {
-    "provinsi": ["provinsi", "proplnsi", "prov1nsi", "propinsi", "prov"],
-    "kabupaten": ["kabupaten", "kabupalen", "kabupat3n", "kab"],
+    "provinsi": ["provinsi", "proplnsi", "prov1nsi", "propinsi", "prov", "gorontalo", "prov1nsi"],
+    "kabupaten": ["kabupaten", "kabupalen", "kabupat3n", "kab", "kab."],
     "kota": ["kota"],
-    "nik": ["nik", "nlk", "nik.", "n1k"],
-    "nama": ["nama", "narna"],
-    "tempat/tgl lahir": ["tempat/tgl lahir", "tempat tgl lahir", "ttl", "tempat tanggal lahir"],
-    "jenis kelamin": ["jenis kelamin", "jns kelamin", "kelamin"],
-    "gol. darah": ["gol. darah", "gol darah", "goldar"],
-    "alamat": ["alamat", "alarnat"],
-    "rt/rw": ["rt/rw", "rt / rw", "rtrw", "rt rw"],
-    "kelurahan": ["kelurahan", "kelurahaan", "desa", "kel/desa"],
-    "kecamatan": ["kecamatan", "kecarnatan", "kec"],
-    "agama": ["agama", "agarna"],
-    "status perkawinan": ["status perkawinan", "status kawin", "perkawinan"],
-    "pekerjaan": ["pekerjaan", "pekerjaaan"],
-    "kewarganegaraan": ["kewarganegaraan", "kewarganegaraaan"],
-    "berlaku hingga": ["berlaku hingga", "berlaku s/d", "berlaku"],
+    "nik": ["nik", "nlk", "nik.", "n1k", "nik:", "nik;"],
+    "nama": ["nama", "narna", "nama:"],
+    "tempat/tgl lahir": ["tempat/tgl lahir", "tempat tgl lahir", "ttl", "tempat tanggal lahir", "tempat/tgl lahir:", "ttl:"],
+    "jenis kelamin": ["jenis kelamin", "jns kelamin", "kelamin", "jenis kelamın"],
+    "gol. darah": ["gol. darah", "gol darah", "goldar", "gol.darah", "golongan darah"],
+    "alamat": ["alamat", "alarnat", "alarnat :", "alamat:"],
+    "rt/rw": ["rt/rw", "rt / rw", "rtrw", "rt rw", "rtrw:"],
+    "kelurahan": ["kelurahan", "kelurahaan", "desa", "kel/desa", "kel/des", "kel/desa:", "desa:"],
+    "kecamatan": ["kecamatan", "kecarnatan", "kec", "kecamatan:", "kec."],
+    "agama": ["agama", "agarna", "agama:"],
+    "status perkawinan": ["status perkawinan", "status kawin", "perkawinan", "status perkawinan:"],
+    "pekerjaan": ["pekerjaan", "pekerjaaan", "pekerjaan:"],
+    "kewarganegaraan": ["kewarganegaraan", "kewarganegaraaan", "kewarganegaraan:"],
+    "berlaku hingga": ["berlaku hingga", "berlaku s/d", "berlaku", "berlaku hingga:", "berlaku hingga :"],
 }
 
-def is_ktp_document(text: str) -> bool:
-    # More robust: handle OCR typos in keywords
+# Document type detection — vision now aware of multiple types
+DOCUMENT_TYPES = {
+    "KTP": ['NIK', 'PROVINSI', 'KABUPATEN', 'KELURAHAN', 'KECAMATAN', 'ALAMAT', 'AGAMA'],
+    "KK": ['KARTU KELUARGA', 'NO. KK', 'KEPALA KELUARGA', 'ALAMAT'],
+    "SIM": ['SURAT IZIN MENGEMUDI', 'SIM', 'BERLAKU HINGGA'],
+    "PASPOR": ['PASPOR', 'PASSPORT', 'KEBANGSAAN', 'NATIONALITY'],
+}
+
+def detect_document_type(text: str) -> str:
     upper = text.upper()
-    # fuzzy keywords
-    keywords = ['NIK', 'PROVINSI', 'KABUPATEN', 'KELURAHAN', 'KECAMATAN', 'KOTA', 'ALAMAT', 'AGAMA']
-    # count with close match
-    matches = 0
-    for kw in keywords:
-        if kw in upper:
-            matches += 1
-        else:
-            # check close occurrence via regex tolerant
-            if re.search(kw[:3] + r".{0,2}" + kw[-2:], upper):
+    scores = {}
+    for doc_type, keywords in DOCUMENT_TYPES.items():
+        matches = 0
+        for kw in keywords:
+            if kw in upper:
+                matches += 1
+            elif re.search(kw[:3] + r".{0,2}" + kw[-2:], upper):
                 matches += 0.5
-    return matches >= 2.5
+        scores[doc_type] = matches
+    best = max(scores, key=scores.get) if scores else "GENERIC"
+    if scores.get(best, 0) >= 2.5:
+        return best
+    # fallback: if NIK present, assume KTP
+    if 'NIK' in upper:
+        return "KTP"
+    return "GENERIC"
+
+def is_ktp_document(text: str) -> bool:
+    return detect_document_type(text) == "KTP"
 
 def normalize_key(raw_key: str) -> str:
     key = raw_key.lower().strip()
-    # remove trailing punctuation
     key = re.sub(r'[:\.\-]+$', '', key).strip()
     # direct alias match
     for canonical, aliases in ALIASES.items():
@@ -54,13 +73,10 @@ def normalize_key(raw_key: str) -> str:
             return canonical
         for alias in aliases:
             if key == alias or get_close_matches(key, [alias], n=1, cutoff=0.85):
-                # verify
                 pass
-    # general close match with higher cutoff 0.75 (was 0.6 too loose)
     best_match = get_close_matches(key, EXPECTED_KEYS, n=1, cutoff=0.75)
     if best_match:
         return best_match[0]
-    # fallback check aliases flat
     flat = []
     for canonical, aliases in ALIASES.items():
         flat.extend(aliases)
@@ -79,23 +95,19 @@ def is_valid_nik(nik: str) -> bool:
     """Checksum NIK: 16 digits, province code, date DDMMYY valid, not all same digit"""
     if nik is None or len(nik) != 16 or not nik.isdigit():
         return False
-    # not all same digit (e.g. 0000000000000000)
     if len(set(nik)) == 1:
         return False
     try:
         prov = int(nik[0:2])
         if prov not in VALID_PROVINCES:
             return False
-        # date part: nik[6:12] = DDMMYY (with gender offset: female +40 on DD)
         dd = int(nik[6:8])
         mm = int(nik[8:10])
         yy = int(nik[10:12])
-        # adjust female
         if dd > 40:
             dd -= 40
         if not (1 <= dd <= 31 and 1 <= mm <= 12):
             return False
-        # yy 00-99 is ok
         return True
     except Exception:
         return False
@@ -115,7 +127,7 @@ def extract_nik_regex(text: str) -> str:
                 if best_any is None:
                     best_any = fixed16
                 if is_valid_nik(fixed16):
-                    return fixed16  # return first valid immediately
+                    return fixed16
                 if best_valid is None and len(fixed) == 16:
                     best_valid = fixed
     if best_valid:
@@ -130,23 +142,88 @@ def extract_nik_regex(text: str) -> str:
         return cand
     return None
 
+def _clean_region_value(val: str) -> str:
+    # strip leading :.- and extra spaces, title case, remove OCR artifacts
+    val = re.sub(r'^[\s:;\-\.]+', '', val)
+    val = re.sub(r'\s+', ' ', val).strip(" :.-\t")
+    val = re.sub(r'\s*\d{4,}$', '', val)
+    # fix common OCR province/kab typos + missing space
+    upper = val.upper().replace(' ', '')
+    if 'GORONTALOUTARA' in upper or 'GORONTALO' in upper and 'UTARA' in upper:
+        # ensure space: Gorontalo Utara
+        if 'GORONTALOUTARA' in val.upper().replace(' ', '').replace('-',''):
+            val = 'Gorontalo Utara'
+        else:
+            val = val.replace('GORGNTALG', 'GORONTALO').replace('GORGNTALO', 'GORONTALO').replace('GORONTALOUTARA', 'GORONTALO UTARA')
+    else:
+        val = val.replace('GORGNTALG', 'GORONTALO').replace('GORGNTALO', 'GORONTALO')
+    # fix no-space kabupaten
+    if val.upper().replace(' ', '') == 'GORONTALOUTARA':
+        val = 'Gorontalo Utara'
+    if val:
+        # title case but keep correct spacing
+        val = val.title().strip()
+        # re-fix after title
+        if val.lower() == 'gorontaloutara':
+            val = 'Gorontalo Utara'
+        return val
+    return val
+
 def extract_ktp_header(line: str, extracted: dict):
+    """
+    Header KTP tanpa ':' separator — 2 baris teratas + juga fallback untuk
+    kecamatan/kelurahan yang kadang tanpa delimiter di KTP lama.
+    Contoh:
+      PROVINSI GORONTALO
+      KABUPATEN GORONTALO UTARA
+      Kecamatan : ATINGGOLA
+      Kel/Desa : WAPALO
+    Semua ditangani, baik pakai ':' maupun spasi biasa.
+    """
     line_stripped = line.strip()
     upper = line_stripped.upper()
-    # handle PROVINSI with OCR typo
-    if re.match(r'^\s*PROVINSI', upper) or re.match(r'^\s*PROPINSI', upper):
-        val = re.sub(r'^\s*PRO[VP]INSI\s*', '', line_stripped, flags=re.IGNORECASE).strip(" :.-")
+    # PROVINSI — tanpa atau dengan :
+    m = re.match(r'^\s*PROVINSI\s*[:\-]?\s*(.+)$', line_stripped, flags=re.IGNORECASE)
+    if m:
+        val = _clean_region_value(m.group(1))
+        if val and len(val) >= 3:
+            extracted["provinsi"] = val
+            return
+    # also PROPINSI typo
+    m = re.match(r'^\s*PROPINSI\s*[:\-]?\s*(.+)$', line_stripped, flags=re.IGNORECASE)
+    if m:
+        val = _clean_region_value(m.group(1))
         if val:
-            extracted["provinsi"] = val.title()
-    elif re.match(r'^\s*KABUPATEN', upper):
-        val = re.sub(r'^\s*KABUPATEN\s*', '', line_stripped, flags=re.IGNORECASE).strip(" :.-")
+            extracted["provinsi"] = val
+            return
+    # KABUPATEN / KOTA — tanpa :
+    m = re.match(r'^\s*KABUPATEN\s*[:\-]?\s*(.+)$', line_stripped, flags=re.IGNORECASE)
+    if m:
+        val = _clean_region_value(m.group(1))
         if val:
-            extracted["kabupaten"] = val.title()
-    elif re.match(r'^\s*KOTA', upper):
-        # avoid overriding kabupaten if already set to kota
-        val = re.sub(r'^\s*KOTA\s*', '', line_stripped, flags=re.IGNORECASE).strip(" :.-")
+            extracted["kabupaten"] = val
+            # also set kota for compatibility
+            if "kota" not in extracted:
+                extracted["kota"] = val
+            return
+    m = re.match(r'^\s*KOTA\s*[:\-]?\s*(.+)$', line_stripped, flags=re.IGNORECASE)
+    if m:
+        val = _clean_region_value(m.group(1))
         if val:
-            # if kabupaten not set or is city
             if "kabupaten" not in extracted or "kota" in upper.lower():
-                extracted["kabupaten"] = val.title()
-            extracted["kota"] = val.title()
+                extracted["kabupaten"] = val
+            extracted["kota"] = val
+            return
+    # Kecamatan / Kel/Desa header tanpa : (rare but handle)
+    m = re.match(r'^\s*KECAMATAN\s*[:\-]?\s*(.+)$', line_stripped, flags=re.IGNORECASE)
+    if m and "kecamatan" not in extracted:
+        val = _clean_region_value(m.group(1))
+        if val:
+            extracted["kecamatan"] = val.title()
+            return
+    m = re.match(r'^\s*(KEL\/DESA|KEL\.?\/DESA|KELURAHAN|DESA)\s*[:\-]?\s*(.+)$', line_stripped, flags=re.IGNORECASE)
+    if m and "kelurahan" not in extracted:
+        val = _clean_region_value(m.group(2))
+        if val:
+            extracted["kelurahan"] = val.title()
+            return
