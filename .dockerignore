@@ -1,0 +1,22 @@
+# Build context hygiene: keep image builds fast and deterministic
+target/
+uploads/
+logs/
+*.log
+hs_err_pid*.log
+.git/
+.github/
+.anvil/
+.idea/
+.project
+.settings/
+qodana.yaml
+nestara-web/
+nestara-mobile/
+**/__pycache__/
+Dockerfile
+docker-compose.yml
+docker-compose.yml.example
+README.md
+docs/
+scripts/

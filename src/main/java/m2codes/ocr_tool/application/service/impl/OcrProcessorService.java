@@ -71,18 +71,27 @@ public class OcrProcessorService extends TextProcessorService {
     protected void processingExtractionText(OcrDataRequest request, OcrRequest ocrRequest, String clientId, boolean preprocessed) {
         ocrRequest = entityManager.merge(ocrRequest);
 
-        OcrResultDto ocrResultDto = extractTextFromImage(request.getImageUrl(), preprocessed);
-        if (!ocrResultDto.isSuccess()) {
+        try {
+            OcrResultDto ocrResultDto = extractTextFromImage(request.getImageUrl(), preprocessed);
+            if (!ocrResultDto.isSuccess()) {
+                saveOcrRequest(request, RequestStatus.FAILURE, clientId);
+                entityManager.flush();
+                return;
+            }
+
+            OcrResult ocrResult = saveOcrResult(ocrResultDto, ocrRequest);
+            saveAllExtractedText(ocrResultDto, request.getRequiredKeys(), ocrResult);
+            ocrRequestService.updateStatus(ocrRequest, RequestStatus.DONE);
+
+            entityManager.flush();
+        } catch (Exception e) {
+            // Terminal-status guarantee: an unexpected failure inside the async void
+            // method would otherwise reach SimpleAsyncUncaughtExceptionHandler and
+            // leave the OcrRequest stuck in a non-terminal status forever.
+            log.error("URL OCR processing failed : {}", e.getMessage(), e);
             saveOcrRequest(request, RequestStatus.FAILURE, clientId);
             entityManager.flush();
-            return;
         }
-
-        OcrResult ocrResult = saveOcrResult(ocrResultDto, ocrRequest);
-        saveAllExtractedText(ocrResultDto, request.getRequiredKeys(), ocrResult);
-        ocrRequestService.updateStatus(ocrRequest, RequestStatus.DONE);
-
-        entityManager.flush();
     }
 
     @Async("ocrTaskExecutor")
@@ -96,6 +105,7 @@ public class OcrProcessorService extends TextProcessorService {
             if (!ocrResultDto.isSuccess()) {
                 saveOcrRequest(dataRequest, RequestStatus.FAILURE, clientId);
                 entityManager.flush();
+                return;
             }
             OcrResult ocrResult = saveOcrResult(ocrResultDto, ocrRequest);
             saveAllExtractedText(ocrResultDto, dataRequest.getRequiredKeys(), ocrResult);

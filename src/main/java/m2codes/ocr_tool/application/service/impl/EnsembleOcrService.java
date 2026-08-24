@@ -38,7 +38,7 @@ public class EnsembleOcrService implements TextExtractionService {
 
     @Override
     public OcrResultDto extractTextFromImage(String imageUrl, boolean preprocessed) {
-        OcrResultDto r1 = primary.extractTextFromImage(imageUrl, preprocessed);
+        OcrResultDto r1 = guardedExtract(primary, "pytesseract", imageUrl, preprocessed);
         log.info("[Ensemble URL] primary success={} conf={} len={}", r1.isSuccess(), r1.getConfidence(), r1.getExtractedText() != null ? r1.getExtractedText().length() : 0);
         if (isGood(r1)) return withEngine(r1, "pytesseract");
 
@@ -46,7 +46,7 @@ public class EnsembleOcrService implements TextExtractionService {
 
         // try native with preprocess forced
         log.info("[Ensemble URL] trying native fallback");
-        OcrResultDto r2 = nativeTesseract.extractTextFromImage(imageUrl, true);
+        OcrResultDto r2 = guardedExtract(nativeTesseract, "native-tesseract", imageUrl, true);
         if (isBetter(r2, r1)) {
             log.info("[Ensemble URL] native wins conf={}", r2.getConfidence());
             return withEngine(r2, "native-tesseract");
@@ -56,18 +56,18 @@ public class EnsembleOcrService implements TextExtractionService {
 
     @Override
     public OcrResultDto extractTextFromImage(File file, boolean preprocessed) {
-        OcrResultDto r1 = primary.extractTextFromImage(file, preprocessed);
+        OcrResultDto r1 = guardedExtract(primary, "pytesseract", file, preprocessed);
         log.info("[Ensemble File] primary success={} conf={} len={} blur={}", r1.isSuccess(), r1.getConfidence(), r1.getExtractedText() != null ? r1.getExtractedText().length() : 0, r1.getBlurScore());
         if (isGood(r1)) return withEngine(r1, "pytesseract");
 
         if (!fallbackEnabled) return r1;
 
         // native with forced preprocess
-        OcrResultDto r2 = nativeTesseract.extractTextFromImage(file, true);
+        OcrResultDto r2 = guardedExtract(nativeTesseract, "native-tesseract", file, true);
         log.info("[Ensemble File] native conf={} len={}", r2.getConfidence(), r2.getExtractedText() != null ? r2.getExtractedText().length() : 0);
 
         // paddle if enabled and both low
-        OcrResultDto r3 = paddle.extractTextFromImage(file, preprocessed);
+        OcrResultDto r3 = guardedExtract(paddle, "paddle", file, preprocessed);
         log.info("[Ensemble File] paddle success={} len={}", r3.isSuccess(), r3.getExtractedText() != null ? r3.getExtractedText().length() : 0);
 
         OcrResultDto best = r1;
@@ -77,6 +77,41 @@ public class EnsembleOcrService implements TextExtractionService {
         // log observability
         log.info("[Ensemble] chosen engine={} conf={} dur={} best len={}", best.getEngineUsed(), best.getConfidence(), best.getDuration(), best.getExtractedText() != null ? best.getExtractedText().length() : 0);
         return best;
+    }
+
+    /**
+     * Resilience boundary: a single failing engine must never kill the async OCR
+     * pipeline. Catches Throwable deliberately - engine failures include Errors such
+     * as UnsatisfiedLinkError (native library problems), which would otherwise escape
+     * the @Async void method into SimpleAsyncUncaughtExceptionHandler and leave the
+     * OcrRequest stuck in a non-terminal status forever. A failed engine is
+     * synthesized as an unsuccessful result so the existing isGood/isBetter selection
+     * logic simply discards it.
+     */
+    private OcrResultDto guardedExtract(TextExtractionService engine, String engineName, String imageUrl, boolean preprocessed) {
+        try {
+            return engine.extractTextFromImage(imageUrl, preprocessed);
+        } catch (Throwable t) {
+            return synthesizedFailure(engineName, t);
+        }
+    }
+
+    private OcrResultDto guardedExtract(TextExtractionService engine, String engineName, File file, boolean preprocessed) {
+        try {
+            return engine.extractTextFromImage(file, preprocessed);
+        } catch (Throwable t) {
+            return synthesizedFailure(engineName, t);
+        }
+    }
+
+    private OcrResultDto synthesizedFailure(String engineName, Throwable t) {
+        log.error("[Ensemble] engine {} threw {}: {} - synthesizing failed result",
+                engineName, t.getClass().getName(), t.getMessage());
+        OcrResultDto failed = new OcrResultDto();
+        failed.setSuccess(false);
+        failed.setEngineUsed(engineName);
+        failed.setErrorMessage(engineName + " failed: " + t.getClass().getSimpleName() + ": " + t.getMessage());
+        return failed;
     }
 
     private boolean isGood(OcrResultDto r) {

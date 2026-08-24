@@ -20,7 +20,11 @@ services:
     restart: unless-stopped
 
   ocr-api:
-    build: .
+    build:
+      context: .
+      # Host firewall blocks outbound traffic from docker bridge networks;
+      # RUN steps (apt/pip/maven) need internet during image build only.
+      network: host
     container_name: ocr-tool-api
     ports:
       - "8080:8080"
