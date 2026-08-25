@@ -82,16 +82,40 @@ public class ExtractedTextMapper {
 
     private String correctValue(String value, String key) {
         if (key.contains("nik")) {
-            // P1.4 whitelist correction + checksum-aware: don't truncate valid 16 prematurely
             value = value.replace("O","0").replace("o","0").replace("I","1").replace("l","1").replace("L","1").replace("B","8").replace("S","5").replace("Z","2").replace(" ","").replace("-","");
             value = value.replaceAll("[^0-9]", "");
             if (value.length() > 16) value = value.substring(0,16);
-            // if still not 16, keep as is for ensemble NIK validator to discard
+            // if value is "0" single digit from garbage, discard
+            if (value.length() == 1 && value.equals("0")) value = "";
         }
-        // F: don't over-clean other fields — preserve original case for names/addresses but trim
+        // Fix: value may contain next key due to Python merging (e.g. "MA'RIJ alamat: DUSUN")
+        // Split on embedded known keys to avoid concatenation
+        value = stripEmbeddedKeys(value, key);
         if (key.contains("nama") || key.contains("alamat") || key.contains("kelurahan") || key.contains("kecamatan")) {
-            // title-case later via postprocessor; keep raw
             value = value.trim();
+        }
+        return value;
+    }
+
+    private String stripEmbeddedKeys(String value, String currentKey) {
+        // If value contains another KTP key like "alamat:" while current is "nama", truncate before it
+        String lower = value.toLowerCase();
+        String[] keys = {"alamat:", "kecamatan:", "kelurahan:", "desa:", "agama:", "provinsi:", "kabupaten:", "kota:", "nik:", "nama:", "tempat/tgl lahir:", "jenis kelamin:", "gol. darah:", "rt/rw:", "status perkawinan:", "pekerjaan:", "kewarganegaraan:", "berlaku hingga:"};
+        for (String k : keys) {
+            if (k.equals(currentKey + ":") || k.equals(currentKey + " :")) continue;
+            int idx = lower.indexOf(k);
+            if (idx > 0) {
+                // also handle without colon: " alamat " as separator
+                value = value.substring(0, idx).trim();
+                lower = value.toLowerCase();
+            }
+            // also without colon variant "alamat" as word boundary
+            String kNoColon = k.replace(":", "").trim();
+            // check " alamat " inside value
+            idx = lower.indexOf(" " + kNoColon + " ");
+            if (idx > 0 && !currentKey.contains(kNoColon)) {
+                value = value.substring(0, idx).trim();
+            }
         }
         return value;
     }
