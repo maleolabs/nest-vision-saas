@@ -51,10 +51,11 @@ public class PaddleOcrService implements TextExtractionService {
         }
         long start = System.currentTimeMillis();
         try {
-            String scriptAbs = Paths.get(paddleScriptPath).toAbsolutePath().toString();
+            String scriptAbs = resolveScriptPath(paddleScriptPath);
             if (!new File(scriptAbs).exists()) {
                 result.setSuccess(false);
-                result.setErrorMessage("Paddle script not found: " + scriptAbs);
+                result.setErrorMessage("Paddle script not found: " + scriptAbs + " (configured=" + paddleScriptPath + ")");
+                log.warn(result.getErrorMessage());
                 return result;
             }
             ProcessBuilder pb = new ProcessBuilder(pythonPath, scriptAbs, file.getAbsolutePath());
@@ -83,5 +84,19 @@ public class PaddleOcrService implements TextExtractionService {
             log.error("PaddleOCR failed", e);
         }
         return result;
+    }
+
+    private String resolveScriptPath(String configured) {
+        java.nio.file.Path p = Paths.get(configured);
+        if (p.isAbsolute() && java.nio.file.Files.exists(p)) return p.toString();
+        java.nio.file.Path abs = p.toAbsolutePath();
+        if (java.nio.file.Files.exists(abs)) return abs.toString();
+        String[] candidates = { configured, "opt/app/ocr/paddle_ocr.py" };
+        String userDir = System.getProperty("user.dir", "");
+        for (String c : candidates) {
+            java.nio.file.Path cand = Paths.get(userDir, c);
+            if (java.nio.file.Files.exists(cand)) return cand.toAbsolutePath().toString();
+        }
+        return abs.toString();
     }
 }

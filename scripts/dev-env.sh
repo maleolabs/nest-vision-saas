@@ -15,11 +15,39 @@ fi
 export PATH="$JAVA_HOME/bin:$PATH"
 
 # --- Tesseract ---
-export TESSERACT_DATAPATH="${TESSERACT_DATAPATH:-$HOME/.local/share/tessdata}"
+# Auto-detect system tessdata (Fedora: /usr/share/tesseract/tessdata, Ubuntu: /usr/share/tesseract-ocr/5/tessdata)
+# Priority: explicit env > ~/.local/share/tessdata (if complete) > system path > fallback
+if [ -z "${TESSERACT_DATAPATH:-}" ]; then
+    if [ -f "$HOME/.local/share/tessdata/ind.traineddata" ] && [ -f "$HOME/.local/share/tessdata/osd.traineddata" ]; then
+        export TESSERACT_DATAPATH="$HOME/.local/share/tessdata"
+    elif [ -f "/usr/share/tesseract/tessdata/osd.traineddata" ]; then
+        export TESSERACT_DATAPATH="/usr/share/tesseract/tessdata"
+    elif [ -f "/usr/share/tesseract-ocr/5/tessdata/osd.traineddata" ]; then
+        export TESSERACT_DATAPATH="/usr/share/tesseract-ocr/5/tessdata"
+    elif [ -f "/usr/share/tessdata/osd.traineddata" ]; then
+        export TESSERACT_DATAPATH="/usr/share/tessdata"
+    else
+        export TESSERACT_DATAPATH="$HOME/.local/share/tessdata"
+    fi
+else
+    export TESSERACT_DATAPATH="$TESSERACT_DATAPATH"
+fi
+# Ensure ind + osd exist; auto-fix missing osd by symlink/copy from system
 if [ ! -f "$TESSERACT_DATAPATH/ind.traineddata" ]; then
     echo "WARN: ind.traineddata not found in $TESSERACT_DATAPATH — OCR for Indonesian will fail" >&2
     echo "      Run: curl -sL https://github.com/tesseract-ocr/tessdata_fast/raw/main/ind.traineddata -o \"\$TESSERACT_DATAPATH/ind.traineddata\"" >&2
+    # try copy from system if available
+    for src in /usr/share/tesseract/tessdata/ind.traineddata /usr/share/tesseract-ocr/5/tessdata/ind.traineddata; do
+        if [ -f "$src" ]; then mkdir -p "$TESSERACT_DATAPATH" && cp -n "$src" "$TESSERACT_DATAPATH/" 2>/dev/null && echo "  [FIX] copied ind.traineddata from $src" && break; fi
+    done
 fi
+if [ ! -f "$TESSERACT_DATAPATH/osd.traineddata" ]; then
+    echo "WARN: osd.traineddata not found in $TESSERACT_DATAPATH — OSD orientation will fail" >&2
+    for src in /usr/share/tesseract/tessdata/osd.traineddata /usr/share/tesseract-ocr/5/tessdata/osd.traineddata /usr/share/tessdata/osd.traineddata; do
+        if [ -f "$src" ]; then mkdir -p "$TESSERACT_DATAPATH" && cp -n "$src" "$TESSERACT_DATAPATH/" 2>/dev/null && echo "  [FIX] copied osd.traineddata from $src -> $TESSERACT_DATAPATH" && break; fi
+    done
+fi
+export TESSDATA_PREFIX="$TESSERACT_DATAPATH"
 
 # --- Database ---
 export SPRING_DATASOURCE_URL="${SPRING_DATASOURCE_URL:-jdbc:mysql://127.0.0.1:3307/ocr_tool?createDatabaseIfNotExist=true}"

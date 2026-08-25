@@ -18,7 +18,7 @@ public class PythonOcrExcecutor {
     private String scriptPath;
 
     public String runOcrScript(String imagePath) throws IOException, InterruptedException {
-        String scriptPath = Paths.get(this.scriptPath).toAbsolutePath().toString();
+        String scriptPath = resolveScriptPath(this.scriptPath);
 
         ProcessBuilder builder = new ProcessBuilder(pythonPath, scriptPath, imagePath);
         builder.redirectErrorStream(false); // separate stderr for observability
@@ -54,6 +54,31 @@ public class PythonOcrExcecutor {
         }
 
         return output.trim();
+    }
+
+    private String resolveScriptPath(String configured) {
+        // 1. absolute exists
+        java.nio.file.Path p = Paths.get(configured);
+        if (p.isAbsolute() && java.nio.file.Files.exists(p)) return p.toString();
+        // 2. relative to user.dir
+        java.nio.file.Path abs = p.toAbsolutePath();
+        if (java.nio.file.Files.exists(abs)) return abs.toString();
+        // 3. relative to repo root (user.dir may be nested)
+        String[] candidates = {
+            configured,
+            "opt/app/ocr/tesseract_ocr.py",
+            "src/main/resources/opt/app/ocr/tesseract_ocr.py"
+        };
+        String userDir = System.getProperty("user.dir", "");
+        for (String c : candidates) {
+            java.nio.file.Path cand = Paths.get(userDir, c);
+            if (java.nio.file.Files.exists(cand)) return cand.toAbsolutePath().toString();
+            // also try parent of userDir (when run from scripts/)
+            java.nio.file.Path parentCand = Paths.get(userDir).getParent() != null ? Paths.get(userDir).getParent().resolve(c) : null;
+            if (parentCand != null && java.nio.file.Files.exists(parentCand)) return parentCand.toAbsolutePath().toString();
+        }
+        // fallback: return absolute anyway (will error with clear message)
+        return abs.toString();
     }
 
     public record OcrMetrics(double blur, double brightness, double contrast, double conf, int psm, boolean sr) {}

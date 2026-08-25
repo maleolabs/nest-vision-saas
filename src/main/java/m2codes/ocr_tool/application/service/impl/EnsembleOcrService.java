@@ -73,11 +73,11 @@ public class EnsembleOcrService implements TextExtractionService {
 
         // rapid (preferred for blur) — try before paddle
         OcrResultDto rRapid = guardedExtract(rapid, "rapid", file, preprocessed);
-        log.info("[Ensemble File] rapid success={} conf={} len={}", rRapid.isSuccess(), rRapid.getConfidence(), rRapid.getExtractedText() != null ? rRapid.getExtractedText().length() : 0);
+        log.info("[Ensemble File] rapid success={} conf={} len={} err={}", rRapid.isSuccess(), rRapid.getConfidence(), rRapid.getExtractedText() != null ? rRapid.getExtractedText().length() : 0, rRapid.getErrorMessage());
 
         // paddle legacy if rapid not good
         OcrResultDto r3 = guardedExtract(paddle, "paddle", file, preprocessed);
-        log.info("[Ensemble File] paddle success={} len={}", r3.isSuccess(), r3.getExtractedText() != null ? r3.getExtractedText().length() : 0);
+        log.info("[Ensemble File] paddle success={} len={} err={}", r3.isSuccess(), r3.getExtractedText() != null ? r3.getExtractedText().length() : 0, r3.getErrorMessage());
 
         OcrResultDto best = r1;
         if (isBetter(r2, best)) best = withEngine(r2, "native-tesseract");
