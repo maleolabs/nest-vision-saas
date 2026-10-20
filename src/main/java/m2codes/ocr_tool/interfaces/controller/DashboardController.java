@@ -52,10 +52,14 @@ public class DashboardController {
         User user = authService.getCurrentUser();
         if (user != null) {
             try {
-                String apiKey = apiKeyService.findByClientId(user.getClient().getClientId());
-                model.addAttribute("apiKey", apiKey);
+                String apiKey = (String) session.getAttribute("newApiKey");
+                if (apiKey != null) {
+                    model.addAttribute("apiKey", apiKey);
+                    session.removeAttribute("newApiKey");
+                }
             } catch (Exception e) {
-                model.addAttribute("canGenerateApiKey", true);
+                log.error("failed to load API key page", e);
+                model.addAttribute("apiKeyError", "Tidak dapat memuat API key.");
             }
         }
 
@@ -76,7 +80,12 @@ public class DashboardController {
                     "Tidak dapat membuat API Key baru, data pengguna tidak ditemukan! Silahkan coba lagi nanti");
             return "redirect:/dashboard/docs?failed";
         }
-        apiKeyService.create(user.getClient().getClientId());
+        try {
+            session.setAttribute("newApiKey", apiKeyService.create(user.getClient().getClientId()));
+        } catch (Exception e) {
+            log.error("failed to create API key", e);
+            session.setAttribute("apiKeyError", "Tidak dapat membuat API key. Silakan coba lagi.");
+        }
         return "redirect:/dashboard/docs";
     }
 

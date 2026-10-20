@@ -2,7 +2,7 @@ package m2codes.ocr_tool.domain.service;
 
 public interface ApiKeyService {
 
-    void create(String clientId);
+    String create(String clientId);
 
     boolean verify(String apiKey);
 

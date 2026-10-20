@@ -54,9 +54,9 @@
                 </div>
                 <pre class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-mono">X-API-KEY: <span th:text="${apiKey}">your_api_key</span></pre>
                 <div th:if="${apiKeyError}" th:text="${apiKeyError}" class="mt-3 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700"></div>
-                <form th:action="@{/dashboard/docs/create-new-api-key}" method="POST" th:if="${canGenerateApiKey}" class="mt-4">
-                    <button type="submit" class="rounded-xl bg-blue-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-blue-700">+ Buat API Key baru</button>
-                    <span class="ml-2 text-xs text-slate-500">Hanya 1 key aktif per akun.</span>
+                <form th:action="@{/dashboard/docs/create-new-api-key}" method="POST" class="mt-4">
+                    <button type="submit" class="rounded-xl bg-blue-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-blue-700">Buat / rotate API Key</button>
+                    <span class="ml-2 text-xs text-slate-500">Key hanya tampil sekali setelah dibuat.</span>
                 </form>
             </div>
         </div>

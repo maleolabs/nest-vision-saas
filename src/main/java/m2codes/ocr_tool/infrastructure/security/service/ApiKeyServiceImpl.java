@@ -11,6 +11,11 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.util.Base64;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -26,20 +31,17 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     private int apiKeyLifetimeInDays;
 
     @Override
-    public void create(String clientId) {
-        try {
-            String apiKey = apiKeyGenerator.encrypt(clientId);
-            Instant expiresAt = Instant.now().plus(apiKeyLifetimeInDays, ChronoUnit.DAYS);
-            save(clientId, apiKey, expiresAt);
-        } catch (Exception e) {
-            log.error("failed to create API Key for client {}", clientId, e);
-            throw new IllegalStateException("Unable to create API key", e);
-        }
+    @Transactional
+    public String create(String clientId) {
+        String rawKey = "app_" + randomKey();
+        Instant expiresAt = Instant.now().plus(apiKeyLifetimeInDays, ChronoUnit.DAYS);
+        save(clientId, hash(rawKey), expiresAt);
+        return rawKey;
     }
 
     @Override
     public boolean verify(String apiKey) {
-        var apiKeyData = apiKeyRepository.findFirstByApiKey(apiKey).orElseThrow();
+        var apiKeyData = apiKeyRepository.findFirstByApiKey(hash(apiKey)).orElseThrow();
         return !apiKeyData.getExpiresAt().isBefore(Instant.now());
     }
 
@@ -50,7 +52,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
     @Override
     public String findByClientId(String clientId) {
-        return apiKeyRepository.findFirstByClientId(clientId).orElseThrow().getApiKey();
+        throw new IllegalStateException("API key cannot be retrieved after creation");
     }
 
     private void save(String clientId, String apiKey, Instant expiresAt) {
@@ -72,6 +74,21 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                 .build()
         );
 
+    }
+
+    private String randomKey() {
+        byte[] bytes = new byte[Math.max(16, (apiKeyLength * 3) / 4)];
+        new SecureRandom().nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes).substring(0, apiKeyLength);
+    }
+
+    private String hash(String value) {
+        try {
+            return Base64.getEncoder().encodeToString(MessageDigest.getInstance("SHA-256")
+                    .digest(value.getBytes(StandardCharsets.UTF_8)));
+        } catch (Exception e) {
+            throw new IllegalStateException("Unable to hash API key", e);
+        }
     }
 
 }
