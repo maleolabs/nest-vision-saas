@@ -7,7 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script>
 </head>
-<body class="bg-slate-50 font-sans antialiased" x-data="{open:false}">
+<body class="bg-slate-50 font-sans antialiased" x-data="dashboardKeys()" x-init="loadKeys()">
 <aside class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 hidden sm:flex flex-col">
     <div class="h-16 flex items-center gap-3 px-6 border-b border-slate-100"><span class="w-9 h-9 rounded-xl bg-blue-600 text-white grid place-items-center font-black text-sm">NV</span><span class="font-bold">Nestara Vision</span></div>
     <nav class="flex-1 p-4 space-y-1">
@@ -36,26 +36,31 @@
             </div>
         </div>
 
-        <!-- API Key -->
-        <div class="mt-6 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+         <!-- API keys -->
+         <section class="mt-6 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden" aria-labelledby="keys-title" x-init="loadKeys()">
             <div class="px-6 py-5 border-b border-slate-100 flex items-center gap-3">
                 <span class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 grid place-items-center"><i data-lucide="key-round" class="w-5 h-5"></i></span>
-                <div><h3 class="font-bold">API Key Anda</h3><p class="text-xs text-slate-500">Sertakan di setiap request via header X-API-KEY</p></div>
+                 <div><h3 id="keys-title" class="font-bold">API Keys</h3><p class="text-xs text-slate-500">Sertakan key aktif via header X-API-KEY. Secret hanya tampil sekali.</p></div>
                 <span class="ml-auto hidden sm:inline text-xs font-medium bg-slate-900 text-white px-3 py-1 rounded-full">Required</span>
             </div>
-            <div class="p-6">
-                <div class="flex flex-col sm:flex-row gap-3 items-stretch">
-                    <code class="flex-1 bg-slate-950 text-emerald-300 font-mono text-sm px-4 py-3 rounded-xl break-all" id="apiKeyCode" th:text="${apiKey} ?: '••••••••••••••••••••••••••••'">••••</code>
-                    <button onclick="navigator.clipboard.writeText(document.getElementById('apiKeyCode').innerText); this.innerText='Copied!'; setTimeout(()=>this.innerText='Copy',1500)" class="shrink-0 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold hover:bg-slate-50">Copy</button>
-                </div>
-                <pre class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-mono">X-API-KEY: <span th:text="${apiKey}">your_api_key</span></pre>
-                <div th:if="${apiKeyError}" th:text="${apiKeyError}" class="mt-3 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700"></div>
-                <form th:action="@{/dashboard/docs/create-new-api-key}" method="POST" th:if="${canGenerateApiKey}" class="mt-4">
-                    <button type="submit" class="rounded-xl bg-blue-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-blue-700">+ Buat API Key baru</button>
-                    <span class="ml-2 text-xs text-slate-500">Hanya 1 key aktif per akun.</span>
-                </form>
-            </div>
-        </div>
+             <div class="p-6">
+                 <p x-show="loading" class="text-sm text-slate-500" role="status">Memuat API keys…</p>
+                 <p x-show="error" x-text="error" class="p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700" role="alert"></p>
+                 <p x-show="!loading && !error && keys.length === 0" class="text-sm text-slate-500">Belum ada API key. Buat key untuk mulai integrasi.</p>
+                 <div x-show="!loading && !error && keys.length" class="divide-y divide-slate-100">
+                     <template x-for="key in keys" :key="key.id"><div class="py-4 first:pt-0 flex flex-col sm:flex-row sm:items-center gap-3">
+                         <div class="min-w-0 flex-1"><div class="font-semibold text-sm" x-text="key.name || 'API key'"></div><code class="text-xs text-slate-500 font-mono">••••••••••••••••••••</code><div class="text-xs text-slate-500 mt-1"><span x-text="key.active ? 'Aktif' : 'Dicabut'"></span> · <span x-text="key.expiresAt ? 'Berakhir ' + new Date(key.expiresAt).toLocaleDateString('id-ID') : '—'"></span></div></div>
+                         <button type="button" @click="revoke(key.id)" x-show="key.active" class="rounded-lg border border-red-200 text-red-700 px-3 py-2 text-xs font-semibold hover:bg-red-50">Cabut</button>
+                     </div></template>
+                 </div>
+                 <div class="mt-5 flex flex-wrap gap-2"><button type="button" @click="modal=true" class="rounded-xl bg-blue-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-blue-700">+ Buat API key</button><button type="button" @click="rotate()" class="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold hover:bg-slate-50">Rotasi key aktif</button></div>
+             </div>
+         </section>
+
+         <div x-show="modal" x-cloak class="fixed inset-0 z-50 grid place-items-center bg-slate-950/50 p-4" role="dialog" aria-modal="true" aria-labelledby="create-key-title">
+             <form @submit.prevent="createKey()" class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"><h2 id="create-key-title" class="text-lg font-bold">Buat API key</h2><label class="mt-4 block text-sm font-semibold" for="key-name">Nama key</label><input id="key-name" x-model="name" required maxlength="100" class="mt-2 w-full rounded-xl border border-slate-300 px-3 py-2.5" placeholder="Production" /><div class="mt-5 flex justify-end gap-2"><button type="button" @click="modal=false" class="rounded-xl border px-4 py-2 text-sm">Batal</button><button :disabled="saving" class="rounded-xl bg-blue-600 text-white px-4 py-2 text-sm font-semibold">Buat</button></div></form>
+         </div>
+         <div x-show="secret" x-cloak class="fixed inset-0 z-50 grid place-items-center bg-slate-950/50 p-4" role="dialog" aria-modal="true" aria-labelledby="secret-title"><div class="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl"><h2 id="secret-title" class="text-lg font-bold">Simpan secret sekarang</h2><p class="mt-2 text-sm text-slate-600">Secret tidak akan ditampilkan lagi.</p><code class="mt-4 block break-all rounded-xl bg-slate-950 p-4 text-sm text-emerald-300" x-text="secret"></code><button type="button" @click="navigator.clipboard.writeText(secret); secret=''" class="mt-4 rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white">Salin & tutup</button></div></div>
 
         <!-- Endpoint 1 -->
         <div class="mt-6 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
@@ -182,6 +187,15 @@ X-API-KEY: <span th:text="${apiKey}">key</span></pre>
     </div>
 </main>
 <script th:src="@{/js/vendor/lucide.min.js}"></script>
-<script>lucide.createIcons();</script>
+<script>
+function dashboardKeys() { return {
+  open:false, keys:[], loading:true, error:'', modal:false, secret:'', name:'', saving:false,
+  async loadKeys() { try { const r=await fetch('[[@{/dashboard/api/keys}]]'); if(!r.ok) throw Error(); this.keys=await r.json(); } catch(e) { this.error='API keys gagal dimuat. Coba lagi.'; } finally { this.loading=false; } },
+  async createKey() { this.saving=true; try { const r=await fetch('[[@{/dashboard/api/keys}]]',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:this.name})}); if(!r.ok) throw Error(); const d=await r.json(); this.secret=d.secret||''; this.modal=false; this.name=''; await this.loadKeys(); } catch(e) { this.error='API key gagal dibuat.'; } finally { this.saving=false; } },
+  async rotate() { if(!confirm('Rotasi key aktif? Key lama akan tidak berlaku.')) return; try { const r=await fetch('[[@{/dashboard/api/keys/rotate}]]',{method:'POST'}); if(!r.ok) throw Error(); this.secret=(await r.json()).secret||''; await this.loadKeys(); } catch(e) { this.error='API key gagal dirotasi.'; } },
+  async revoke(id) { if(!confirm('Cabut API key ini?')) return; try { const r=await fetch('[[@{/dashboard/api/keys/}]]'+id+'/revoke',{method:'POST'}); if(!r.ok) throw Error(); await this.loadKeys(); } catch(e) { this.error='API key gagal dicabut.'; } }
+}; }
+lucide.createIcons();
+</script>
 </body>
 </html>
