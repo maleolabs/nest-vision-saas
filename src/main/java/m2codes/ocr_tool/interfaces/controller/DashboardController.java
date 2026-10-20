@@ -53,15 +53,6 @@ public class DashboardController {
 
     @GetMapping(path = "/docs")
     public String docs(Model model, HttpSession session) {
-        User user = authService.getCurrentUser();
-        if (user != null) {
-            try {
-                model.addAttribute("apiKey", "YOUR_API_KEY");
-            } catch (Exception e) {
-                model.addAttribute("canGenerateApiKey", true);
-            }
-        }
-
         String apiKeyError = (String) session.getAttribute("apiKeyError");
         if (apiKeyError != null) {
             model.addAttribute("apiKeyError", apiKeyError);
@@ -79,7 +70,7 @@ public class DashboardController {
         return noStore(new ApiKeyResponse(null, request.name(), true, null, null, secret));
     }
     @PostMapping("/api/keys/rotate") @ResponseBody
-    public ResponseEntity<?> rotateApiKey() { return noStore(new ApiKeyResponse(null, "API key", true, null, null, apiKeyService.rotate(authService.getCurrentUser().getClient().getClientId()))); }
+    public ResponseEntity<?> rotateApiKey() { return noStore(new ApiKeyResponse(null, "Rotated API key", true, null, null, apiKeyService.rotate(authService.getCurrentUser().getClient().getClientId()))); }
     @PostMapping("/api/keys/{id}/revoke") @ResponseBody
     public ResponseEntity<Void> revokeApiKey(@PathVariable Long id) { apiKeyService.revokeForClient(id, authService.getCurrentUser().getClient().getClientId()); return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build(); }
     private <T> ResponseEntity<T> noStore(T body) { return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(body); }

@@ -8,6 +8,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script>
 </head>
 <body class="bg-slate-50 font-sans antialiased" x-data="dashboardKeys()" x-init="loadKeys()">
+<form class="hidden"><input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"></form>
 <aside class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 hidden sm:flex flex-col">
     <div class="h-16 flex items-center gap-3 px-6 border-b border-slate-100"><span class="w-9 h-9 rounded-xl bg-blue-600 text-white grid place-items-center font-black text-sm">NV</span><span class="font-bold">Nestara Vision</span></div>
     <nav class="flex-1 p-4 space-y-1">
@@ -73,8 +74,8 @@
                 <div class="grid lg:grid-cols-2 gap-6">
                     <div>
                         <h4 class="text-sm font-semibold">Header</h4>
-                        <pre class="mt-2 bg-slate-950 text-slate-200 p-3 rounded-xl text-xs font-mono overflow-auto">Content-Type: multipart/form-data
-X-API-KEY: <span th:text="${apiKey}">key</span></pre>
+                         <pre class="mt-2 bg-slate-950 text-slate-200 p-3 rounded-xl text-xs font-mono overflow-auto">Content-Type: multipart/form-data
+X-API-KEY: key dari panel API Keys</pre>
                         <h4 class="mt-4 text-sm font-semibold">Body (pilih salah satu)</h4>
                         <table class="mt-2 w-full text-sm border border-slate-200 rounded-xl overflow-hidden">
                             <thead class="bg-slate-50 text-xs text-slate-600"><tr><th class="text-left px-3 py-2">Field</th><th class="text-left px-3 py-2">Type</th><th class="text-left px-3 py-2">Desc</th></tr></thead>
@@ -119,7 +120,7 @@ X-API-KEY: <span th:text="${apiKey}">key</span></pre>
             </div>
             <div class="p-6 grid lg:grid-cols-2 gap-6">
                 <div>
-                    <pre class="bg-slate-950 text-slate-200 p-3 rounded-xl text-xs font-mono">X-API-KEY: <span th:text="${apiKey}">key</span></pre>
+                     <pre class="bg-slate-950 text-slate-200 p-3 rounded-xl text-xs font-mono">X-API-KEY: key dari panel API Keys</pre>
                     <table class="mt-4 w-full text-sm border border-slate-200 rounded-xl overflow-hidden">
                         <thead class="bg-slate-50 text-xs"><tr><th class="text-left px-3 py-2">Status</th><th class="text-left px-3 py-2">Arti</th></tr></thead>
                         <tbody class="divide-y divide-slate-100 text-xs">
@@ -192,7 +193,7 @@ function dashboardKeys() { return {
   open:false, keys:[], loading:true, error:'', modal:false, secret:'', name:'', saving:false,
   async loadKeys() { try { const r=await fetch('[[@{/dashboard/api/keys}]]'); if(!r.ok) throw Error(); this.keys=await r.json(); } catch(e) { this.error='API keys gagal dimuat. Coba lagi.'; } finally { this.loading=false; } },
   async createKey() { this.saving=true; try { const r=await fetch('[[@{/dashboard/api/keys}]]',{method:'POST',headers:{'Content-Type':'application/json','X-XSRF-TOKEN':decodeURIComponent(document.cookie.match('(^|; )XSRF-TOKEN=([^;]*)')?.[2]||'')},body:JSON.stringify({name:this.name})}); if(!r.ok) throw Error(); const d=await r.json(); this.secret=d.secret||''; this.modal=false; this.name=''; await this.loadKeys(); } catch(e) { this.error='API key gagal dibuat.'; } finally { this.saving=false; } },
-  async rotate() { if(!confirm('Rotasi key aktif? Key lama akan tidak berlaku.')) return; try { const r=await fetch('[[@{/dashboard/api/keys/rotate}]]',{method:'POST',headers:{'X-XSRF-TOKEN':decodeURIComponent(document.cookie.match('(^|; )XSRF-TOKEN=([^;]*)')?.[2]||'')}}); if(!r.ok) throw Error(); this.secret=(await r.json()).secret||''; await this.loadKeys(); } catch(e) { this.error='API key gagal dirotasi.'; } },
+  async rotate() { if(!confirm('Rotasi key? Key lama tetap aktif sampai dicabut atau kedaluwarsa.')) return; try { const r=await fetch('[[@{/dashboard/api/keys/rotate}]]',{method:'POST',headers:{'X-XSRF-TOKEN':decodeURIComponent(document.cookie.match('(^|; )XSRF-TOKEN=([^;]*)')?.[2]||'')}}); if(!r.ok) throw Error(); this.secret=(await r.json()).secret||''; await this.loadKeys(); } catch(e) { this.error='API key gagal dirotasi.'; } },
   async revoke(id) { if(!confirm('Cabut API key ini?')) return; try { const r=await fetch('[[@{/dashboard/api/keys/}]]'+id+'/revoke',{method:'POST',headers:{'X-XSRF-TOKEN':decodeURIComponent(document.cookie.match('(^|; )XSRF-TOKEN=([^;]*)')?.[2]||'')}}); if(!r.ok) throw Error(); await this.loadKeys(); } catch(e) { this.error='API key gagal dicabut.'; } }
 }; }
 lucide.createIcons();

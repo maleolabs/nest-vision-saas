@@ -53,7 +53,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
             .findFirst().map(this::plainToken).orElseThrow();
     }
 
-    /** Overlap rotation: old key stays valid until explicit revoke/expiry. */
+    /** Rotation creates another active key; old key remains valid until revoke or expiry. */
     @Override public String rotate(String clientId) { return create(clientId, "Rotated API key"); }
     @Override public void revoke(String apiKey) { lookup(apiKey).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
     @Override public String clientId(String apiKey) { return lookup(apiKey).filter(k -> Boolean.TRUE.equals(k.getIsActive()) && !k.getExpiresAt().isBefore(Instant.now())).map(ApiKey::getClientId).orElse(null); }
