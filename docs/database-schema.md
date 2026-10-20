@@ -7,7 +7,17 @@
 |---|---|
 | Project | ocr-tool (nestara-vision-saas) |
 | Database | MySQL / MariaDB (`jdbc:mysql://.../ocr_tool`) |
-| Schema management | Hibernate `spring.jpa.hibernate.ddl-auto=update` — **tidak ada migration file** (Flyway/Liquibase absen) |
+| Schema management | Flyway migrations (`V2__api_key_name.sql`, `V3__api_key_hash.sql`) dengan baseline version 1; Hibernate `ddl-auto=update` masih aktif |
+
+## API key pepper dan migrasi legacy
+
+`APP_API_KEY_PEPPER` wajib diisi, minimal 32 karakter, dan harus stabil antar-deploy. Nilai ini
+dipakai HMAC untuk `api_keys.key_hash`; jangan generate ulang saat container restart atau release.
+
+Migrasi `V3__api_key_hash.sql` menambah kolom hash untuk transisi dari key legacy. Sebelum rotasi
+pepper, migrasikan/reissue atau revoke seluruh key legacy dan verifikasi client memakai key baru.
+Pertahankan pepper lama sampai proses selesai; rotasi tanpa dual-read/migrasi terencana membuat
+key tersimpan tidak dapat diverifikasi.
 | Tabel | 10 tabel |
 | Tipe PK | `UUID` (logical) + `BIGINT AUTO_INCREMENT` (teknis/log) |
 | Relasi | 4 relasi JPA (FK constraint) + 4 relasi logis (string `client_id`, tanpa FK constraint) |
