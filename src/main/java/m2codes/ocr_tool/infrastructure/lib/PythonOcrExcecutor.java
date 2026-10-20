@@ -1,13 +1,17 @@
 package m2codes.ocr_tool.infrastructure.lib;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Paths;
+import java.util.concurrent.TimeUnit;
 
+@Slf4j
 @Component
 public class PythonOcrExcecutor {
 
@@ -17,6 +21,16 @@ public class PythonOcrExcecutor {
     @Value("${ocr.script.path}")
     private String scriptPath;
 
+    // VIS-F09: budget keras runtime python — env OCR_PYTHON_TIMEOUT_MILLIS, default 120000.
+    // Dibaca langsung dari Environment (pola env-var yang sama seperti OCR_RAPID_ENABLED dst),
+    // application.properties tidak diubah. Sebelumnya process hang menahan thread pool
+    // OCR (ocrTaskExecutor) selamanya.
+    @Value("${OCR_PYTHON_TIMEOUT_MILLIS:120000}")
+    private long timeoutMillis;
+
+    private static final int DESTROY_GRACE_MILLIS = 2_000;
+    private static final int READER_JOIN_MILLIS = 2_000;
+
     public String runOcrScript(String imagePath) throws IOException, InterruptedException {
         String scriptPath = resolveScriptPath(this.scriptPath);
 
@@ -25,35 +39,90 @@ public class PythonOcrExcecutor {
 
         Process process = builder.start();
 
-        String output;
+        // VIS-F09: kedua stream dikonsumsi dari thread reader sejak awal supaya proses tidak
+        // deadlock menulis pipe penuh sementara kita menunggu bounded waitFor. Reader daemon
+        // berhenti sendiri via EOF ketika process exit (normal maupun destroy) —tidak ada leak.
+        StringBuilder stdout = new StringBuilder();
         StringBuilder stderr = new StringBuilder();
-        // read stdout
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            StringBuilder result = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                result.append(line).append("\n");
-            }
-            output = result.toString();
-        }
-        // read stderr for [OCR] metrics
-        try (BufferedReader errReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
-            String line;
-            while ((line = errReader.readLine()) != null) {
-                stderr.append(line).append("\n");
-                // log observability line
-                if (line.contains("[OCR]")) {
-                    org.slf4j.LoggerFactory.getLogger(PythonOcrExcecutor.class).info(line);
-                }
-            }
+        Thread stdoutReader = startReaderThread(process.getInputStream(), stdout);
+        Thread stderrReader = startReaderThread(process.getErrorStream(), stderr);
+
+        boolean finished;
+        try {
+            finished = process.waitFor(timeoutMillis, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            process.destroyForcibly();
+            throw e;
         }
 
-        int exitCode = process.waitFor();
+        if (!finished) {
+            destroyGracefully(process);
+            log.warn("OCR python process timed out after {} ms", timeoutMillis);
+            // pesan generik — tidak bocorkan detail internal; caller (PyTesseractOcrService)
+            // menangkap Exception dan menaruh getMessage() ke OcrResultDto.errorMessage
+            throw new RuntimeException("OCR processing timed out");
+        }
+
+        // process sudah exit → streams EOF → reader berhenti; join pendek defensive
+        awaitReader(stdoutReader);
+        awaitReader(stderrReader);
+
+        String output = stdout.toString();
+        String stderrValue = stderr.toString();
+
+        int exitCode = process.waitFor(); // reap; process sudah pasti exit di titik ini
         if (exitCode != 0) {
-            throw new RuntimeException("Python script exited with code " + exitCode + ". Output: \n" + output + "\nStderr: " + stderr);
+            throw new RuntimeException("Python script exited with code " + exitCode + ". Output: \n" + output + "\nStderr: \n" + stderrValue);
         }
 
         return output.trim();
+    }
+
+    private Thread startReaderThread(InputStream in, StringBuilder target) {
+        Thread reader = new Thread(() -> {
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    target.append(line).append('\n');
+                    // log observability line
+                    if (line.contains("[OCR]")) {
+                        log.info(line);
+                    }
+                }
+            } catch (IOException ignored) {
+                // stream di-close via destroy (timeout) — reader keluar diam-diam
+            }
+        }, "ocr-python-output-reader");
+        reader.setDaemon(true);
+        reader.start();
+        return reader;
+    }
+
+    private void awaitReader(Thread reader) {
+        try {
+            reader.join(READER_JOIN_MILLIS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    /**
+     * destroy() (SIGTERM) dulu supaya python sempat cleanup, lalu destroyForcibly()
+     * (SIGKILL) kalau tidak mati dalam grace window. File output OCR TIDAK dihapus
+     * di sini — penghapusan temp tetap tanggung jawab caller setelah result dipakai.
+     */
+    private void destroyGracefully(Process process) {
+        process.destroy();
+        boolean reaped = false;
+        try {
+            reaped = process.waitFor(DESTROY_GRACE_MILLIS, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        if (!reaped) {
+            process.destroyForcibly();
+        }
     }
 
     private String resolveScriptPath(String configured) {
