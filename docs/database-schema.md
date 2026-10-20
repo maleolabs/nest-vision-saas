@@ -134,7 +134,7 @@ erDiagram
 
     API_KEYS {
         bigint id PK
-        varchar client_id FK, UK "not null, unique -> clients.client_id (logical)"
+         varchar client_id FK "not null -> clients.client_id (logical); multiple rows allowed for rotation overlap"
         varchar api_key UK "not null, unique"
         boolean is_active "not null, default true"
         timestamp expires_at "not null"
@@ -344,7 +344,7 @@ erDiagram
 | 3 | `users` | `verification_codes` | `verification_codes.user_id` | 1 : N | FK constraint (`@ManyToOne`) |
 | 4 | `ocr_request` | `ocr_result` | `ocr_result.ocr_request_id` | 1 : 0..1 | FK constraint + UNIQUE (`@OneToOne`) |
 | 5 | `ocr_result` | `extracted_text` | `extracted_text.ocr_result_id` | 1 : N | FK constraint (`@ManyToOne`) |
-| 6 | `clients` | `api_keys` | `api_keys.client_id` | 1 : 0..1 | **Logis** (string match ke `clients.client_id`, tanpa FK) |
+| 6 | `clients` | `api_keys` | `api_keys.client_id` | 1 : N | **Logis** (string match ke `clients.client_id`, tanpa FK) |
 | 7 | `clients` | `ocr_request` | `ocr_request.client_id` | 1 : N | **Logis** |
 | 8 | `clients` | `request_usages` | `request_usages.client_id` | 1 : N | **Logis** |
 | 9 | `clients` | `api_request_logs` | `api_request_logs.client_id` | 1 : N | **Logis** |
@@ -423,7 +423,7 @@ Status akun tidak dipakai di `clients` — status hidup di `users.status`, karen
 | `clients` | `email` UNIQUE | 1 email = 1 akun |
 | `clients` | `client_id` UNIQUE | Public identifier untuk API |
 | `clients` | `user_id` UNIQUE | 1 user hanya boleh punya 1 profil client |
-| `api_keys` | `client_id` UNIQUE | 1 client = 1 API key aktif |
+| `api_keys` | `client_id` indexed | 1 client = banyak API key aktif selama overlap rotasi |
 | `api_keys` | `api_key` UNIQUE | Key harus unik globally |
 | `ocr_result` | `ocr_request_id` UNIQUE | 1 request = 1 result |
 

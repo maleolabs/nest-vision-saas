@@ -8,6 +8,7 @@ import m2codes.ocr_tool.domain.service.ApiKeyService;
 import m2codes.ocr_tool.infrastructure.security.util.ApiKeyGenerator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -27,6 +28,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     private int apiKeyLifetimeInDays;
 
     @Override
+    @Transactional
     public String create(String clientId, String name) {
         String apiKey = apiKeyGenerator.generate();
         Instant expiresAt = Instant.now().plus(apiKeyLifetimeInDays, ChronoUnit.DAYS);
@@ -45,7 +47,9 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     }
 
     /** Rotation creates another active key; old key remains valid until revoke or expiry. */
-    @Override public String rotate(String clientId) { return create(clientId, "Rotated API key"); }
+    @Override
+    @Transactional
+    public String rotate(String clientId) { return create(clientId, "Rotated API key"); }
     @Override public void revoke(String apiKey) { lookup(apiKey).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
     @Override public String clientId(String apiKey) { return lookup(apiKey).filter(k -> Boolean.TRUE.equals(k.getIsActive()) && !k.getExpiresAt().isBefore(Instant.now())).map(ApiKey::getClientId).orElse(null); }
     @Override public List<ApiKeyResponse> list(String clientId) { return apiKeyRepository.findAllByClientIdOrderByCreatedAtDesc(clientId).stream().map(k -> new ApiKeyResponse(k.getId(), k.getName(), Boolean.TRUE.equals(k.getIsActive()) && !k.getExpiresAt().isBefore(Instant.now()), k.getCreatedAt(), k.getExpiresAt(), null)).toList(); }
