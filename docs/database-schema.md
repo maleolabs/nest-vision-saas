@@ -14,7 +14,10 @@
 `APP_API_KEY_PEPPER` wajib diisi, minimal 32 karakter, dan harus stabil antar-deploy. Nilai ini
 dipakai HMAC untuk `api_keys.key_hash`; jangan generate ulang saat container restart atau release.
 
-Migrasi `V3__api_key_hash.sql` menambah kolom hash untuk transisi dari key legacy. Sebelum rotasi
+Migrasi `V3__api_key_hash.sql` menambah kolom hash untuk transisi dari key legacy. Migration memakai
+`ALTER TABLE` standar tanpa idempotency palsu; Flyway menjalankannya sekali pada database fresh atau
+database yang sudah dibaseline di versi 1. Jika deployment lama gagal di V3, lakukan `flyway repair`
+setelah memastikan kolom belum ada, lalu jalankan migrate ulang. Sebelum rotasi
 pepper, migrasikan/reissue atau revoke seluruh key legacy dan verifikasi client memakai key baru.
 Pertahankan pepper lama sampai proses selesai; rotasi tanpa dual-read/migrasi terencana membuat
 key tersimpan tidak dapat diverifikasi.
