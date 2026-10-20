@@ -30,10 +30,10 @@ public class ApiKeyServiceImpl implements ApiKeyService {
         try {
             String apiKey = apiKeyGenerator.encrypt(clientId);
             Instant expiresAt = Instant.now().plus(apiKeyLifetimeInDays, ChronoUnit.DAYS);
-
             save(clientId, apiKey, expiresAt);
         } catch (Exception e) {
-            log.error("failed to create API Key, got error: {}, {}", e.getMessage(), e.toString());
+            log.error("failed to create API Key for client {}", clientId, e);
+            throw new IllegalStateException("Unable to create API key", e);
         }
     }
 
@@ -65,6 +65,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
         apiKeyRepository.save(
             ApiKey.builder()
                 .clientId(clientId)
+                .name("Default API key")
                 .apiKey(apiKey)
                 .expiresAt(expiresAt)
                 .isActive(true)

@@ -21,6 +21,11 @@ public class ApiKey {
     @Column(name = "client_id", nullable = false, unique = true)
     private String clientId;
 
+    // Existing production schema requires this column although older entity did not map it.
+    @Builder.Default
+    @Column(name = "name", nullable = false, length = 100)
+    private String name = "Default API key";
+
     @Column(name = "api_key", nullable = false, unique = true)
     private String apiKey;
 
