@@ -29,10 +29,10 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     private int apiKeyLifetimeInDays;
 
     @Override
-    public String create(String clientId) {
+    public String create(String clientId, String name) {
         String apiKey = apiKeyGenerator.generate();
         Instant expiresAt = Instant.now().plus(apiKeyLifetimeInDays, ChronoUnit.DAYS);
-        save(clientId, apiKey, expiresAt);
+        save(clientId, name, apiKey, expiresAt);
         return apiKey;
     }
 
@@ -53,16 +53,18 @@ public class ApiKeyServiceImpl implements ApiKeyService {
             .findFirst().map(this::plainToken).orElseThrow();
     }
 
-    @Override public String rotate(String clientId) { return create(clientId); }
+    /** Overlap rotation: old key stays valid until explicit revoke/expiry. */
+    @Override public String rotate(String clientId) { return create(clientId, "Rotated API key"); }
     @Override public void revoke(String apiKey) { lookup(apiKey).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
     @Override public String clientId(String apiKey) { return lookup(apiKey).filter(k -> Boolean.TRUE.equals(k.getIsActive()) && !k.getExpiresAt().isBefore(Instant.now())).map(ApiKey::getClientId).orElse(null); }
-    @Override public List<ApiKeyResponse> list(String clientId) { return apiKeyRepository.findAllByClientIdOrderByCreatedAtDesc(clientId).stream().map(k -> new ApiKeyResponse(k.getId(), "API key", Boolean.TRUE.equals(k.getIsActive()), k.getCreatedAt(), k.getExpiresAt(), null)).toList(); }
+    @Override public List<ApiKeyResponse> list(String clientId) { return apiKeyRepository.findAllByClientIdOrderByCreatedAtDesc(clientId).stream().map(k -> new ApiKeyResponse(k.getId(), k.getName(), Boolean.TRUE.equals(k.getIsActive()) && !k.getExpiresAt().isBefore(Instant.now()), k.getCreatedAt(), k.getExpiresAt(), null)).toList(); }
     @Override public void revokeForClient(Long id, String clientId) { apiKeyRepository.findById(id).filter(k -> clientId.equals(k.getClientId())).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
 
-    private void save(String clientId, String apiKey, Instant expiresAt) {
+    private void save(String clientId, String name, String apiKey, Instant expiresAt) {
         apiKeyRepository.save(
             ApiKey.builder()
                 .clientId(clientId)
+                .name(name)
                 .apiKey(null)
                 .keyHash(apiKeyGenerator.hash(apiKey))
                 .expiresAt(expiresAt)

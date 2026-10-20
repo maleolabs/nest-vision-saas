@@ -4,7 +4,8 @@ import java.util.List;
 
 public interface ApiKeyService {
 
-    String create(String clientId);
+    String create(String clientId, String name);
+    default String create(String clientId) { return create(clientId, "API key"); }
 
     boolean verify(String apiKey);
 

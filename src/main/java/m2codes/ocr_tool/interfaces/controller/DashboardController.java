@@ -56,8 +56,7 @@ public class DashboardController {
         User user = authService.getCurrentUser();
         if (user != null) {
             try {
-                String apiKey = apiKeyService.findByClientId(user.getClient().getClientId());
-                model.addAttribute("apiKey", apiKey);
+                model.addAttribute("apiKey", "YOUR_API_KEY");
             } catch (Exception e) {
                 model.addAttribute("canGenerateApiKey", true);
             }
@@ -72,23 +71,11 @@ public class DashboardController {
         return "dashboard/docs";
     }
 
-    @PostMapping(path = "/docs/create-new-api-key")
-    public String createNewApiKey(HttpSession session) {
-        User user = authService.getCurrentUser();
-        if (user == null || user.getClient() == null) {
-            session.setAttribute("apiKeyError",
-                    "Tidak dapat membuat API Key baru, data pengguna tidak ditemukan! Silahkan coba lagi nanti");
-            return "redirect:/dashboard/docs?failed";
-        }
-        apiKeyService.create(user.getClient().getClientId());
-        return "redirect:/dashboard/docs";
-    }
-
     @GetMapping("/api/keys") @ResponseBody
     public ResponseEntity<?> listApiKeys() { return noStore(apiKeyService.list(authService.getCurrentUser().getClient().getClientId())); }
     @PostMapping("/api/keys") @ResponseBody
     public ResponseEntity<?> createApiKey(@Valid @RequestBody CreateApiKeyRequest request) {
-        String secret = apiKeyService.create(authService.getCurrentUser().getClient().getClientId());
+        String secret = apiKeyService.create(authService.getCurrentUser().getClient().getClientId(), request.name());
         return noStore(new ApiKeyResponse(null, request.name(), true, null, null, secret));
     }
     @PostMapping("/api/keys/rotate") @ResponseBody

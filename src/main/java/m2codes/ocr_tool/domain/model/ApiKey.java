@@ -20,6 +20,8 @@ public class ApiKey {
 
     @Column(name = "client_id", nullable = false)
     private String clientId;
+    @Column(name = "name", nullable = false, length = 100)
+    private String name;
 
     @Column(name = "api_key", nullable = true, unique = true)
     private String apiKey;
