@@ -1,0 +1,1 @@
+ALTER TABLE api_keys ADD COLUMN key_hash VARCHAR(64) NULL;

@@ -55,6 +55,8 @@ services:
       - OCR_LLM_MODEL=${OCR_LLM_MODEL:-gpt-4o-mini}
 
       # API Key Configuration
+      # Required stable secret; Compose fails fast when missing.
+      - APP_API_KEY_PEPPER=${APP_API_KEY_PEPPER:?APP_API_KEY_PEPPER must be set; minimum 32 characters}
       - APP_API-KEY_LENGTH=32
       - APP_API-KEY_LIFETIME=180
 

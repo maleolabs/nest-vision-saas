@@ -187,6 +187,17 @@ Semua key punya default (`${VAR:default}` di `application.properties`). Override
 | `TESSERACT_CMD` | *(auto-detect)* | Path binary tesseract |
 | `OCR_PYTHON_PATH` | `python3` | Interpreter Python |
 | `OCR_SCRIPT_PATH` | `opt/app/ocr/tesseract_ocr.py` | Skrip bridge OCR |
+| `APP_API_KEY_PEPPER` | *(wajib, tanpa default)* | Secret HMAC minimal 32 karakter; harus stabil antar-deploy |
+
+`APP_API_KEY_PEPPER` wajib tersedia sebelum aplikasi start. Compose gagal cepat bila variable
+belum diisi; startup manual juga menolak nilai kosong atau kurang dari 32 karakter. Generate
+secret sekali, simpan di secret manager atau `.env` yang tidak di-commit, lalu pakai nilai sama
+selama key lama masih harus bisa diverifikasi. Jangan membuat pepper baru setiap deploy.
+
+Rotasi pepper bukan perubahan konfigurasi biasa: pepper lama diperlukan untuk verifikasi hash
+API key tersimpan. Sebelum rotasi, lakukan migrasi legacy key ke format hash `V3__api_key_hash.sql`
+dan reissue/revoke key yang belum bermigrasi. Simpan backup pepper lama sampai seluruh key legacy
+sudah diganti dan validasi akses selesai; perubahan tanpa prosedur ini dapat memutus semua client.
 
 ### Tuning OCR
 

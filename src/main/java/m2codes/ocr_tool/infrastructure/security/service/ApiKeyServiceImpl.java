@@ -1,23 +1,20 @@
 package m2codes.ocr_tool.infrastructure.security.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import m2codes.ocr_tool.domain.model.ApiKey;
 import m2codes.ocr_tool.domain.repository.ApiKeyRepository;
 import m2codes.ocr_tool.domain.service.ApiKeyService;
 import m2codes.ocr_tool.infrastructure.security.util.ApiKeyGenerator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.SecureRandom;
-import java.util.Base64;
-import org.springframework.transaction.annotation.Transactional;
+import java.util.Optional;
+import java.util.List;
+import m2codes.ocr_tool.interfaces.dto.response.ApiKeyResponse;
 
-@Slf4j
 @RequiredArgsConstructor
 @Service
 public class ApiKeyServiceImpl implements ApiKeyService {
@@ -25,70 +22,59 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     private final ApiKeyRepository apiKeyRepository;
     private final ApiKeyGenerator apiKeyGenerator;
 
-    @Value("${app.api-key.length}")
-    private int apiKeyLength;
     @Value("${app.api-key.lifetime}")
     private int apiKeyLifetimeInDays;
 
     @Override
     @Transactional
-    public String create(String clientId) {
-        String rawKey = "app_" + randomKey();
+    public String create(String clientId, String name) {
+        String apiKey = apiKeyGenerator.generate();
         Instant expiresAt = Instant.now().plus(apiKeyLifetimeInDays, ChronoUnit.DAYS);
-        save(clientId, hash(rawKey), expiresAt);
-        return rawKey;
+        save(clientId, name, apiKey, expiresAt);
+        return apiKey;
     }
 
     @Override
     public boolean verify(String apiKey) {
-        var apiKeyData = apiKeyRepository.findFirstByApiKey(hash(apiKey)).orElseThrow();
-        return !apiKeyData.getExpiresAt().isBefore(Instant.now());
+        return lookup(apiKey).map(this::isUsable).orElse(false);
     }
 
     @Override
     public void delete(String apiKey) {
-
+        revoke(apiKey);
     }
 
+    /** Rotation creates another active key; old key remains valid until revoke or expiry. */
     @Override
-    public String findByClientId(String clientId) {
-        throw new IllegalStateException("API key cannot be retrieved after creation");
-    }
+    @Transactional
+    public String rotate(String clientId) { return create(clientId, "Rotated API key"); }
+    @Override public void revoke(String apiKey) { lookup(apiKey).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
+    @Override public String clientId(String apiKey) { return lookup(apiKey).filter(this::isUsable).map(ApiKey::getClientId).orElse(null); }
+    @Override public List<ApiKeyResponse> list(String clientId) { return apiKeyRepository.findAllByClientIdOrderByCreatedAtDesc(clientId).stream().map(k -> new ApiKeyResponse(k.getId(), k.getName(), isUsable(k), k.getCreatedAt(), k.getExpiresAt(), null)).toList(); }
+    @Override public void revokeForClient(Long id, String clientId) { apiKeyRepository.findById(id).filter(k -> clientId.equals(k.getClientId())).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
 
-    private void save(String clientId, String apiKey, Instant expiresAt) {
-        var apiKeyData = apiKeyRepository.findFirstByClientId(clientId).orElse(null);
-        if (apiKeyData != null) {
-            apiKeyData.setApiKey(apiKey);
-            apiKeyData.setExpiresAt(expiresAt);
-            apiKeyRepository.save(apiKeyData);
-            return;
-        }
-
+    private void save(String clientId, String name, String apiKey, Instant expiresAt) {
         apiKeyRepository.save(
-            ApiKey.builder()
-                .clientId(clientId)
-                .name("Default API key")
-                .apiKey(apiKey)
-                .expiresAt(expiresAt)
-                .isActive(true)
-                .build()
+                ApiKey.builder()
+                    .clientId(clientId)
+                    .name(name)
+                    .apiKey(null)
+                    .keyHash(apiKeyGenerator.hash(apiKey))
+                    .expiresAt(expiresAt)
+                    .isActive(true)
+                    .build()
         );
-
     }
 
-    private String randomKey() {
-        byte[] bytes = new byte[Math.max(16, (apiKeyLength * 3) / 4)];
-        new SecureRandom().nextBytes(bytes);
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes).substring(0, apiKeyLength);
+    private boolean isUsable(ApiKey key) {
+        return Boolean.TRUE.equals(key.getIsActive())
+                && key.getExpiresAt() != null
+                && !key.getExpiresAt().isBefore(Instant.now());
     }
 
-    private String hash(String value) {
-        try {
-            return Base64.getEncoder().encodeToString(MessageDigest.getInstance("SHA-256")
-                    .digest(value.getBytes(StandardCharsets.UTF_8)));
-        } catch (Exception e) {
-            throw new IllegalStateException("Unable to hash API key", e);
-        }
+    private Optional<ApiKey> lookup(String token) {
+        if (token == null || token.isBlank()) return Optional.empty();
+        return apiKeyRepository.findByKeyHash(apiKeyGenerator.hash(token));
     }
 
 }

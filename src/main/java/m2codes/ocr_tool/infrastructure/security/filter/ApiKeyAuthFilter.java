@@ -28,9 +28,10 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
                     response.getWriter().write("Token is invalid");
                     return;
                 }
+                request.setAttribute("clientId", apiKeyService.clientId(apiKey));
             } catch (Exception e) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Token Verification Failed " + e.getMessage());
+                response.getWriter().write("Token Verification Failed");
                 return;
             }
         } else {

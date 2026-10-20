@@ -1,5 +1,6 @@
 package m2codes.ocr_tool.interfaces.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,10 @@ import m2codes.ocr_tool.domain.service.UserService;
 import m2codes.ocr_tool.infrastructure.security.service.ApiRequestLogService;
 import m2codes.ocr_tool.infrastructure.security.service.AuthService;
 import m2codes.ocr_tool.interfaces.dto.request.ChangePasswordRequest;
+import m2codes.ocr_tool.interfaces.dto.request.CreateApiKeyRequest;
+import m2codes.ocr_tool.interfaces.dto.response.ApiKeyResponse;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ResponseEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -33,7 +38,8 @@ public class DashboardController {
 
     @GetMapping(path = "")
     public String index(Model model) {
-        User user = authService.getCurrentUser();
+        User user;
+        try { user = authService.getCurrentUser(); } catch (RuntimeException e) { return "redirect:/auth/login"; }
         Client client = user.getClient();
 
         var requestCountPerPeriod = apiRequestLogService.getRequestCountByClientIdAndEndpoint(client.getClientId(), "do-ocr");
@@ -48,46 +54,30 @@ public class DashboardController {
     }
 
     @GetMapping(path = "/docs")
-    public String docs(Model model, HttpSession session) {
-        User user = authService.getCurrentUser();
-        if (user != null) {
-            try {
-                String apiKey = (String) session.getAttribute("newApiKey");
-                if (apiKey != null) {
-                    model.addAttribute("apiKey", apiKey);
-                    session.removeAttribute("newApiKey");
-                }
-            } catch (Exception e) {
-                log.error("failed to load API key page", e);
-                model.addAttribute("apiKeyError", "Tidak dapat memuat API key.");
-            }
-        }
-
+    public String docs(Model model, HttpSession session, HttpServletRequest request) {
         String apiKeyError = (String) session.getAttribute("apiKeyError");
         if (apiKeyError != null) {
             model.addAttribute("apiKeyError", apiKeyError);
             session.removeAttribute("apiKeyError");
         }
+        String baseUrl = request.getRequestURL().toString().replace(request.getRequestURI(), "");
+        model.addAttribute("baseUrl", baseUrl);
 
         return "dashboard/docs";
     }
 
-    @PostMapping(path = "/docs/create-new-api-key")
-    public String createNewApiKey(HttpSession session) {
-        User user = authService.getCurrentUser();
-        if (user == null || user.getClient() == null) {
-            session.setAttribute("apiKeyError",
-                    "Tidak dapat membuat API Key baru, data pengguna tidak ditemukan! Silahkan coba lagi nanti");
-            return "redirect:/dashboard/docs?failed";
-        }
-        try {
-            session.setAttribute("newApiKey", apiKeyService.create(user.getClient().getClientId()));
-        } catch (Exception e) {
-            log.error("failed to create API key", e);
-            session.setAttribute("apiKeyError", "Tidak dapat membuat API key. Silakan coba lagi.");
-        }
-        return "redirect:/dashboard/docs";
+    @GetMapping("/api/keys") @ResponseBody
+    public ResponseEntity<?> listApiKeys() { return noStore(apiKeyService.list(authService.getCurrentUser().getClient().getClientId())); }
+    @PostMapping("/api/keys") @ResponseBody
+    public ResponseEntity<?> createApiKey(@Valid @RequestBody CreateApiKeyRequest request) {
+        String secret = apiKeyService.create(authService.getCurrentUser().getClient().getClientId(), request.name());
+        return noStore(new ApiKeyResponse(null, request.name(), true, null, null, secret));
     }
+    @PostMapping("/api/keys/rotate") @ResponseBody
+    public ResponseEntity<?> rotateApiKey() { return noStore(new ApiKeyResponse(null, "Rotated API key", true, null, null, apiKeyService.rotate(authService.getCurrentUser().getClient().getClientId()))); }
+    @PostMapping("/api/keys/{id}/revoke") @ResponseBody
+    public ResponseEntity<Void> revokeApiKey(@PathVariable Long id) { apiKeyService.revokeForClient(id, authService.getCurrentUser().getClient().getClientId()); return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build(); }
+    private <T> ResponseEntity<T> noStore(T body) { return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(body); }
 
     @GetMapping(path = "/logs")
     public String logs(

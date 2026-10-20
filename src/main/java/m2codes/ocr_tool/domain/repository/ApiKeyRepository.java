@@ -12,6 +12,10 @@ public interface ApiKeyRepository extends JpaRepository<ApiKey, Long> {
 
     Optional<ApiKey> findFirstByApiKey(String apiKey);
 
+    Optional<ApiKey> findByKeyHash(String keyHash);
+
+    java.util.List<ApiKey> findAllByClientIdOrderByCreatedAtDesc(String clientId);
+
     @Transactional
     void deleteByClientId(String clientId);
 

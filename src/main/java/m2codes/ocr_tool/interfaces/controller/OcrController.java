@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import m2codes.ocr_tool.application.service.impl.ExtractedTextQueryServiceImpl;
 import m2codes.ocr_tool.application.service.impl.OcrProcessorService;
 import m2codes.ocr_tool.infrastructure.security.service.RequestLimitService;
-import m2codes.ocr_tool.infrastructure.security.util.ApiKeyGenerator;
 import m2codes.ocr_tool.interfaces.dto.request.OcrDataRequest;
 import m2codes.ocr_tool.interfaces.dto.response.OcrResponse;
 import m2codes.ocr_tool.interfaces.dto.response.ApiResponse;
@@ -31,7 +30,6 @@ public class OcrController {
 
     private final OcrProcessorService ocrProcessorService;
     private final ExtractedTextQueryServiceImpl extractedTextQueryService;
-    private final ApiKeyGenerator apiKeyGenerator;
     private final RequestLimitService requestLimitService;
 
     @PostMapping(
@@ -44,11 +42,9 @@ public class OcrController {
             BindingResult result,
             HttpServletRequest servletRequest
             ) {
-        String apiKey = servletRequest.getHeader("X-API-KEY");
-        String clientId;
-
+        String clientId = (String) servletRequest.getAttribute("clientId");
         try {
-            clientId = apiKeyGenerator.decrypt(apiKey);
+            if (clientId == null) throw new IllegalStateException("Missing client principal");
             if (!requestLimitService.isRequestAllowed(clientId)) {
                 return ResponseEntity.badRequest().body(
                         ApiResponse.error(
@@ -111,19 +107,7 @@ public class OcrController {
             @PathVariable(name = "requestId") String requestId,
             HttpServletRequest servletRequest
     ) {
-        String apiKey = servletRequest.getHeader("X-API-KEY");
-        String clientId;
-
-        try {
-            clientId = apiKeyGenerator.decrypt(apiKey);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(
-                    ApiResponse.error(
-                            "Failed to get request result",
-                            HttpStatus.INTERNAL_SERVER_ERROR
-                    )
-            );
-        }
+        String clientId = (String) servletRequest.getAttribute("clientId");
 
         var response = extractedTextQueryService.getByRequestId(requestId);
 
@@ -143,19 +127,7 @@ public class OcrController {
             @PathVariable(name = "requestId") String requestId,
             HttpServletRequest servletRequest
     ) {
-        String apiKey = servletRequest.getHeader("X-API-KEY");
-        String clientId;
-
-        try {
-            clientId = apiKeyGenerator.decrypt(apiKey);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().body(
-                    ApiResponse.error(
-                            "Failed to get request result",
-                            HttpStatus.INTERNAL_SERVER_ERROR
-                    )
-            );
-        }
+        String clientId = (String) servletRequest.getAttribute("clientId");
         ApiResponse<OcrResponse> response = extractedTextQueryService.checkStatus(requestId);
 
         var invalidClientId = checkClientId(clientId, response.getData().getClientId());

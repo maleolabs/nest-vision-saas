@@ -7,7 +7,20 @@
 |---|---|
 | Project | ocr-tool (nestara-vision-saas) |
 | Database | MySQL / MariaDB (`jdbc:mysql://.../ocr_tool`) |
-| Schema management | Hibernate `spring.jpa.hibernate.ddl-auto=update` — **tidak ada migration file** (Flyway/Liquibase absen) |
+| Schema management | Flyway migrations (`V2__api_key_name.sql` sampai `V5__align_api_key_hash_schema.sql`) dengan baseline version 1; Hibernate `ddl-auto=update` masih aktif |
+
+## API key pepper dan migrasi legacy
+
+`APP_API_KEY_PEPPER` wajib diisi, minimal 32 karakter, dan harus stabil antar-deploy. Nilai ini
+dipakai HMAC untuk `api_keys.key_hash`; jangan generate ulang saat container restart atau release.
+
+Migrasi `V3__api_key_hash.sql` menambah kolom hash untuk transisi dari key legacy. Migration memakai
+`ALTER TABLE` standar tanpa idempotency palsu; Flyway menjalankannya sekali pada database fresh atau
+database yang sudah dibaseline di versi 1. Jika deployment lama gagal di V3, lakukan `flyway repair`
+setelah memastikan kolom belum ada, lalu jalankan migrate ulang. Sebelum rotasi
+pepper, migrasikan/reissue atau revoke seluruh key legacy dan verifikasi client memakai key baru.
+Pertahankan pepper lama sampai proses selesai; rotasi tanpa dual-read/migrasi terencana membuat
+key tersimpan tidak dapat diverifikasi.
 | Tabel | 10 tabel |
 | Tipe PK | `UUID` (logical) + `BIGINT AUTO_INCREMENT` (teknis/log) |
 | Relasi | 4 relasi JPA (FK constraint) + 4 relasi logis (string `client_id`, tanpa FK constraint) |
@@ -121,7 +134,7 @@ erDiagram
 
     API_KEYS {
         bigint id PK
-        varchar client_id FK, UK "not null, unique -> clients.client_id (logical)"
+         varchar client_id FK "not null -> clients.client_id (logical); multiple rows allowed for rotation overlap"
         varchar api_key UK "not null, unique"
         boolean is_active "not null, default true"
         timestamp expires_at "not null"
@@ -331,7 +344,7 @@ erDiagram
 | 3 | `users` | `verification_codes` | `verification_codes.user_id` | 1 : N | FK constraint (`@ManyToOne`) |
 | 4 | `ocr_request` | `ocr_result` | `ocr_result.ocr_request_id` | 1 : 0..1 | FK constraint + UNIQUE (`@OneToOne`) |
 | 5 | `ocr_result` | `extracted_text` | `extracted_text.ocr_result_id` | 1 : N | FK constraint (`@ManyToOne`) |
-| 6 | `clients` | `api_keys` | `api_keys.client_id` | 1 : 0..1 | **Logis** (string match ke `clients.client_id`, tanpa FK) |
+| 6 | `clients` | `api_keys` | `api_keys.client_id` | 1 : N | **Logis** (string match ke `clients.client_id`, tanpa FK) |
 | 7 | `clients` | `ocr_request` | `ocr_request.client_id` | 1 : N | **Logis** |
 | 8 | `clients` | `request_usages` | `request_usages.client_id` | 1 : N | **Logis** |
 | 9 | `clients` | `api_request_logs` | `api_request_logs.client_id` | 1 : N | **Logis** |
@@ -410,7 +423,7 @@ Status akun tidak dipakai di `clients` — status hidup di `users.status`, karen
 | `clients` | `email` UNIQUE | 1 email = 1 akun |
 | `clients` | `client_id` UNIQUE | Public identifier untuk API |
 | `clients` | `user_id` UNIQUE | 1 user hanya boleh punya 1 profil client |
-| `api_keys` | `client_id` UNIQUE | 1 client = 1 API key aktif |
+| `api_keys` | `client_id` indexed | 1 client = banyak API key aktif selama overlap rotasi |
 | `api_keys` | `api_key` UNIQUE | Key harus unik globally |
 | `ocr_result` | `ocr_request_id` UNIQUE | 1 request = 1 result |
 
@@ -422,13 +435,13 @@ Tidak ada `@Index` eksplisit di entity. Index hanya berasal dari PK dan UNIQUE c
 
 Temuan saat ekstraksi, relevan kalau schema mau dirapikan:
 
-1. **Tidak ada migration tool.** Schema dibentuk Hibernate `ddl-auto=update`. Tidak reproducible, tidak ada versioning, dan `update` tidak pernah drop/rename kolom. Produksi sebaiknya pindah ke Flyway/Liquibase dengan baseline dari schema aktual.
+1. **Migration memakai Flyway dengan baseline version 1.** Migration hanya menambah kolom yang sudah dideklarasikan entity; deployment harus memakai schema aktual yang sudah dibaseline. API key baru disimpan hash-only melalui `api_keys.key_hash`; token plaintext lama tidak kompatibel dengan flow baru dan perlu rotasi.
 2. **Relasi logis tanpa FK** (`client_id` string). Integritas data bergantung kode aplikasi. Kalau `clients.client_id` berubah (regenerate), baris historis jadi orphan. Opsi: ganti jadi `clients.id` BIGINT FK, atau tambah FK ke `clients(client_id)`.
 3. **Index hilang di tabel log.** `api_request_logs` dan `request_usages` dipakai untuk reporting agregat; minimal butuh composite index (`client_id`, `request_time`) dan (`client_id`, `request_date`).
 4. **`request_usages.request_date` bertipe `DATE` tapi field `Instant`** dan selalu ditimpa `Instant.now()` di `@PrePersist` — tidak bisa menyimpan tanggal historis hasil backfill, dan perbandingan `findByClientIdAndRequestDate(Instant)` rawan mismatch presisi. Bersihkan ke `LocalDate`.
 5. **Duplikasi status.** `ocr_request.status` dan `ocr_result.is_success` menyimpan informasi yang saling tumpang tindih; perlu aturan tunggal mana yang jadi source of truth.
 6. **`ocr_result` 1:1 dengan `ocr_request`** memaksa satu hasil per request. Kalau nanti butuh retry/ensemble multi-pass, constraint UNIQUE ini harus dilepas.
-7. **`api_keys` menyimpan key plaintext** (kolom `api_key`). Idealnya hash + prefix lookup.
+7. **`api_keys.api_key` adalah kolom legacy nullable.** Flow baru menyimpan hash-only di `key_hash`; V5 memastikan `api_key` nullable, `key_hash` unik, dan `client_id` punya index nonunique. Key lama perlu dirotasi sebelum kolom legacy dihapus.
 8. **Tidak ada soft delete / audit actor.** `created_at`/`updated_at` ada, tapi tidak ada `deleted_at` maupun `updated_by`.
 9. **Kuota harian tanpa unique constraint.** `request_usages` tidak punya UNIQUE (`client_id`, `request_date`), jadi dua request paralel bisa membuat dua baris counter untuk client + tanggal yang sama → kuota bocor. Tambahkan unique constraint + logika upsert atomik.
 
