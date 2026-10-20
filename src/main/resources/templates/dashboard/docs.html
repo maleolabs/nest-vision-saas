@@ -8,7 +8,7 @@
 <style>[x-cloak] { display: none !important; } .mobile-nav-backdrop { position: fixed; inset: 0; z-index: 9998; background: rgba(0, 0, 0, .55); }</style>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script>
 </head>
-<body class="bg-slate-50 font-sans antialiased" x-data="{open:false}" @keydown.escape.window="open=false">
+<body class="bg-slate-50 font-sans antialiased" x-data="{open:false, keyModal:false}" @keydown.escape.window="open=false; keyModal=false">
 <aside class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 hidden sm:flex flex-col">
     <div class="h-16 flex items-center gap-3 px-6 border-b border-slate-100"><span class="w-9 h-9 rounded-xl bg-blue-600 text-white grid place-items-center font-black text-sm">NV</span><span class="font-bold">Nestara Vision</span></div>
     <nav class="flex-1 p-4 space-y-1">
@@ -55,10 +55,14 @@
                 <pre class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-mono">X-API-KEY: <span th:text="${apiKey}">your_api_key</span></pre>
                 <div th:if="${apiKeyError}" th:text="${apiKeyError}" class="mt-3 p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700"></div>
                 <form th:action="@{/dashboard/docs/create-new-api-key}" method="POST" class="mt-4">
-                    <button type="submit" class="rounded-xl bg-blue-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-blue-700">Buat / rotate API Key</button>
+                    <button type="button" @click="keyModal=true" class="rounded-xl bg-blue-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-blue-700">Buat / rotate API Key</button>
                     <span class="ml-2 text-xs text-slate-500">Key hanya tampil sekali setelah dibuat.</span>
                 </form>
             </div>
+        </div>
+        <div x-cloak x-show="keyModal" x-transition.opacity class="fixed inset-0 z-[10000] grid place-items-center p-4" style="display:none" role="dialog" aria-modal="true" @click.self="keyModal=false">
+            <div class="absolute inset-0" style="background:rgba(2,6,23,.6)" aria-hidden="true" @click="keyModal=false"></div>
+            <div class="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"><h2 class="text-lg font-bold">Konfirmasi API key baru</h2><p class="mt-2 text-sm text-slate-600">Key aktif lama akan diganti. Lanjutkan?</p><div class="mt-5 flex justify-end gap-2"><button type="button" @click="keyModal=false" class="rounded-xl border px-4 py-2 text-sm">Batal</button><button type="button" @click="keyModal=false; $el.closest('body').querySelector('form[action*=create-new-api-key]').submit()" class="rounded-xl bg-blue-600 text-white px-4 py-2 text-sm font-semibold">Lanjutkan</button></div></div>
         </div>
 
         <!-- Endpoint 1 -->
