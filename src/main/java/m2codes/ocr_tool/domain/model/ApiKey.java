@@ -18,11 +18,14 @@ public class ApiKey {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "client_id", nullable = false, unique = true)
+    @Column(name = "client_id", nullable = false)
     private String clientId;
 
-    @Column(name = "api_key", nullable = false, unique = true)
+    @Column(name = "api_key", nullable = true, unique = true)
     private String apiKey;
+
+    @Column(name = "key_hash", unique = true, length = 64)
+    private String keyHash;
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;

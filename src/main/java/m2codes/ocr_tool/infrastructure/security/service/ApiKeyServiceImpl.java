@@ -28,7 +28,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     @Override
     public void create(String clientId) {
         try {
-            String apiKey = apiKeyGenerator.encrypt(clientId);
+            String apiKey = apiKeyGenerator.generate();
             Instant expiresAt = Instant.now().plus(apiKeyLifetimeInDays, ChronoUnit.DAYS);
 
             save(clientId, apiKey, expiresAt);
@@ -39,8 +39,8 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
     @Override
     public boolean verify(String apiKey) {
-        var apiKeyData = apiKeyRepository.findFirstByApiKey(apiKey).orElseThrow();
-        return !apiKeyData.getExpiresAt().isBefore(Instant.now());
+        var data = apiKey.startsWith("app_v2_") ? apiKeyRepository.findByKeyHash(apiKeyGenerator.hash(apiKey)) : apiKeyRepository.findFirstByApiKey(apiKey);
+        return data.map(k -> Boolean.TRUE.equals(k.getIsActive()) && !k.getExpiresAt().isBefore(Instant.now())).orElse(false);
     }
 
     @Override
@@ -52,6 +52,10 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     public String findByClientId(String clientId) {
         return apiKeyRepository.findFirstByClientId(clientId).orElseThrow().getApiKey();
     }
+
+    @Override public String rotate(String clientId) { create(clientId); return findByClientId(clientId); }
+    @Override public void revoke(String apiKey) { apiKeyRepository.findByKeyHash(apiKeyGenerator.hash(apiKey)).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
+    @Override public String clientId(String apiKey) { return apiKeyRepository.findByKeyHash(apiKeyGenerator.hash(apiKey)).map(ApiKey::getClientId).orElse(null); }
 
     private void save(String clientId, String apiKey, Instant expiresAt) {
         var apiKeyData = apiKeyRepository.findFirstByClientId(clientId).orElse(null);
@@ -65,7 +69,8 @@ public class ApiKeyServiceImpl implements ApiKeyService {
         apiKeyRepository.save(
             ApiKey.builder()
                 .clientId(clientId)
-                .apiKey(apiKey)
+                .apiKey(apiKey.startsWith("app_v2_") ? null : apiKey)
+                .keyHash(apiKey.startsWith("app_v2_") ? apiKeyGenerator.hash(apiKey) : null)
                 .expiresAt(expiresAt)
                 .isActive(true)
                 .build()

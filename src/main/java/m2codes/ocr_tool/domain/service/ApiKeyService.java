@@ -10,4 +10,10 @@ public interface ApiKeyService {
 
     void delete(String apiKey);
 
+    String rotate(String clientId);
+
+    void revoke(String apiKey);
+
+    String clientId(String apiKey);
+
 }
