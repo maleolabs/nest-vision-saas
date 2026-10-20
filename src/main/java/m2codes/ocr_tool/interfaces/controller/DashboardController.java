@@ -1,5 +1,6 @@
 package m2codes.ocr_tool.interfaces.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -53,12 +54,14 @@ public class DashboardController {
     }
 
     @GetMapping(path = "/docs")
-    public String docs(Model model, HttpSession session) {
+    public String docs(Model model, HttpSession session, HttpServletRequest request) {
         String apiKeyError = (String) session.getAttribute("apiKeyError");
         if (apiKeyError != null) {
             model.addAttribute("apiKeyError", apiKeyError);
             session.removeAttribute("apiKeyError");
         }
+        String baseUrl = request.getRequestURL().toString().replace(request.getRequestURI(), "");
+        model.addAttribute("baseUrl", baseUrl);
 
         return "dashboard/docs";
     }
