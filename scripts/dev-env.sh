@@ -5,6 +5,30 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+# --- API key pepper ---
+# Local-only override wins; otherwise persist one stable machine-local value.
+if [ -f "$REPO_ROOT/.env.local" ]; then
+    _pepper="$(awk -F= '$1 == "APP_API_KEY_PEPPER" { sub(/^[^=]*=/, ""); print; exit }' "$REPO_ROOT/.env.local" | tr -d '\r')"
+else
+    _pepper=""
+fi
+if [ -z "$_pepper" ]; then
+    _pepper_file="$HOME/.config/ocr-tool/api-key-pepper"
+    mkdir -p "${_pepper_file%/*}"
+    chmod 700 "${_pepper_file%/*}"
+    if [ ! -s "$_pepper_file" ]; then
+        (umask 077 && openssl rand -hex 32 > "$_pepper_file")
+    fi
+    chmod 600 "$_pepper_file"
+    _pepper="$(cat "$_pepper_file")"
+fi
+if [ "${#_pepper}" -lt 32 ]; then
+    echo "ERROR: APP_API_KEY_PEPPER must contain at least 32 characters" >&2
+    return 1 2>/dev/null || exit 1
+fi
+export APP_API_KEY_PEPPER="$_pepper"
+unset _pepper _pepper_file
+
 # --- JDK 17 ---
 if [ -d "$HOME/.local/opt/jdk-17" ] && [ -f "$HOME/.local/opt/jdk-17/bin/java" ]; then
     export JAVA_HOME="$HOME/.local/opt/jdk-17"
@@ -132,6 +156,7 @@ fi
 
 echo ""
 echo "Dev env ready:"
+echo "  APP_API_KEY_PEPPER=configured"
 echo "  JAVA_HOME=$JAVA_HOME ($("$JAVA_HOME/bin/java" -version 2>&1 | head -1))"
 echo "  TESSERACT_DATAPATH=$TESSERACT_DATAPATH"
 echo "  DB: $SPRING_DATASOURCE_URL ($SPRING_DATASOURCE_USERNAME)"

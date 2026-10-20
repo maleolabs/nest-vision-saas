@@ -3,6 +3,7 @@ HELP.md
 ### Environment ###
 /src/main/resources/*.properties
 .env
+.env.local
 
 /uploads/
 
