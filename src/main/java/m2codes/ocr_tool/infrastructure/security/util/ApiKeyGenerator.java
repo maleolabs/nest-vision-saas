@@ -3,6 +3,7 @@ package m2codes.ocr_tool.infrastructure.security.util;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import jakarta.annotation.PostConstruct;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -24,6 +25,13 @@ public class ApiKeyGenerator {
 
     @org.springframework.beans.factory.annotation.Value("${app.api-key.pepper:}")
     private String pepper;
+
+    @PostConstruct
+    void validatePepper() {
+        if (pepper == null || pepper.length() < 32) {
+            throw new IllegalStateException("APP_API_KEY_PEPPER must be set and contain at least 32 characters");
+        }
+    }
 
     public String generate() {
         byte[] bytes = new byte[32];

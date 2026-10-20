@@ -37,7 +37,8 @@ public class DashboardController {
 
     @GetMapping(path = "")
     public String index(Model model) {
-        User user = authService.getCurrentUser();
+        User user;
+        try { user = authService.getCurrentUser(); } catch (RuntimeException e) { return "redirect:/auth/login"; }
         Client client = user.getClient();
 
         var requestCountPerPeriod = apiRequestLogService.getRequestCountByClientIdAndEndpoint(client.getClientId(), "do-ocr");

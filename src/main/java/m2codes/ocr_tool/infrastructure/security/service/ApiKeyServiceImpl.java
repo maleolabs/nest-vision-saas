@@ -23,8 +23,6 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     private final ApiKeyRepository apiKeyRepository;
     private final ApiKeyGenerator apiKeyGenerator;
 
-    @Value("${app.api-key.length}")
-    private int apiKeyLength;
     @Value("${app.api-key.lifetime}")
     private int apiKeyLifetimeInDays;
 
@@ -43,14 +41,14 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
     @Override
     public void delete(String apiKey) {
-
+        revoke(apiKey);
     }
 
     @Override
     public String findByClientId(String clientId) {
         return apiKeyRepository.findAllByClientIdOrderByCreatedAtDesc(clientId).stream()
             .filter(k -> Boolean.TRUE.equals(k.getIsActive()) && !k.getExpiresAt().isBefore(Instant.now()))
-            .findFirst().map(this::plainToken).orElseThrow();
+            .findFirst().orElseThrow(() -> new IllegalStateException("No active API key found"));
     }
 
     /** Rotation creates another active key; old key remains valid until revoke or expiry. */
@@ -79,11 +77,6 @@ public class ApiKeyServiceImpl implements ApiKeyService {
         return token.startsWith("app_v2_")
             ? apiKeyRepository.findByKeyHash(apiKeyGenerator.hash(token))
             : apiKeyRepository.findFirstByApiKey(token);
-    }
-
-    private String plainToken(ApiKey key) {
-        if (key.getApiKey() == null) throw new IllegalStateException("API key secret unavailable");
-        return key.getApiKey();
     }
 
 }
