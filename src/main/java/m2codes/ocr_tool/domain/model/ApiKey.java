@@ -23,7 +23,7 @@ public class ApiKey {
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @Column(name = "api_key", nullable = true, unique = true)
+    @Column(name = "api_key", nullable = true)
     private String apiKey;
 
     @Column(name = "key_hash", unique = true, length = 64)

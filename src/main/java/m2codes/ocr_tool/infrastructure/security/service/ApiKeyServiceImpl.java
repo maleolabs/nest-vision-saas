@@ -1,7 +1,6 @@
 package m2codes.ocr_tool.infrastructure.security.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import m2codes.ocr_tool.domain.model.ApiKey;
 import m2codes.ocr_tool.domain.repository.ApiKeyRepository;
 import m2codes.ocr_tool.domain.service.ApiKeyService;
@@ -9,7 +8,6 @@ import m2codes.ocr_tool.infrastructure.security.util.ApiKeyGenerator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -17,7 +15,6 @@ import java.util.Optional;
 import java.util.List;
 import m2codes.ocr_tool.interfaces.dto.response.ApiKeyResponse;
 
-@Slf4j
 @RequiredArgsConstructor
 @Service
 public class ApiKeyServiceImpl implements ApiKeyService {
@@ -39,7 +36,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
     @Override
     public boolean verify(String apiKey) {
-        return lookup(apiKey).map(k -> Boolean.TRUE.equals(k.getIsActive()) && !k.getExpiresAt().isBefore(Instant.now())).orElse(false);
+        return lookup(apiKey).map(this::isUsable).orElse(false);
     }
 
     @Override
@@ -52,13 +49,12 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     @Transactional
     public String rotate(String clientId) { return create(clientId, "Rotated API key"); }
     @Override public void revoke(String apiKey) { lookup(apiKey).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
-    @Override public String clientId(String apiKey) { return lookup(apiKey).filter(k -> Boolean.TRUE.equals(k.getIsActive()) && !k.getExpiresAt().isBefore(Instant.now())).map(ApiKey::getClientId).orElse(null); }
-    @Override public List<ApiKeyResponse> list(String clientId) { return apiKeyRepository.findAllByClientIdOrderByCreatedAtDesc(clientId).stream().map(k -> new ApiKeyResponse(k.getId(), k.getName(), Boolean.TRUE.equals(k.getIsActive()) && !k.getExpiresAt().isBefore(Instant.now()), k.getCreatedAt(), k.getExpiresAt(), null)).toList(); }
+    @Override public String clientId(String apiKey) { return lookup(apiKey).filter(this::isUsable).map(ApiKey::getClientId).orElse(null); }
+    @Override public List<ApiKeyResponse> list(String clientId) { return apiKeyRepository.findAllByClientIdOrderByCreatedAtDesc(clientId).stream().map(k -> new ApiKeyResponse(k.getId(), k.getName(), isUsable(k), k.getCreatedAt(), k.getExpiresAt(), null)).toList(); }
     @Override public void revokeForClient(Long id, String clientId) { apiKeyRepository.findById(id).filter(k -> clientId.equals(k.getClientId())).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
 
     private void save(String clientId, String name, String apiKey, Instant expiresAt) {
-        try {
-            apiKeyRepository.save(
+        apiKeyRepository.save(
                 ApiKey.builder()
                     .clientId(clientId)
                     .name(name)
@@ -67,14 +63,13 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                     .expiresAt(expiresAt)
                     .isActive(true)
                     .build()
-            );
-        } catch (DataIntegrityViolationException exception) {
-            log.error("API key insert failed; schema may still enforce unique api_keys.client_id", exception);
-            throw new IllegalStateException(
-                    "API key schema rejects multiple keys per client; run Flyway migration V4",
-                    exception);
-        }
+        );
+    }
 
+    private boolean isUsable(ApiKey key) {
+        return Boolean.TRUE.equals(key.getIsActive())
+                && key.getExpiresAt() != null
+                && !key.getExpiresAt().isBefore(Instant.now());
     }
 
     private Optional<ApiKey> lookup(String token) {
