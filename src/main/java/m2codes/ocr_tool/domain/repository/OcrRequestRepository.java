@@ -12,7 +12,8 @@ import java.util.UUID;
  * @author marij_mokoginta
  */
 public interface OcrRequestRepository extends  JpaRepository<OcrRequest, UUID> {
-    Optional<OcrRequest> findFirstByImageUrl(String imageUrl);
+    // XR-07: dedupe selalu scoped per client
+    Optional<OcrRequest> findFirstByImageUrlAndClientId(String imageUrl, String clientId);
 
     boolean existsByImageUrlAndClientId(String imageUrl, String clientId);
 

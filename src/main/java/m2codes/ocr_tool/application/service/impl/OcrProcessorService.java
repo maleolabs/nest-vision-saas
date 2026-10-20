@@ -4,6 +4,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import m2codes.ocr_tool.application.service.OcrProcessingAsyncExecutor;
 import m2codes.ocr_tool.application.util.TaskManager;
 import m2codes.ocr_tool.domain.model.RequestStatus;
 import m2codes.ocr_tool.infrastructure.filemanager.service.FileManagerService;
@@ -48,13 +49,14 @@ public class OcrProcessorService extends TextProcessorService {
             OcrRequestService ocrRequestService,
             OcrResultService ocrResultService,
             ExtractedTextService extractedTextService,
+            OcrProcessingAsyncExecutor ocrProcessingAsyncExecutor,
             @Qualifier("ensembleOcrService") TextExtractionService textExtractionService,
             ExtractedTextCleaner extractedTextCleaner,
             ExtractedTextMapper extractedTextMapper,
             TaskManager taskManager,
             FileManagerService fileManagerService
     ) {
-        super(ocrRequestService, ocrResultService, extractedTextService);
+        super(ocrRequestService, ocrResultService, extractedTextService, ocrProcessingAsyncExecutor);
         this.textExtractionService = textExtractionService;
 
         this.extractedTextCleaner = extractedTextCleaner;
@@ -68,13 +70,16 @@ public class OcrProcessorService extends TextProcessorService {
     @Async("ocrTaskExecutor")
     @Transactional
     @Override
-    protected void processingExtractionText(OcrDataRequest request, OcrRequest ocrRequest, String clientId, boolean preprocessed) {
+    public void processingExtractionText(OcrDataRequest request, OcrRequest ocrRequest, String clientId, boolean preprocessed) {
         ocrRequest = entityManager.merge(ocrRequest);
 
         try {
             OcrResultDto ocrResultDto = extractTextFromImage(request.getImageUrl(), preprocessed);
             if (!ocrResultDto.isSuccess()) {
-                saveOcrRequest(request, RequestStatus.FAILURE, clientId);
+                // target failure = entitas yang SUDAH di-merge di baris atas (deterministik);
+                // saveOcrRequest(request, FAILURE) via dedupe-reuse bisa mendarat di row
+                // history lain (findFirst tanpa ORDER BY) → row asli stuck PROCESSING
+                ocrRequestService.updateStatus(ocrRequest, RequestStatus.FAILURE);
                 entityManager.flush();
                 return;
             }
@@ -89,21 +94,21 @@ public class OcrProcessorService extends TextProcessorService {
             // method would otherwise reach SimpleAsyncUncaughtExceptionHandler and
             // leave the OcrRequest stuck in a non-terminal status forever.
             log.error("URL OCR processing failed : {}", e.getMessage(), e);
-            saveOcrRequest(request, RequestStatus.FAILURE, clientId);
-            entityManager.flush();
+            persistFailureQuietly(ocrRequest);
         }
     }
 
     @Async("ocrTaskExecutor")
     @Transactional
     @Override
-    protected void processingExtractionText(File file, OcrRequest ocrRequest, OcrDataRequest dataRequest, String clientId, boolean preprocessed) {
+    public void processingExtractionText(File file, OcrRequest ocrRequest, OcrDataRequest dataRequest, String clientId, boolean preprocessed) {
         ocrRequest = entityManager.merge(ocrRequest);
 
         try {
             OcrResultDto ocrResultDto = extractTextFromImage(file, preprocessed);
             if (!ocrResultDto.isSuccess()) {
-                saveOcrRequest(dataRequest, RequestStatus.FAILURE, clientId);
+                // target failure = entitas yang sudah di-merge (deterministik, see path URL)
+                ocrRequestService.updateStatus(ocrRequest, RequestStatus.FAILURE);
                 entityManager.flush();
                 return;
             }
@@ -113,8 +118,24 @@ public class OcrProcessorService extends TextProcessorService {
             entityManager.flush();
         } catch (Exception e) {
             log.error("Exception Error : {}", e.getMessage());
-            saveOcrRequest(dataRequest, RequestStatus.FAILURE, clientId);
+            persistFailureQuietly(ocrRequest);
+        }
+    }
+
+    /**
+     * Exception-safety thread async (VIS-F01): persist FAILURE (termasuk RuntimeException /
+     * error lain di dalam Exception) tidak boleh ikut melempar — kalau persist gagal, log
+     * dan berhenti; kalau dibiarkan naik ke SimpleAsyncUncaughtExceptionHandler, transaksi
+     * async di-rollback dan record jadi orphan non-terminal.
+     * Target = entitas OcrRequest yang sudah di-merge di method pemanggil (deterministik,
+     * tidak melalui jalur dedupe-reuse findFirstByImageUrlAndClientId yang bisa salah sasaran).
+     */
+    private void persistFailureQuietly(OcrRequest ocrRequest) {
+        try {
+            ocrRequestService.updateStatus(ocrRequest, RequestStatus.FAILURE);
             entityManager.flush();
+        } catch (Exception persistError) {
+            log.error("Failed to persist FAILURE status for OCR request: {}", persistError.getMessage());
         }
     }
 
