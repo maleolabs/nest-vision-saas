@@ -9,6 +9,7 @@ import m2codes.ocr_tool.infrastructure.security.util.ApiKeyGenerator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -56,16 +57,23 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     @Override public void revokeForClient(Long id, String clientId) { apiKeyRepository.findById(id).filter(k -> clientId.equals(k.getClientId())).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
 
     private void save(String clientId, String name, String apiKey, Instant expiresAt) {
-        apiKeyRepository.save(
-            ApiKey.builder()
-                .clientId(clientId)
-                .name(name)
-                .apiKey(null)
-                .keyHash(apiKeyGenerator.hash(apiKey))
-                .expiresAt(expiresAt)
-                .isActive(true)
-                .build()
-        );
+        try {
+            apiKeyRepository.save(
+                ApiKey.builder()
+                    .clientId(clientId)
+                    .name(name)
+                    .apiKey(null)
+                    .keyHash(apiKeyGenerator.hash(apiKey))
+                    .expiresAt(expiresAt)
+                    .isActive(true)
+                    .build()
+            );
+        } catch (DataIntegrityViolationException exception) {
+            log.error("API key insert failed; schema may still enforce unique api_keys.client_id", exception);
+            throw new IllegalStateException(
+                    "API key schema rejects multiple keys per client; run Flyway migration V4",
+                    exception);
+        }
 
     }
 
