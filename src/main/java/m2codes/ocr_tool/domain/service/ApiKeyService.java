@@ -1,4 +1,6 @@
 package m2codes.ocr_tool.domain.service;
+import m2codes.ocr_tool.interfaces.dto.response.ApiKeyResponse;
+import java.util.List;
 
 public interface ApiKeyService {
 
@@ -15,5 +17,7 @@ public interface ApiKeyService {
     void revoke(String apiKey);
 
     String clientId(String apiKey);
+    List<ApiKeyResponse> list(String clientId);
+    void revokeForClient(Long id, String clientId);
 
 }

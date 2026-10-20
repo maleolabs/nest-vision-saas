@@ -12,6 +12,10 @@ import m2codes.ocr_tool.domain.service.UserService;
 import m2codes.ocr_tool.infrastructure.security.service.ApiRequestLogService;
 import m2codes.ocr_tool.infrastructure.security.service.AuthService;
 import m2codes.ocr_tool.interfaces.dto.request.ChangePasswordRequest;
+import m2codes.ocr_tool.interfaces.dto.request.CreateApiKeyRequest;
+import m2codes.ocr_tool.interfaces.dto.response.ApiKeyResponse;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ResponseEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -79,6 +83,19 @@ public class DashboardController {
         apiKeyService.create(user.getClient().getClientId());
         return "redirect:/dashboard/docs";
     }
+
+    @GetMapping("/api/keys") @ResponseBody
+    public ResponseEntity<?> listApiKeys() { return noStore(apiKeyService.list(authService.getCurrentUser().getClient().getClientId())); }
+    @PostMapping("/api/keys") @ResponseBody
+    public ResponseEntity<?> createApiKey(@Valid @RequestBody CreateApiKeyRequest request) {
+        String secret = apiKeyService.create(authService.getCurrentUser().getClient().getClientId());
+        return noStore(new ApiKeyResponse(null, request.name(), true, null, null, secret));
+    }
+    @PostMapping("/api/keys/rotate") @ResponseBody
+    public ResponseEntity<?> rotateApiKey() { return noStore(new ApiKeyResponse(null, "API key", true, null, null, apiKeyService.rotate(authService.getCurrentUser().getClient().getClientId()))); }
+    @PostMapping("/api/keys/{id}/revoke") @ResponseBody
+    public ResponseEntity<Void> revokeApiKey(@PathVariable Long id) { apiKeyService.revokeForClient(id, authService.getCurrentUser().getClient().getClientId()); return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build(); }
+    private <T> ResponseEntity<T> noStore(T body) { return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(body); }
 
     @GetMapping(path = "/logs")
     public String logs(

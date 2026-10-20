@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
+import java.util.List;
+import m2codes.ocr_tool.interfaces.dto.response.ApiKeyResponse;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -54,6 +56,8 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     @Override public String rotate(String clientId) { return create(clientId); }
     @Override public void revoke(String apiKey) { lookup(apiKey).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
     @Override public String clientId(String apiKey) { return lookup(apiKey).filter(k -> Boolean.TRUE.equals(k.getIsActive()) && !k.getExpiresAt().isBefore(Instant.now())).map(ApiKey::getClientId).orElse(null); }
+    @Override public List<ApiKeyResponse> list(String clientId) { return apiKeyRepository.findAllByClientIdOrderByCreatedAtDesc(clientId).stream().map(k -> new ApiKeyResponse(k.getId(), "API key", Boolean.TRUE.equals(k.getIsActive()), k.getCreatedAt(), k.getExpiresAt(), null)).toList(); }
+    @Override public void revokeForClient(Long id, String clientId) { apiKeyRepository.findById(id).filter(k -> clientId.equals(k.getClientId())).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
 
     private void save(String clientId, String apiKey, Instant expiresAt) {
         apiKeyRepository.save(
