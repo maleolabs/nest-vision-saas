@@ -5,9 +5,10 @@
     <link rel="stylesheet" th:href="@{/css/app.css}">
     <title>Dokumentasi — Nestara Vision</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <style>[x-cloak] { display: none !important; }</style>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script>
 </head>
-<body class="bg-slate-50 font-sans antialiased" x-data="{open:false}">
+<body class="bg-slate-50 font-sans antialiased" x-data="{open:false}" @keydown.escape.window="open=false">
 <aside class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 hidden sm:flex flex-col">
     <div class="h-16 flex items-center gap-3 px-6 border-b border-slate-100"><span class="w-9 h-9 rounded-xl bg-blue-600 text-white grid place-items-center font-black text-sm">NV</span><span class="font-bold">Nestara Vision</span></div>
     <nav class="flex-1 p-4 space-y-1">
@@ -20,7 +21,8 @@
     <div class="p-4 border-t border-slate-100"><a th:href="@{/auth/logout}" class="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm text-slate-600 hover:bg-red-50 hover:text-red-600"><i data-lucide="log-out" class="w-4 h-4"></i> Keluar</a></div>
 </aside>
 <div class="sm:hidden sticky top-0 z-30 bg-white border-b border-slate-200 flex items-center justify-between px-4 h-14"><span class="font-bold flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-blue-600 text-white grid place-items-center font-black">NV</span> Nestara</span><button @click="open=!open" class="p-2 rounded-lg border border-slate-200"><i data-lucide="menu" class="w-5 h-5"></i></button></div>
-<div x-show="open" class="sm:hidden mx-4 mt-3 bg-white border border-slate-200 rounded-xl p-2 space-y-1"><a th:href="@{/dashboard}" class="block px-3 py-2 rounded-lg text-sm">Dashboard</a><a th:href="@{/dashboard/docs}" class="block px-3 py-2 rounded-lg bg-slate-900 text-white text-sm">Dokumentasi</a><a th:href="@{/dashboard/logs}" class="block px-3 py-2 rounded-lg text-sm">Log</a></div>
+<div x-cloak x-show="open" x-transition.opacity class="sm:hidden fixed inset-0 z-40 bg-slate-950/50" aria-hidden="true" @click="open=false"></div>
+<div x-cloak x-show="open" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-100" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 -translate-y-2" class="sm:hidden fixed top-14 left-4 right-4 z-50 bg-white border border-slate-200 rounded-xl p-2 space-y-1 shadow-xl" role="dialog" aria-label="Navigasi mobile"><a th:href="@{/dashboard}" class="block px-3 py-2 rounded-lg text-sm">Dashboard</a><a th:href="@{/dashboard/docs}" class="block px-3 py-2 rounded-lg bg-slate-900 text-white text-sm">Dokumentasi</a><a th:href="@{/dashboard/logs}" class="block px-3 py-2 rounded-lg text-sm">Log</a></div>
 
 <main class="sm:ml-64">
     <div class="max-w-5xl mx-auto px-6 lg:px-8 py-8">
