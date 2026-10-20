@@ -422,13 +422,13 @@ Tidak ada `@Index` eksplisit di entity. Index hanya berasal dari PK dan UNIQUE c
 
 Temuan saat ekstraksi, relevan kalau schema mau dirapikan:
 
-1. **Tidak ada migration tool.** Schema dibentuk Hibernate `ddl-auto=update`. Tidak reproducible, tidak ada versioning, dan `update` tidak pernah drop/rename kolom. Produksi sebaiknya pindah ke Flyway/Liquibase dengan baseline dari schema aktual.
+1. **Migration memakai Flyway dengan baseline version 1.** Migration hanya menambah kolom yang sudah dideklarasikan entity; deployment harus memakai schema aktual yang sudah dibaseline. API key baru disimpan hash-only melalui `api_keys.key_hash`; token plaintext lama tidak kompatibel dengan flow baru dan perlu rotasi.
 2. **Relasi logis tanpa FK** (`client_id` string). Integritas data bergantung kode aplikasi. Kalau `clients.client_id` berubah (regenerate), baris historis jadi orphan. Opsi: ganti jadi `clients.id` BIGINT FK, atau tambah FK ke `clients(client_id)`.
 3. **Index hilang di tabel log.** `api_request_logs` dan `request_usages` dipakai untuk reporting agregat; minimal butuh composite index (`client_id`, `request_time`) dan (`client_id`, `request_date`).
 4. **`request_usages.request_date` bertipe `DATE` tapi field `Instant`** dan selalu ditimpa `Instant.now()` di `@PrePersist` — tidak bisa menyimpan tanggal historis hasil backfill, dan perbandingan `findByClientIdAndRequestDate(Instant)` rawan mismatch presisi. Bersihkan ke `LocalDate`.
 5. **Duplikasi status.** `ocr_request.status` dan `ocr_result.is_success` menyimpan informasi yang saling tumpang tindih; perlu aturan tunggal mana yang jadi source of truth.
 6. **`ocr_result` 1:1 dengan `ocr_request`** memaksa satu hasil per request. Kalau nanti butuh retry/ensemble multi-pass, constraint UNIQUE ini harus dilepas.
-7. **`api_keys` menyimpan key plaintext** (kolom `api_key`). Idealnya hash + prefix lookup.
+7. **`api_keys.api_key` adalah kolom legacy.** Flow baru menyimpan hash-only di `key_hash`; key lama perlu dirotasi sebelum kolom legacy dihapus.
 8. **Tidak ada soft delete / audit actor.** `created_at`/`updated_at` ada, tapi tidak ada `deleted_at` maupun `updated_by`.
 9. **Kuota harian tanpa unique constraint.** `request_usages` tidak punya UNIQUE (`client_id`, `request_date`), jadi dua request paralel bisa membuat dua baris counter untuk client + tanggal yang sama → kuota bocor. Tambahkan unique constraint + logika upsert atomik.
 

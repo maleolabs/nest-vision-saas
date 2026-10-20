@@ -44,13 +44,6 @@ public class ApiKeyServiceImpl implements ApiKeyService {
         revoke(apiKey);
     }
 
-    @Override
-    public String findByClientId(String clientId) {
-        return apiKeyRepository.findAllByClientIdOrderByCreatedAtDesc(clientId).stream()
-            .filter(k -> Boolean.TRUE.equals(k.getIsActive()) && !k.getExpiresAt().isBefore(Instant.now()))
-            .findFirst().orElseThrow(() -> new IllegalStateException("No active API key found"));
-    }
-
     /** Rotation creates another active key; old key remains valid until revoke or expiry. */
     @Override public String rotate(String clientId) { return create(clientId, "Rotated API key"); }
     @Override public void revoke(String apiKey) { lookup(apiKey).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
@@ -74,9 +67,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
     private Optional<ApiKey> lookup(String token) {
         if (token == null || token.isBlank()) return Optional.empty();
-        return token.startsWith("app_v2_")
-            ? apiKeyRepository.findByKeyHash(apiKeyGenerator.hash(token))
-            : apiKeyRepository.findFirstByApiKey(token);
+        return apiKeyRepository.findByKeyHash(apiKeyGenerator.hash(token));
     }
 
 }

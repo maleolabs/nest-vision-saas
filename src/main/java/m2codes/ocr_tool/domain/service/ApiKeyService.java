@@ -9,8 +9,6 @@ public interface ApiKeyService {
 
     boolean verify(String apiKey);
 
-    String findByClientId(String clientId);
-
     void delete(String apiKey);
 
     String rotate(String clientId);
