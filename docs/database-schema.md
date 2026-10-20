@@ -7,7 +7,7 @@
 |---|---|
 | Project | ocr-tool (nestara-vision-saas) |
 | Database | MySQL / MariaDB (`jdbc:mysql://.../ocr_tool`) |
-| Schema management | Flyway migrations (`V2__api_key_name.sql`, `V3__api_key_hash.sql`) dengan baseline version 1; Hibernate `ddl-auto=update` masih aktif |
+| Schema management | Flyway migrations (`V2__api_key_name.sql` sampai `V5__align_api_key_hash_schema.sql`) dengan baseline version 1; Hibernate `ddl-auto=update` masih aktif |
 
 ## API key pepper dan migrasi legacy
 
@@ -441,7 +441,7 @@ Temuan saat ekstraksi, relevan kalau schema mau dirapikan:
 4. **`request_usages.request_date` bertipe `DATE` tapi field `Instant`** dan selalu ditimpa `Instant.now()` di `@PrePersist` — tidak bisa menyimpan tanggal historis hasil backfill, dan perbandingan `findByClientIdAndRequestDate(Instant)` rawan mismatch presisi. Bersihkan ke `LocalDate`.
 5. **Duplikasi status.** `ocr_request.status` dan `ocr_result.is_success` menyimpan informasi yang saling tumpang tindih; perlu aturan tunggal mana yang jadi source of truth.
 6. **`ocr_result` 1:1 dengan `ocr_request`** memaksa satu hasil per request. Kalau nanti butuh retry/ensemble multi-pass, constraint UNIQUE ini harus dilepas.
-7. **`api_keys.api_key` adalah kolom legacy.** Flow baru menyimpan hash-only di `key_hash`; key lama perlu dirotasi sebelum kolom legacy dihapus.
+7. **`api_keys.api_key` adalah kolom legacy nullable.** Flow baru menyimpan hash-only di `key_hash`; V5 memastikan `api_key` nullable, `key_hash` unik, dan `client_id` punya index nonunique. Key lama perlu dirotasi sebelum kolom legacy dihapus.
 8. **Tidak ada soft delete / audit actor.** `created_at`/`updated_at` ada, tapi tidak ada `deleted_at` maupun `updated_by`.
 9. **Kuota harian tanpa unique constraint.** `request_usages` tidak punya UNIQUE (`client_id`, `request_date`), jadi dua request paralel bisa membuat dua baris counter untuk client + tanggal yang sama → kuota bocor. Tambahkan unique constraint + logika upsert atomik.
 
