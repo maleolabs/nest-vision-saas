@@ -111,6 +111,12 @@ public class OcrController {
 
         var response = extractedTextQueryService.getByRequestId(requestId);
 
+        if (!response.isSuccess() || response.getData() == null) {
+            // XR-03/VIS-F04: request tidak ditemukan kini 404 DENGAN ApiResponse body
+            // (sebelumnya data null → NPE di checkClientId → 500 generik + leak)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
         var invalidClientId = checkClientId(clientId, response.getData().getClientId());
         if (invalidClientId != null) {
             return invalidClientId;
@@ -130,6 +136,12 @@ public class OcrController {
         String clientId = (String) servletRequest.getAttribute("clientId");
         ApiResponse<OcrResponse> response = extractedTextQueryService.checkStatus(requestId);
 
+        if (!response.isSuccess() || response.getData() == null) {
+            // XR-03/VIS-F04: request tidak ditemukan kini 404 DENGAN ApiResponse body
+            // (sebelumnya data null → NPE di checkClientId → 500 generik + leak)
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+
         var invalidClientId = checkClientId(clientId, response.getData().getClientId());
         if (invalidClientId != null) {
             return invalidClientId;
@@ -143,7 +155,14 @@ public class OcrController {
             return null;
         }
 
-        return ResponseEntity.notFound().build();
+        // XR-03/VIS-F04: 404 tanpa body diganti ApiResponse standar. Tetap 404 agar
+        // eksistensi request milik client lain tidak terbocorkan ke peminta.
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                ApiResponse.error(
+                        "Request not found for this client",
+                        HttpStatus.NOT_FOUND
+                )
+        );
     }
 
 }

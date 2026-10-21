@@ -1,9 +1,9 @@
 package m2codes.ocr_tool.application.service.impl;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +11,7 @@ import javax.imageio.ImageIO;
 
 import m2codes.ocr_tool.application.service.TextExtractionService;
 import m2codes.ocr_tool.application.util.ImageQualityAssessor;
+import m2codes.ocr_tool.infrastructure.security.util.ImageDownloadValidator;
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
@@ -57,9 +58,12 @@ public class TesseractOcrService implements TextExtractionService {
     private boolean fallbackEnabled;
 
     private final ImageQualityAssessor qualityAssessor;
+    // S-07/VIS-F08: satu SSRF guard untuk semua fetch by URL
+    private final ImageDownloadValidator imageDownloadValidator;
 
-    public TesseractOcrService(ImageQualityAssessor qualityAssessor) {
+    public TesseractOcrService(ImageQualityAssessor qualityAssessor, ImageDownloadValidator imageDownloadValidator) {
         this.qualityAssessor = qualityAssessor;
+        this.imageDownloadValidator = imageDownloadValidator;
     }
 
     @Override
@@ -536,7 +540,15 @@ public class TesseractOcrService implements TextExtractionService {
     }
 
     private BufferedImage getBufferedImage(String imageUrl) throws IOException {
-        return ImageIO.read(new URL(imageUrl));
+        try {
+            // SSRF guard + controlled fetch (menggantikan ImageIO.read(new URL(imageUrl)));
+            // rejection dibungkus IOException agar error path engine
+            // (createErrorResult "Failed to load image") tetap yang menangani
+            byte[] imageBytes = imageDownloadValidator.download(imageUrl);
+            return ImageIO.read(new ByteArrayInputStream(imageBytes));
+        } catch (IllegalArgumentException e) {
+            throw new IOException(e.getMessage(), e);
+        }
     }
 
     private OcrResultDto createErrorResult(String errorMessage) {

@@ -30,9 +30,18 @@ public class OcrRequestServiceImpl implements OcrRequestService {
     public OcrRequest save(OcrDataRequest request, RequestStatus status, String clientId) {
         var imageUrl = request != null ? request.getImageUrl() : null;
 
-        UUID savedImageUploadId = ocrRequestRepository
-                .findFirstByImageUrl(imageUrl)
-                .map(OcrRequest::getId).orElse(null);
+        // XR-07: dedupe harus scoped per client — sebelumnya findFirstByImageUrl lintas client
+        // membuat status/hasil request bisa dipakai ulang oleh client lain. Bila clientId kosong,
+        // reuse di-skip (selalu buat record baru) supaya tidak memutasi baris milik client lain.
+        // Trade-off (pre-existing): dua request concurrent (imageUrl, clientId) sama bisa
+        // membuat 2 row (racenya antara lookup & save, tanpa unique constraint di DB);
+        // findFirst juga nondeterministik di antara duplikat history. Failure-path worker
+        // tidak lagi lewat sini (pakai updateStatus entity) supaya tidak salah sasaran.
+        UUID savedImageUploadId = (imageUrl != null && clientId != null && !clientId.isBlank())
+                ? ocrRequestRepository
+                        .findFirstByImageUrlAndClientId(imageUrl, clientId)
+                        .map(OcrRequest::getId).orElse(null)
+                : null;
 
         OcrRequest ocrRequest = OcrRequest.builder()
                 .id(savedImageUploadId)

@@ -1,6 +1,5 @@
 package m2codes.ocr_tool.application.service;
 
-import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import m2codes.ocr_tool.domain.model.RequestStatus;
 import m2codes.ocr_tool.application.dto.ExtractedTextDto;
@@ -16,9 +15,9 @@ import m2codes.ocr_tool.interfaces.dto.response.ApiResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.RejectedExecutionException;
 
 @Slf4j
 public abstract class TextProcessorService {
@@ -26,25 +25,34 @@ public abstract class TextProcessorService {
     protected final OcrRequestService ocrRequestService;
     protected  final OcrResultService ocrResultService;
     protected  final ExtractedTextService extractedTextService;
+    protected final OcrProcessingAsyncExecutor ocrProcessingAsyncExecutor;
 
     public TextProcessorService(
             OcrRequestService ocrRequestService,
             OcrResultService ocrResultService,
-            ExtractedTextService extractedTextService
+            ExtractedTextService extractedTextService,
+            OcrProcessingAsyncExecutor ocrProcessingAsyncExecutor
     ) {
         this.ocrRequestService = ocrRequestService;
         this.ocrResultService = ocrResultService;
         this.extractedTextService = extractedTextService;
+        this.ocrProcessingAsyncExecutor = ocrProcessingAsyncExecutor;
     }
 
-    @Transactional
+    /**
+     * VIS-F01: @Transactional sengaja dihapus. Method ini hanya menulis satu OcrRequest
+     * (repository.save dengan tx sendiri) dan harus selesai COMMIT sebelum task async
+     * dijalankan; menggabungkannya dalam tx HTTP membuat worker async bisa merge entitas
+     * yang belum commit (race do-ocr fast-return). Pemanggilan @Async kini via
+     * OcrProcessingAsyncExecutor agar proxy @Async tidak di-bypass self-invocation.
+     */
     public final ApiResponse<?> processOcrRequestWithImageUrl(OcrDataRequest request, String clientId) {
         var status = isPoolAvailable() ? RequestStatus.PROCESSING : RequestStatus.WAITING;
 
         boolean preprocessed = usePreprocessedImage(request.getImageUrl(), clientId);
 
         OcrRequest ocrRequest = saveOcrRequest(request, status, clientId);
-        processingExtractionText(request, ocrRequest, clientId, preprocessed);
+        dispatchUrlProcessing(request, ocrRequest, clientId, preprocessed);
         return buildResponse(
                 OcrResponse.builder()
                         .requestId(ocrRequest.getId().toString())
@@ -55,8 +63,24 @@ public abstract class TextProcessorService {
         );
     }
 
+    private void dispatchUrlProcessing(OcrDataRequest request, OcrRequest ocrRequest, String clientId, boolean preprocessed) {
+        try {
+            ocrProcessingAsyncExecutor.dispatchUrlProcessing(request, ocrRequest, clientId, preprocessed);
+        } catch (RejectedExecutionException e) {
+            // pool + queue penuh (AppConfig RejectedExecutionHandler): tanpa worker yang
+            // mengerjakan task, OcrRequest bisa stuck non-terminal — tandai FAILURE lalu
+            // biarkan ErrorController menjawab 503 (bukan fake-success).
+            log.warn("OCR executor saturated; marking request {} FAILURE", ocrRequest.getId());
+            markFailureQuietly(ocrRequest);
+            throw e;
+        }
+    }
 
-    @Transactional
+
+    /**
+     * VIS-F01: @Transactional dihapus dengan alasan sama dengan processOcrRequestWithImageUrl —
+     * save harus commit sebelum task async start.
+     */
     public final ApiResponse<?> processOcrRequestWithUploadedImage(OcrDataRequest request, String clientId) {
         var status = isPoolAvailable() ? RequestStatus.PROCESSING : RequestStatus.WAITING;
 
@@ -79,7 +103,7 @@ public abstract class TextProcessorService {
 
         OcrDataRequest dataRequest = OcrDataRequest.builder().imageUrl(uploadedFileName).build();
         OcrRequest ocrRequest = saveOcrRequest(dataRequest, status, clientId);
-        processingExtractionText(uploadedFile, ocrRequest, dataRequest, clientId, preprocessed);
+        dispatchFileProcessing(uploadedFile, ocrRequest, dataRequest, clientId, preprocessed);
 
         return buildResponse(
                 OcrResponse.builder()
@@ -90,9 +114,37 @@ public abstract class TextProcessorService {
                 null
         );
     }
-    protected abstract void processingExtractionText(OcrDataRequest request, OcrRequest ocrRequest, String clientId, boolean preprocessed);
 
-    protected abstract void processingExtractionText(File file, OcrRequest ocrRequest, OcrDataRequest dataRequest, String clientid, boolean preprocessed);
+    private void dispatchFileProcessing(File file, OcrRequest ocrRequest, OcrDataRequest dataRequest, String clientId, boolean preprocessed) {
+        try {
+            ocrProcessingAsyncExecutor.dispatchFileProcessing(file, ocrRequest, dataRequest, clientId, preprocessed);
+        } catch (RejectedExecutionException e) {
+            log.warn("OCR executor saturated; marking request {} FAILURE", ocrRequest.getId());
+            markFailureQuietly(ocrRequest);
+            throw e;
+        }
+    }
+
+    /**
+     * Tanpa worker yang mengerjakan task (pool + queue penuh), OcrRequest bisa stuck di
+     * PROCESSING/WAITING selamanya — tandai FAILURE quietly agar tidak jadi orphan.
+     */
+    private void markFailureQuietly(OcrRequest ocrRequest) {
+        try {
+            ocrRequestService.updateStatus(ocrRequest, RequestStatus.FAILURE);
+        } catch (Exception e) {
+            log.error("Failed to mark OcrRequest {} as FAILURE", ocrRequest.getId(), e);
+        }
+    }
+
+    public abstract void processingExtractionText(OcrDataRequest request, OcrRequest ocrRequest, String clientId, boolean preprocessed);
+
+    /**
+     * @Async proxy-safe: method ini WAJIB public dan dipanggil dari bean lain
+     * (OcrProcessingAsyncExecutor), bukan lewat self-invocation, agar dieksekusi
+     * pada ocrTaskExecutor — bukan thread HTTP.
+     */
+    public abstract void processingExtractionText(File file, OcrRequest ocrRequest, OcrDataRequest dataRequest, String clientid, boolean preprocessed);
 
     protected abstract OcrRequest saveOcrRequest(OcrDataRequest request, RequestStatus status, String clientId);
 

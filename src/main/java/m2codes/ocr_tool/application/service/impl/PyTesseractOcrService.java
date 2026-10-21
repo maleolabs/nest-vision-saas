@@ -6,12 +6,13 @@ import m2codes.ocr_tool.application.dto.OcrResultDto;
 import m2codes.ocr_tool.application.service.TextExtractionService;
 import m2codes.ocr_tool.application.util.ImageQualityAssessor;
 import m2codes.ocr_tool.infrastructure.lib.PythonOcrExcecutor;
+import m2codes.ocr_tool.infrastructure.security.util.ImageDownloadValidator;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.net.URL;
 
 @Slf4j
 @Service(value = "pyTesseractService")
@@ -20,13 +21,17 @@ public class PyTesseractOcrService implements TextExtractionService {
 
     private final PythonOcrExcecutor excecutor;
     private final ImageQualityAssessor qualityAssessor;
+    // S-07/VIS-F08: satu SSRF guard untuk semua fetch by URL
+    private final ImageDownloadValidator imageDownloadValidator;
 
     @Override
     public OcrResultDto extractTextFromImage(String imageUrl, boolean preprocessed) {
         OcrResultDto ocrResult = new OcrResultDto();
 
         try {
-            BufferedImage image = ImageIO.read(new URL(imageUrl));
+            // SSRF guard + controlled fetch (menggantikan ImageIO.read(new URL(imageUrl)))
+            byte[] imageBytes = imageDownloadValidator.download(imageUrl);
+            BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageBytes));
 
             if (image == null) {
                 ocrResult.setSuccess(false);
