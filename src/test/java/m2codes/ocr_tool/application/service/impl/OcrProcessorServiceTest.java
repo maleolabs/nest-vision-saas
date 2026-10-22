@@ -8,6 +8,7 @@ import m2codes.ocr_tool.application.util.ExtractedTextCleaner;
 import m2codes.ocr_tool.application.util.ExtractedTextMapper;
 import m2codes.ocr_tool.application.util.TaskManager;
 import m2codes.ocr_tool.domain.model.OcrRequest;
+import m2codes.ocr_tool.domain.model.OcrResult;
 import m2codes.ocr_tool.domain.model.RequestStatus;
 import m2codes.ocr_tool.domain.service.ExtractedTextService;
 import m2codes.ocr_tool.domain.service.OcrRequestService;

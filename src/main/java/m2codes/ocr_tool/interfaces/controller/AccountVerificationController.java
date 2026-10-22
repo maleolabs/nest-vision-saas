@@ -9,6 +9,7 @@ import m2codes.ocr_tool.infrastructure.security.service.AccountVerificationServi
 import m2codes.ocr_tool.infrastructure.security.service.AuthService;
 import m2codes.ocr_tool.infrastructure.security.util.InMemoryRateLimiter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -79,7 +80,7 @@ public class AccountVerificationController {
         if (!rateLimiter.allow(accountKey, verifyAccountMax, verifyAccountWindowMillis)
                 || !rateLimiter.allow("verify:ip:" + servletRequest.getRemoteAddr(), verifyIpMax, verifyIpWindowMillis)) {
             // 429 + halaman verifikasi dengan pesan generik (tanpa detail IP/hitungan)
-            servletResponse.setStatus(HttpServletResponse.SC_TOO_MANY_REQUESTS);
+            servletResponse.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             model.addAttribute("errorMessage", "Terlalu banyak percobaan verifikasi. Silakan coba lagi nanti.");
             return "auth/verification";
         }
@@ -112,7 +113,7 @@ public class AccountVerificationController {
         // VIS-F05: batas resend (kirim ulang kode) per account — service resend tidak diubah
         String resendKey = "verify:resend:" + user.getUsername();
         if (!rateLimiter.allow(resendKey, resendMax, resendWindowMillis)) {
-            servletResponse.setStatus(HttpServletResponse.SC_TOO_MANY_REQUESTS);
+            servletResponse.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
             model.addAttribute("errorMessage", "Terlalu banyak permintaan kode. Silakan coba lagi nanti.");
             return "auth/verification";
         }
