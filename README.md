@@ -82,6 +82,30 @@ source scripts/dev-env.sh
 
 `scripts/dev-env.sh` menyiapkan `JAVA_HOME`, `TESSERACT_DATAPATH`, kredensial DB, dan men-start container MySQL `ocr-tool-mysql` (port 3307) secara otomatis.
 
+### Windows (PowerShell)
+
+Launcher Windows tidak memakai `dev-env.sh`. Jalankan:
+
+```powershell
+.\scripts\run.ps1
+```
+
+Script memilih JAR **terbaru** di `target\` (fallback ke root repo), menyiapkan environment
+dev (DB, Tesseract, OCR bridge), lalu menjalankan `java -jar`. `scripts\run.bat` tersedia
+sebagai alternatif batch dengan perilaku yang sama.
+
+`APP_API_KEY_PEPPER` disiapkan otomatis oleh `scripts\ensure-pepper.ps1` dengan prioritas:
+
+1. environment variable `APP_API_KEY_PEPPER`
+2. `.env` / `.env.local`
+3. file persisten `%USERPROFILE%\.config\ocr-tool\api-key-pepper`
+4. generate 64 hex char baru lalu disimpan ke file tersebut (**sekali saja**)
+
+Nilai di file itu **jangan dihapus/diubah**: hash `api_key` tersimpan bergantung pada pepper
+tersebut, jadi menggantinya membuat key lama tidak bisa diverifikasi (lihat §Konfigurasi).
+Kalau nilai di-set eksplisit tapi kurang dari 32 karakter, script gagal cepat — tidak
+diam-diam fallback ke file, supaya tidak ada dua pepper berbeda.
+
 Jika `ind.traineddata` belum tersedia:
 
 ```bash
