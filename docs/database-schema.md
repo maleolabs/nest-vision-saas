@@ -7,7 +7,7 @@
 |---|---|
 | Project | ocr-tool (nestara-vision-saas) |
 | Database | MySQL / MariaDB (`jdbc:mysql://.../ocr_tool`) |
-| Schema management | Flyway migrations (`V2__api_key_name.sql` sampai `V5__align_api_key_hash_schema.sql`) dengan baseline version 1; Hibernate `ddl-auto=update` masih aktif |
+| Schema management | Flyway migrations (`V1__baseline_schema.sql` sampai `V5__align_api_key_hash_schema.sql`) dengan baseline version 1; default `ddl-auto=validate` |
 
 ## API key pepper dan migrasi legacy
 
@@ -21,6 +21,19 @@ setelah memastikan kolom belum ada, lalu jalankan migrate ulang. Sebelum rotasi
 pepper, migrasikan/reissue atau revoke seluruh key legacy dan verifikasi client memakai key baru.
 Pertahankan pepper lama sampai proses selesai; rotasi tanpa dual-read/migrasi terencana membuat
 key tersimpan tidak dapat diverifikasi.
+
+`V1__baseline_schema.sql` adalah schema **legacy** (sebelum V2..V5) untuk instalasi baru:
+
+| Kondisi database saat start | Perilaku Flyway |
+|---|---|
+| Kosong | V1 dijalankan, lalu V2..V5 (instalasi baru jalan tanpa langkah manual) |
+| Sudah berisi schema legacy, belum ada `flyway_schema_history` | dibaseline di versi 1 (V1 dilewati), lalu V2..V5 |
+| Sudah punya `flyway_schema_history` (deployment existing) | V1 dianggap di bawah baseline dan diabaikan; `validate` tetap lolos |
+
+Konsekuensinya `docker compose up` pada volume database baru tidak perlu lagi membuat schema manual.
+Kalau entity berubah, tambahkan migration baru — jangan mengedit `V1`, karena file itu sudah
+diterapkan di instalasi baru.
+
 | Tabel | 10 tabel |
 | Tipe PK | `UUID` (logical) + `BIGINT AUTO_INCREMENT` (teknis/log) |
 | Relasi | 4 relasi JPA (FK constraint) + 4 relasi logis (string `client_id`, tanpa FK constraint) |
@@ -435,7 +448,7 @@ Tidak ada `@Index` eksplisit di entity. Index hanya berasal dari PK dan UNIQUE c
 
 Temuan saat ekstraksi, relevan kalau schema mau dirapikan:
 
-1. **Migration memakai Flyway dengan baseline version 1.** Migration hanya menambah kolom yang sudah dideklarasikan entity; deployment harus memakai schema aktual yang sudah dibaseline. API key baru disimpan hash-only melalui `api_keys.key_hash`; token plaintext lama tidak kompatibel dengan flow baru dan perlu rotasi.
+1. **Migration memakai Flyway dengan baseline version 1.** `V1__baseline_schema.sql` menyediakan schema legacy untuk database kosong; V2..V5 adalah delta di atasnya. Database existing yang sudah punya `flyway_schema_history` melewati V1 (di bawah baseline). API key baru disimpan hash-only melalui `api_keys.key_hash`; token plaintext lama tidak kompatibel dengan flow baru dan perlu rotasi.
 2. **Relasi logis tanpa FK** (`client_id` string). Integritas data bergantung kode aplikasi. Kalau `clients.client_id` berubah (regenerate), baris historis jadi orphan. Opsi: ganti jadi `clients.id` BIGINT FK, atau tambah FK ke `clients(client_id)`.
 3. **Index hilang di tabel log.** `api_request_logs` dan `request_usages` dipakai untuk reporting agregat; minimal butuh composite index (`client_id`, `request_time`) dan (`client_id`, `request_date`).
 4. **`request_usages.request_date` bertipe `DATE` tapi field `Instant`** dan selalu ditimpa `Instant.now()` di `@PrePersist` — tidak bisa menyimpan tanggal historis hasil backfill, dan perbandingan `findByClientIdAndRequestDate(Instant)` rawan mismatch presisi. Bersihkan ke `LocalDate`.
