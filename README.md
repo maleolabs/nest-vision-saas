@@ -199,6 +199,24 @@ API key tersimpan. Sebelum rotasi, lakukan migrasi legacy key ke format hash `V3
 dan reissue/revoke key yang belum bermigrasi. Simpan backup pepper lama sampai seluruh key legacy
 sudah diganti dan validasi akses selesai; perubahan tanpa prosedur ini dapat memutus semua client.
 
+### Keystore (AES key untuk API key tersimpan)
+
+`keystore.jks` di root repo adalah **dev keystore** (JCEKS, alias `ocr`, password `changeit`) yang
+di-commit supaya `docker build` dan compose dev langsung jalan. Karena password-nya publik, file itu
+tidak memberi kerahasiaan apa pun — jangan dipakai di produksi.
+
+Produksi: generate keystore sendiri dan mount menimpa path image (`/app/keystore.jks`), lalu set
+`KEYSTORE_PASSWORD` / `KEYSTORE_ALIAS` sesuai isi keystore tersebut.
+
+```bash
+keytool -genseckey -alias ocr -keyalg AES -keysize 256 -storetype JCEKS \
+  -keystore secrets/keystore.jks -storepass "$(cat secrets/keystore.pass)"
+```
+
+Keystore ini **harus stabil antar-deploy**: kalau diganti, API key yang sudah tersimpan tidak bisa
+didekripsi lagi, jadi perlakukan seperti pepper (backup + rotasi terencana).
+
+
 ### Tuning OCR
 
 | Key | Default | Keterangan |

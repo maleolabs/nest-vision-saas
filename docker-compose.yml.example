@@ -86,4 +86,10 @@ services:
       - SPRING_MAIL_PASSWORD=${SPRING_MAIL_PASSWORD}
       - SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH=true
       - SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true
+
+    # Produksi: jangan pakai keystore dev yang ter-commit di repo (password-nya
+    # publik). Generate keystore sendiri lalu mount menimpa path image.
+    # Lihat README §Konfigurasi -> Keystore.
+    # volumes:
+    #   - ./secrets/keystore.jks:/app/keystore.jks:ro
     restart: unless-stopped
