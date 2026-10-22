@@ -52,6 +52,10 @@ $Config = @{
     OCR_LLM_MODEL           = "gpt-4o-mini"
     KEYSTORE_PASSWORD       = "changeit"
     KEYSTORE_ALIAS          = "ocr"
+    # API key pepper (HMAC untuk api_key hash). Kosong = auto-load/generate.
+    # Nilai HARUS stabil antar-restart: kalau berubah, API key tersimpan tidak
+    # bisa diverifikasi lagi (client harus rotate/reissue).
+    APP_API_KEY_PEPPER      = ""
     SPRING_MAIL_HOST        = "smtp.gmail.com"
     SPRING_MAIL_PORT        = "587"
     SPRING_MAIL_USERNAME    = "dev@example.com"
@@ -77,6 +81,28 @@ if (Test-Path $envFile) {
 }
 
 $Host.UI.RawUI.WindowTitle = "OCR Tool - Spring Boot"
+
+# --- API key pepper (WAJIB, harus stabil antar-restart) ---
+# Resolusi nilai dipusatkan di scripts/ensure-pepper.ps1 (dipakai juga oleh
+# run.bat): env var > .env/.env.local > %USERPROFILE%\.config\ocr-tool\api-key-pepper.
+# JANGAN ganti nilai tanpa prosedur rotasi: api_key tersimpan di-hash dengan pepper ini.
+$pepper = $env:APP_API_KEY_PEPPER
+if (-not $pepper -and $Config.ContainsKey("APP_API_KEY_PEPPER")) { $pepper = $Config["APP_API_KEY_PEPPER"] }
+if (-not $pepper) {
+    $ensurePepper = Join-Path $PSScriptRoot "ensure-pepper.ps1"
+    if (Test-Path $ensurePepper) {
+        $pepper = (& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $ensurePepper | Select-Object -Last 1)
+        if ($pepper) { $pepper = $pepper.Trim() }
+    }
+}
+if (-not $pepper -or $pepper.Length -lt 32) {
+    Write-Host "  [ERROR] APP_API_KEY_PEPPER minimal 32 karakter (sekarang $(if ($pepper) { $pepper.Length } else { 0 }))." -ForegroundColor Red
+    Write-Host "          Set di environment, .env, atau .env.local. Contoh generate:" -ForegroundColor Red
+    Write-Host '          $env:APP_API_KEY_PEPPER = -join ([guid]::NewGuid().ToString("N") + [guid]::NewGuid().ToString("N"))' -ForegroundColor DarkGray
+    Read-Host "  Tekan Enter untuk exit"
+    exit 1
+}
+$Config["APP_API_KEY_PEPPER"] = $pepper
 
 Write-Host ""
 Write-Host "  ========================================" -ForegroundColor Green
@@ -106,9 +132,10 @@ Write-Host ""
 
 # --- Cari JAR ---
 if (-not $JarPath) {
-    $jar = Get-ChildItem -Path (Join-Path $PSScriptRoot "..\target\*.jar") -ErrorAction SilentlyContinue | Select-Object -First 1
-    if (-not $jar) { $jar = Get-ChildItem -Path ".\*.jar" -ErrorAction SilentlyContinue | Select-Object -First 1 }
-    if (-not $jar) { $jar = Get-ChildItem -Path (Join-Path $PSScriptRoot "..\*.jar") -ErrorAction SilentlyContinue | Select-Object -First 1 }
+    # Ambil JAR TERBARU (jangan asal satu) supaya release lama di target tidak kepakai.
+    $jar = Get-ChildItem -Path (Join-Path $PSScriptRoot "..\target\*.jar") -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    if (-not $jar) { $jar = Get-ChildItem -Path ".\*.jar" -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1 }
+    if (-not $jar) { $jar = Get-ChildItem -Path (Join-Path $PSScriptRoot "..\*.jar") -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1 }
     if ($jar) { $JarPath = $jar.FullName }
 }
 if (-not $JarPath -or -not (Test-Path $JarPath)) {
@@ -120,6 +147,7 @@ if (-not $JarPath -or -not (Test-Path $JarPath)) {
 }
 Write-Host "  [OK] JAR: $JarPath" -ForegroundColor Green
 Write-Host "  [OK] DB: $($Config.SPRING_DATASOURCE_URL) ($($Config.SPRING_DATASOURCE_USERNAME))" -ForegroundColor Green
+Write-Host "  [OK] PEPPER: $($Config.APP_API_KEY_PEPPER.Substring(0,6))... (len=$($Config.APP_API_KEY_PEPPER.Length))" -ForegroundColor Green
 Write-Host "  [OK] TESSERACT: $($Config.TESSERACT_DATAPATH)" -ForegroundColor Green
 if ($Config.TESSERACT_CMD) { Write-Host "  [OK] TESSERACT_CMD: $($Config.TESSERACT_CMD)" -ForegroundColor Green }
 Write-Host "  [OK] OCR preprocess: $($Config.OCR_PREPROCESSING_ENABLED) | ensemble: $($Config.OCR_ENSEMBLE_FALLBACK) | perspective: $($Config.OCR_PERSPECTIVE_ENABLED) | OSD: $($Config.OCR_OSD_ENABLED)" -ForegroundColor Green

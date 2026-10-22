@@ -98,6 +98,28 @@ if exist ".env" (
     )
 )
 
+REM --- API key pepper (WAJIB, harus stabil antar-restart) ---
+REM Resolusi dipusatkan di scripts\ensure-pepper.ps1 (dipakai juga oleh run.ps1):
+REM env var > .env/.env.local > %USERPROFILE%\.config\ocr-tool\api-key-pepper.
+REM JANGAN ganti nilai tanpa prosedur rotasi: api_key tersimpan di-hash dengan pepper ini.
+if not defined APP_API_KEY_PEPPER if exist ".env.local" (
+    for /f "usebackq eol=# tokens=1,* delims==" %%a in (".env.local") do (
+        if /i "%%a"=="APP_API_KEY_PEPPER" set "APP_API_KEY_PEPPER=%%b"
+    )
+)
+if not defined APP_API_KEY_PEPPER (
+    for /f "usebackq delims=" %%p in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0ensure-pepper.ps1"`) do set "APP_API_KEY_PEPPER=%%p"
+)
+set "_PEPPER_CHECK=!APP_API_KEY_PEPPER!"
+if "!_PEPPER_CHECK:~31!"=="" (
+    echo  [ERROR] APP_API_KEY_PEPPER minimal 32 karakter.
+    echo          Set manual di environment atau .env.local, atau periksa pesan error di atas.
+    echo.
+    pause
+    exit /b 1
+)
+set "_PEPPER_CHECK="
+
 title OCR Tool - Spring Boot
 
 echo.
@@ -129,15 +151,21 @@ if exist "%JAVA_HOME%\bin\java.exe" (
 )
 echo.
 
-REM --- Cari JAR ---
+REM --- Cari JAR (terbaru dulu, supaya release lama di target tidak kepakai) ---
 set "JAR="
-for %%f in ("target\*.jar") do set "JAR=%%f"
-if not defined JAR (
-    for %%f in (".\*.jar") do set "JAR=%%f"
+for /f "delims=" %%f in ('dir /b /a-d /o-d "target\*.jar" 2^>nul') do (
+    set "JAR=target\%%f"
+    goto :jar_found
 )
-if not defined JAR (
-    for %%f in ("%~dp0..\target\*.jar") do set "JAR=%%f"
+for /f "delims=" %%f in ('dir /b /a-d /o-d "*.jar" 2^>nul') do (
+    set "JAR=%%f"
+    goto :jar_found
 )
+for /f "delims=" %%f in ('dir /b /a-d /o-d "%~dp0..\target\*.jar" 2^>nul') do (
+    set "JAR=%~dp0..\target\%%f"
+    goto :jar_found
+)
+:jar_found
 if not defined JAR (
     echo  [ERROR] File *.jar tidak ditemukan!
     echo          Jalankan dulu: mvnw.cmd clean package -DskipTests
