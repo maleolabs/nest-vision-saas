@@ -18,10 +18,11 @@ HELP.md
 *.p12
 *.pfx
 
-### JVM crash / heap dump ###
+### JVM crash / heap dump / runtime log ###
 hs_err_pid*.log
 replay_pid*.log
 *.hprof
+*.log
 
 /uploads/
 
