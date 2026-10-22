@@ -1,9 +1,27 @@
 HELP.md
 
 ### Environment ###
-/src/main/resources/*.properties
+# Default config WAJIB di-track (application.properties bukan secret).
+# Yang di-ignore hanya override lokal yang biasanya berisi kredensial.
+/src/main/resources/application-local.properties
+/src/main/resources/application-local.yml
+/src/main/resources/application-*.local.properties
 .env
 .env.local
+
+### Secret material ###
+# Jangan commit keystore produksi. keystore.jks di root adalah dev keystore
+# (password publik, dipakai Dockerfile + compose dev) dan tetap di-track;
+# deployment produksi harus mount keystore sendiri, lihat README §Konfigurasi.
+*.jks
+!/keystore.jks
+*.p12
+*.pfx
+
+### JVM crash / heap dump ###
+hs_err_pid*.log
+replay_pid*.log
+*.hprof
 
 /uploads/
 
