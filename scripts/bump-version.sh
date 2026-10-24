@@ -87,7 +87,18 @@ awk -v v="$NEXT" '
 ' pom.xml > pom.xml.new
 
 # sanity: parent version untouched, project version bumped
-grep -q "<version>3.3.3</version>" pom.xml.new || die "pom parent version corrupted, aborting"
+PARENT_VERSION="$(awk '
+    /<parent>/ { in_parent=1; next }
+    /<\/parent>/ { in_parent=0 }
+    in_parent && /<version>[^<]*<\/version>/ {
+        match($0, /<version>[^<]*<\/version>/)
+        value=substr($0, RSTART + 9, RLENGTH - 18)
+        print value
+        exit
+    }
+' pom.xml)"
+[ -n "$PARENT_VERSION" ] || die "pom parent version could not be detected"
+grep -q "<version>${PARENT_VERSION}</version>" pom.xml.new || die "pom parent version corrupted, aborting"
 grep -q "<version>${NEXT}</version>" pom.xml.new || die "pom project version not updated, aborting"
 mv pom.xml.new pom.xml
 
