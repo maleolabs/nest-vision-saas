@@ -92,7 +92,7 @@ PARENT_VERSION="$(awk '
     /<\/parent>/ { in_parent=0 }
     in_parent && /<version>[^<]*<\/version>/ {
         match($0, /<version>[^<]*<\/version>/)
-        value=substr($0, RSTART + 9, RLENGTH - 18)
+        value=substr($0, RSTART + 9, RLENGTH - 19)
         print value
         exit
     }
