@@ -67,7 +67,7 @@ Gambar input
 
 ## Quick Start (Development)
 
-Prasyarat: JDK 17, Docker (MySQL), Tesseract binary + tessdata.
+Prasyarat: JDK 25, Docker (MySQL), Tesseract binary + tessdata.
 
 ```bash
 # 1. Environment + MySQL container (idempotent)
@@ -81,6 +81,18 @@ source scripts/dev-env.sh
 ```
 
 `scripts/dev-env.sh` menyiapkan `JAVA_HOME`, `TESSERACT_DATAPATH`, kredensial DB, dan men-start container MySQL `ocr-tool-mysql` (port 3307) secara otomatis.
+
+### Test integration
+
+Test memakai datasource terpisah. Default: `ocr_tool_test` di `127.0.0.1:3306`.
+Pastikan database kosong/disposable, lalu jalankan:
+
+```bash
+TEST_DATASOURCE_URL='jdbc:mysql://127.0.0.1:3306/ocr_tool_test?createDatabaseIfNotExist=true' \
+TEST_DATASOURCE_USERNAME=ocr TEST_DATASOURCE_PASSWORD=ocr ./mvnw -B verify
+```
+
+Override `TEST_DATASOURCE_URL`, `TEST_DATASOURCE_USERNAME`, `TEST_DATASOURCE_PASSWORD` untuk CI atau container test. Jangan arahkan test ke datasource development/production.
 
 ### Windows (PowerShell)
 
@@ -172,7 +184,7 @@ docker compose logs -f
 
 ### Opsi 3 — Jar manual
 
-Butuh JDK 17, Python 3 + `opencv-python-headless pytesseract numpy`, Tesseract binary.
+Butuh JDK 25, Python 3 + `opencv-python-headless pytesseract numpy`, Tesseract binary.
 
 ```bash
 java -jar ocr-tool-*.jar    # konfigurasi via env var / .env

@@ -1,7 +1,7 @@
 # ---- Build stage ----
-# maven:3.9-eclipse-temurin-17 (Debian bookworm, maintained) replaces deprecated
-# openjdk:17-slim + apt maven. Tesseract NOT needed here (runtime-only dependency).
-FROM maven:3.9-eclipse-temurin-17 AS builder
+# maven:3.9-eclipse-temurin-25 (Debian bookworm, maintained) replaces deprecated
+# openjdk:25-slim + apt maven. Tesseract NOT needed here (runtime-only dependency).
+FROM maven:3.9-eclipse-temurin-25 AS builder
 
 WORKDIR /app
 
@@ -14,12 +14,12 @@ COPY src ./src
 RUN ./mvnw -B clean package -DskipTests
 
 # ---- Runtime stage ----
-# eclipse-temurin:17-jre-noble = Ubuntu 24.04. Deliberate choice: Ubuntu 24.04 ships
+# eclipse-temurin:25-jre-noble = Ubuntu 24.04. Deliberate choice: Ubuntu 24.04 ships
 # tesseract 5.x whose traineddata lives at /usr/share/tesseract-ocr/5/tessdata/ —
-# this MATCHES TESSERACT_DATAPATH in docker-compose.yml (bullseye/openjdk:17-slim
+# this MATCHES TESSERACT_DATAPATH in docker-compose.yml (bullseye/openjdk:25-slim
 # would give tesseract 4.x at .../4.00/tessdata and break the native tess4j engine).
 # NOTE: Temurin publishes no Debian bookworm variant; noble is the closest match.
-FROM eclipse-temurin:17-jre-noble
+FROM eclipse-temurin:25-jre-noble
 
 WORKDIR /app
 
@@ -48,9 +48,7 @@ COPY --from=builder /app/target/*.jar app.jar
 # Python OCR bridge scripts (OCR_SCRIPT_PATH=/app/opt/app/ocr/tesseract_ocr.py)
 COPY opt /app/opt
 
-# Dev keystore: AES secret for API-key encrypt/decrypt must be stable across
-# container rebuilds or previously issued api_keys become undecryptable.
-COPY keystore.jks /app/keystore.jks
+# Keystore is mounted/provisioned at runtime. Never bake secrets into image.
 
 EXPOSE 8080
 

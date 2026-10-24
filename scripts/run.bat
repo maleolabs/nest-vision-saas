@@ -10,7 +10,7 @@ REM ============================================================
 REM CONFIG — edit sesuai kebutuhan (user friendly)
 REM Kosongkan (=) untuk pakai default dari application.properties
 REM ============================================================
-set "JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-17.0.20.8-hotspot"
+set "JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-25.0.0.0-hotspot"
 REM Jika JAVA_HOME di atas tidak ada, script akan coba cari java di PATH
 
 set "SPRING_DATASOURCE_URL=jdbc:mysql://127.0.0.1:3306/ocr_tool?createDatabaseIfNotExist=true"
@@ -142,7 +142,7 @@ if exist "%JAVA_HOME%\bin\java.exe" (
         java -version 2>&1 | findstr /i "version"
     ) else (
         echo  [ERROR] Java tidak ditemukan!
-        echo          Install JDK 17: https://adoptium.net/temurin/releases/?version=17
+        echo          Install JDK 25: https://adoptium.net/temurin/releases/?version=25
         echo          Atau set JAVA_HOME di bagian CONFIG atas file ini.
         echo.
         pause

@@ -13,7 +13,8 @@ import java.security.KeyStore;
 @Component
 public class KeyStoreUtil {
 
-    private static final String KEYSTORE_FILE = "keystore.jks";
+    @Value("${keystore.path:/run/secrets/keystore.jks}")
+    private String keyStoreFile;
 
     @Value("${keystore.password}")
     private String keyStorePassword;
@@ -30,14 +31,14 @@ public class KeyStoreUtil {
 
         keyStore.setEntry(keyStoreAlias, secretKeyEntry, passwordParam);
 
-        try (FileOutputStream fos = new FileOutputStream(KEYSTORE_FILE)) {
+        try (FileOutputStream fos = new FileOutputStream(keyStoreFile)) {
             keyStore.store(fos, keyStorePassword.toCharArray());
         }
     }
 
     public SecretKey getSecretKey() throws Exception {
         KeyStore keyStore = KeyStore.getInstance("JCEKS");
-        try (FileInputStream fis = new FileInputStream(KEYSTORE_FILE)) {
+        try (FileInputStream fis = new FileInputStream(keyStoreFile)) {
             keyStore.load(fis, keyStorePassword.toCharArray());
         }
 

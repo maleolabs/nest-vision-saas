@@ -48,6 +48,15 @@ public class OcrRequest {
     @Column(name = "client_id")
     private String clientId;
 
+    @Column(name = "identity_document_type")
+    private String identityDocumentType;
+
+    @Column(name = "identity_decision")
+    private String identityDecision;
+
+    @Column(name = "identity_reason_code")
+    private String identityReasonCode;
+
     @PrePersist
     protected void onCreate() {
         requestedAt = Instant.now();

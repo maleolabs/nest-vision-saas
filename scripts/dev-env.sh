@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # dev-env.sh — setup development environment for ocr-tool
 # Usage: source scripts/dev-env.sh  (must be sourced, not executed)
-set -euo pipefail
+set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
@@ -29,12 +29,14 @@ fi
 export APP_API_KEY_PEPPER="$_pepper"
 unset _pepper _pepper_file
 
-# --- JDK 17 ---
-if [ -d "$HOME/.local/opt/jdk-17" ] && [ -f "$HOME/.local/opt/jdk-17/bin/java" ]; then
-    export JAVA_HOME="$HOME/.local/opt/jdk-17"
-elif [ -d "/opt/phpstorm/jbr" ] && [ -f "/opt/phpstorm/jbr/bin/java" ]; then
-    export JAVA_HOME="/opt/phpstorm/jbr"
-    echo "NOTE: Using JBR 21 at /opt/phpstorm/jbr (Temurin 17 not found at ~/.local/opt/jdk-17)" >&2
+# --- JDK 25 ---
+if [ -d "$HOME/.local/opt/jdk-25" ] && [ -f "$HOME/.local/opt/jdk-25/bin/java" ]; then
+    export JAVA_HOME="$HOME/.local/opt/jdk-25"
+elif [ -d "/usr/lib/jvm/java-25-openjdk" ] && [ -f "/usr/lib/jvm/java-25-openjdk/bin/java" ]; then
+    export JAVA_HOME="/usr/lib/jvm/java-25-openjdk"
+else
+    echo "ERROR: Java 25 not found at ~/.local/opt/jdk-25 or /usr/lib/jvm/java-25-openjdk" >&2
+    return 1 2>/dev/null || exit 1
 fi
 export PATH="$JAVA_HOME/bin:$PATH"
 

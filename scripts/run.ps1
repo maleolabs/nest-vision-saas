@@ -14,7 +14,7 @@ param(
 # CONFIG — edit sesuai kebutuhan (user friendly)
 # ============================================================
 $Config = @{
-    JAVA_HOME               = "C:\Program Files\Eclipse Adoptium\jdk-17.0.20.8-hotspot"
+    JAVA_HOME               = "C:\Program Files\Eclipse Adoptium\jdk-25.0.0.0-hotspot"
     SPRING_DATASOURCE_URL   = "jdbc:mysql://127.0.0.1:3306/ocr_tool?createDatabaseIfNotExist=true"
     SPRING_DATASOURCE_USERNAME = "ocr"
     SPRING_DATASOURCE_PASSWORD = "ocr"
@@ -123,7 +123,7 @@ if ($Config.JAVA_HOME -and (Test-Path "$($Config.JAVA_HOME)\bin\java.exe")) {
     java -version 2>&1 | Select-String "version" | ForEach-Object { Write-Host "       $_" -ForegroundColor DarkGray }
 } else {
     Write-Host "  [ERROR] Java tidak ditemukan!" -ForegroundColor Red
-    Write-Host "          Install JDK 17: https://adoptium.net/temurin/releases/?version=17" -ForegroundColor Red
+    Write-Host "          Install JDK 25: https://adoptium.net/temurin/releases/?version=25" -ForegroundColor Red
     Write-Host "          Atau edit JAVA_HOME di bagian CONFIG atas file ini." -ForegroundColor Red
     Read-Host "  Tekan Enter untuk exit"
     exit 1

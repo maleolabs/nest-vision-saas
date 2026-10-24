@@ -5,12 +5,12 @@ pipeline:
       tasks:
         - name: mvn-deps
           command: bash
-          args: ["-c", 'export JAVA_HOME="$HOME/.local/opt/jdk-17"; [ -d "$JAVA_HOME" ] || export JAVA_HOME="/opt/phpstorm/jbr"; export PATH="$JAVA_HOME/bin:$PATH"; exec ./mvnw -q dependency:go-offline']
+          args: ["-c", 'export JAVA_HOME="$HOME/.local/opt/jdk-25"; [ -d "$JAVA_HOME" ] || export JAVA_HOME="/opt/phpstorm/jbr"; export PATH="$JAVA_HOME/bin:$PATH"; exec ./mvnw -q dependency:go-offline']
     - name: build
       tasks:
         - name: package
           command: bash
-          args: ["-c", 'export JAVA_HOME="$HOME/.local/opt/jdk-17"; [ -d "$JAVA_HOME" ] || export JAVA_HOME="/opt/phpstorm/jbr"; export PATH="$JAVA_HOME/bin:$PATH"; exec ./mvnw clean package -DskipTests']
+          args: ["-c", 'export JAVA_HOME="$HOME/.local/opt/jdk-25"; [ -d "$JAVA_HOME" ] || export JAVA_HOME="/opt/phpstorm/jbr"; export PATH="$JAVA_HOME/bin:$PATH"; exec ./mvnw clean package -DskipTests']
     - name: artifact
       tasks:
         - name: copy-jar

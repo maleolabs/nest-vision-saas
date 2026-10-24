@@ -17,4 +17,6 @@ public interface OcrRequestRepository extends  JpaRepository<OcrRequest, UUID> {
 
     boolean existsByImageUrlAndClientId(String imageUrl, String clientId);
 
+    Optional<OcrRequest> findByIdAndClientId(UUID id, String clientId);
+
 }

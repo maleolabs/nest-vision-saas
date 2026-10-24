@@ -5,7 +5,7 @@ pipeline:
       tasks:
         - name: verify
           command: bash
-          args: ["-c", 'export JAVA_HOME="$HOME/.local/opt/jdk-17"; [ -d "$JAVA_HOME" ] || export JAVA_HOME="/opt/phpstorm/jbr"; export PATH="$JAVA_HOME/bin:$PATH"; exec ./mvnw verify']
+          args: ["-c", 'export JAVA_HOME="$HOME/.local/opt/jdk-25"; [ -d "$JAVA_HOME" ] || export JAVA_HOME="/opt/phpstorm/jbr"; export PATH="$JAVA_HOME/bin:$PATH"; exec ./mvnw verify']
           env:
             SPRING_DATASOURCE_URL: "jdbc:mysql://127.0.0.1:3307/ocr_tool?createDatabaseIfNotExist=true"
             SPRING_DATASOURCE_USERNAME: "ocr"
