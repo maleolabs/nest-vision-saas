@@ -80,6 +80,10 @@ public class DashboardController {
     }
     @PostMapping("/api/keys/{id}/revoke") @ResponseBody
     public ResponseEntity<Void> revokeApiKey(@PathVariable Long id) { apiKeyService.revokeForClient(id, authService.getCurrentUser().getClient().getClientId()); return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build(); }
+    @DeleteMapping("/api/keys/{id}") @ResponseBody
+    public ResponseEntity<Void> deleteApiKey(@PathVariable Long id) { apiKeyService.deleteForClient(id, authService.getCurrentUser().getClient().getClientId()); return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build(); }
+    @DeleteMapping("/api/keys/{id}") @ResponseBody
+    public ResponseEntity<Void> deleteApiKey(@PathVariable Long id) { apiKeyService.deleteForClient(id, authService.getCurrentUser().getClient().getClientId()); return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build(); }
     private <T> ResponseEntity<T> noStore(T body) { return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(body); }
 
     @GetMapping(path = "/logs")

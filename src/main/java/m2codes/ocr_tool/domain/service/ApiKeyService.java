@@ -21,6 +21,8 @@ public interface ApiKeyService {
     String clientId(String apiKey);
     List<ApiKeyResponse> list(String clientId);
     void revokeForClient(Long id, String clientId);
+    void deleteForClient(Long id, String clientId);
+    void deleteForClient(Long id, String clientId);
     ApiKeyResponse rotateForClient(Long id, String clientId);
 
 }

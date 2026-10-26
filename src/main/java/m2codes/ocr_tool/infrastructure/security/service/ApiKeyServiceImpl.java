@@ -56,7 +56,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
         revoke(apiKey);
     }
 
-    /** Rotation creates another active key; old key remains valid until revoke or expiry. */
+    /** Rotation creates replacement, then revokes and removes old key in same transaction. */
     @Override
     @Transactional
     public String rotate(String clientId) { return create(clientId, "Rotated API key"); }
@@ -75,8 +75,10 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                 .orElseThrow(() -> new EntityNotFoundException("API key not found"));
         String secret = apiKeyGenerator.generate();
         Instant expiresAt = Instant.now().plus(apiKeyLifetimeInDays, ChronoUnit.DAYS);
-        // Overlap policy: old key stays active until explicit revoke or expiry.
         ApiKey key = save(clientId, oldKey.getName(), secret, expiresAt);
+        oldKey.setIsActive(false);
+        apiKeyRepository.save(oldKey);
+        apiKeyRepository.delete(oldKey);
         return response(key, secret);
     }
     @Override public void revoke(String apiKey) { lookup(apiKey).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
@@ -92,12 +94,24 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                 .toList();
     }
     @Override public void revokeForClient(Long id, String clientId) { apiKeyRepository.findById(id).filter(k -> clientId.equals(k.getClientId())).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
+    @Override public void deleteForClient(Long id, String clientId) { apiKeyRepository.findById(id).filter(k -> clientId.equals(k.getClientId()) && !isUsable(k)).ifPresent(apiKeyRepository::delete); }
+    @Override @Transactional public void deleteForClient(Long id, String clientId) {
+        ApiKey key = apiKeyRepository.findByIdAndClientId(id, clientId)
+                .orElseThrow(() -> new EntityNotFoundException("API key not found"));
+        if (Boolean.TRUE.equals(key.getIsActive())) {
+            throw new IllegalStateException("Only revoked API keys can be deleted");
+        }
+        apiKeyRepository.delete(key);
+    }
     @Override @Transactional public ApiKeyResponse rotateForClient(Long id, String clientId) {
         ApiKey source = apiKeyRepository.findById(id).filter(k -> clientId.equals(k.getClientId()) && isUsable(k))
                 .orElseThrow(() -> new IllegalArgumentException("API key tidak ditemukan atau tidak aktif"));
         String secret = apiKeyGenerator.generate();
         Instant expiresAt = Instant.now().plus(apiKeyLifetimeInDays, ChronoUnit.DAYS);
         ApiKey key = save(clientId, source.getName(), secret, expiresAt);
+        source.setIsActive(false);
+        apiKeyRepository.save(source);
+        apiKeyRepository.delete(source);
         return response(key, secret);
     }
 
