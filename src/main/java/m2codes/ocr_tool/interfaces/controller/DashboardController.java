@@ -73,7 +73,7 @@ public class DashboardController {
          return noStore(apiKeyService.createResponse(authService.getCurrentUser().getClient().getClientId(), request.name()));
     }
     @PostMapping("/api/keys/rotate") @ResponseBody
-    public ResponseEntity<?> rotateApiKey() { return noStore(new ApiKeyResponse(null, "Rotated API key", true, null, null, apiKeyService.rotate(authService.getCurrentUser().getClient().getClientId()))); }
+     public ResponseEntity<?> rotateApiKey() { return noStore(apiKeyService.rotateResponse(authService.getCurrentUser().getClient().getClientId())); }
     @PostMapping("/api/keys/{id}/revoke") @ResponseBody
     public ResponseEntity<Void> revokeApiKey(@PathVariable Long id) { apiKeyService.revokeForClient(id, authService.getCurrentUser().getClient().getClientId()); return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build(); }
     private <T> ResponseEntity<T> noStore(T body) { return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(body); }

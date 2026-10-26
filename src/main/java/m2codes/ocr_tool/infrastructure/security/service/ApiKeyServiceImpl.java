@@ -60,21 +60,29 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     @Override
     @Transactional
     public String rotate(String clientId) { return create(clientId, "Rotated API key"); }
+    @Override
+    @Transactional
+    public ApiKeyResponse rotateResponse(String clientId) {
+        String secret = apiKeyGenerator.generate();
+        Instant expiresAt = Instant.now().plus(apiKeyLifetimeInDays, ChronoUnit.DAYS);
+        ApiKey key = save(clientId, "Rotated API key", secret, expiresAt);
+        return response(key, secret);
+    }
     @Override public void revoke(String apiKey) { lookup(apiKey).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
     @Override public String clientId(String apiKey) { return lookup(apiKey).filter(this::isUsable).map(ApiKey::getClientId).orElse(null); }
-    @Override public List<ApiKeyResponse> list(String clientId) { return apiKeyRepository.findAllByClientIdOrderByCreatedAtDesc(clientId).stream().map(k -> new ApiKeyResponse(k.getId(), k.getName(), isUsable(k), k.getCreatedAt(), k.getExpiresAt(), null)).toList(); }
+    @Override @Transactional public List<ApiKeyResponse> list(String clientId) { return apiKeyRepository.findAllByClientIdOrderByCreatedAtDesc(clientId).stream().map(k -> { migrateLegacy(k); return response(k, isUsable(k) ? secret(k) : null); }).toList(); }
     @Override public void revokeForClient(Long id, String clientId) { apiKeyRepository.findById(id).filter(k -> clientId.equals(k.getClientId())).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
 
-    private void save(String clientId, String name, String apiKey, Instant expiresAt) {
+    private ApiKey save(String clientId, String name, String apiKey, Instant expiresAt) {
         var encrypted = apiKeyEncryption.encrypt(apiKey);
-        apiKeyRepository.save(
+        return apiKeyRepository.save(
                 ApiKey.builder()
                     .clientId(clientId)
                     .name(name)
                     .apiKey(null)
                     .keyHash(apiKeyGenerator.hash(apiKey))
                     .secretNonce(encrypted.nonce())
-                    .secretCiphertext(encrypted.ciphertext())
+                    .secretCiphertext(encrypted.ciphertext()).secretKeyVersion(encrypted.keyVersion())
                     .expiresAt(expiresAt)
                     .isActive(true)
                     .build()
@@ -85,6 +93,8 @@ public class ApiKeyServiceImpl implements ApiKeyService {
         if (key.getSecretNonce() != null && key.getSecretCiphertext() != null) return apiKeyEncryption.decrypt(key.getSecretNonce(), key.getSecretCiphertext());
         return key.getApiKey();
     }
+    private ApiKeyResponse response(ApiKey k, String secret) { return new ApiKeyResponse(k.getId(), k.getName(), isUsable(k), k.getCreatedAt(), k.getExpiresAt(), secret); }
+    private void migrateLegacy(ApiKey key) { if (key.getApiKey() != null) { var e = apiKeyEncryption.encrypt(key.getApiKey()); key.setKeyHash(apiKeyGenerator.hash(key.getApiKey())); key.setApiKey(null); key.setSecretNonce(e.nonce()); key.setSecretCiphertext(e.ciphertext()); key.setSecretKeyVersion(e.keyVersion()); apiKeyRepository.save(key); } }
 
     private boolean isUsable(ApiKey key) {
         return Boolean.TRUE.equals(key.getIsActive())

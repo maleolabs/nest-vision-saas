@@ -30,6 +30,7 @@ public class ApiKey {
     private String keyHash;
     @Column(name = "secret_nonce", length = 24) private String secretNonce;
     @Column(name = "secret_ciphertext", columnDefinition = "TEXT") private String secretCiphertext;
+    @Column(name = "secret_key_version") private Integer secretKeyVersion;
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;

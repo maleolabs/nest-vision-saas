@@ -13,6 +13,7 @@ public interface ApiKeyService {
     void delete(String apiKey);
 
     String rotate(String clientId);
+    ApiKeyResponse rotateResponse(String clientId);
 
     void revoke(String apiKey);
 
