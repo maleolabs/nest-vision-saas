@@ -114,6 +114,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
             var encrypted = apiKeyEncryption.encrypt(token);
             legacy.setSecretNonce(encrypted.nonce());
             legacy.setSecretCiphertext(encrypted.ciphertext());
+            legacy.setSecretKeyVersion(encrypted.keyVersion());
             return apiKeyRepository.save(legacy);
         });
     }
