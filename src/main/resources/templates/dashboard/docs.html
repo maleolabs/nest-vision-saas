@@ -41,7 +41,7 @@
          <section class="mt-6 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden" aria-labelledby="keys-title" x-init="loadKeys()">
             <div class="px-6 py-5 border-b border-slate-100 flex items-center gap-3">
                 <span class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 grid place-items-center"><i data-lucide="key-round" class="w-5 h-5"></i></span>
-                 <div><h3 id="keys-title" class="font-bold">API Keys</h3><p class="text-xs text-slate-500">Sertakan key aktif via header X-API-KEY. Secret hanya tampil sekali saat dibuat atau dirotasi.</p></div>
+                 <div><h3 id="keys-title" class="font-bold">API Keys</h3><p class="text-xs text-slate-500">Sertakan key aktif via header X-API-KEY. Secret tersimpan terenkripsi; tampilkan hanya saat perlu.</p></div>
                 <span class="ml-auto hidden sm:inline text-xs font-medium bg-slate-900 text-white px-3 py-1 rounded-full">Required</span>
             </div>
              <div class="p-6">
@@ -49,9 +49,9 @@
                  <p x-show="error" x-text="error" class="p-3 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700" role="alert"></p>
                  <p x-show="!loading && !error && keys.length === 0" class="text-sm text-slate-500">Belum ada API key. Buat key untuk mulai integrasi.</p>
                  <div x-show="!loading && !error && keys.length" class="divide-y divide-slate-100">
-                     <template x-for="key in keys" :key="key.id"><div class="py-4 first:pt-0 flex flex-col sm:flex-row sm:items-center gap-3">
-                         <div class="min-w-0 flex-1"><div class="font-semibold text-sm" x-text="key.name || 'API key'"></div><code class="text-xs text-slate-500 font-mono">••••••••••••••••••••</code><div class="text-xs text-slate-500 mt-1"><span x-text="key.active ? 'Aktif' : 'Dicabut'"></span> · <span x-text="key.expiresAt ? 'Berakhir ' + new Date(key.expiresAt).toLocaleDateString('id-ID') : '—'"></span></div></div>
-                         <button type="button" @click="revoke(key.id)" x-show="key.active" class="rounded-lg border border-red-200 text-red-700 px-3 py-2 text-xs font-semibold hover:bg-red-50">Cabut</button>
+                      <template x-for="key in keys" :key="key.id"><div class="py-4 first:pt-0 flex flex-col sm:flex-row sm:items-center gap-3">
+                          <div class="min-w-0 flex-1"><div class="font-semibold text-sm" x-text="key.name || 'API key'"></div><div class="mt-1 flex max-w-full items-center gap-2"><code class="min-w-0 flex-1 break-all text-xs text-slate-500 font-mono" x-text="key.showSecret ? (key.secret || 'Secret tidak tersedia') : '••••••••••••••••••••'" :aria-label="key.showSecret ? 'Secret API key' : 'Secret API key disembunyikan'"></code><button type="button" class="shrink-0 rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold hover:bg-slate-50" @click="key.showSecret=!key.showSecret" :aria-label="key.showSecret ? 'Sembunyikan secret' : 'Tampilkan secret'" x-text="key.showSecret ? 'Sembunyikan' : 'Tampilkan'"></button><button type="button" class="shrink-0 rounded-lg border border-slate-200 px-2 py-1 text-xs font-semibold hover:bg-slate-50" @click="copyKey(key.secret)" :disabled="!key.secret">Salin</button></div><div class="text-xs text-slate-500 mt-1"><span x-text="key.active ? 'Aktif' : 'Dicabut'"></span> · <span x-text="key.expiresAt ? 'Berakhir ' + new Date(key.expiresAt).toLocaleDateString('id-ID') : '—'"></span></div></div>
+                          <button type="button" @click="revoke(key.id)" x-show="key.active" class="rounded-lg border border-red-200 text-red-700 px-3 py-2 text-xs font-semibold hover:bg-red-50">Cabut</button>
                      </div></template>
                  </div>
                  <div class="mt-5 flex flex-wrap gap-2"><button type="button" @click="modal=true" class="rounded-xl bg-blue-600 text-white px-5 py-2.5 text-sm font-semibold hover:bg-blue-700">+ Buat API key</button><button type="button" @click="rotate()" class="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold hover:bg-slate-50">Rotasi key aktif</button></div>
@@ -192,12 +192,13 @@ X-API-KEY: key dari panel API Keys</pre>
 <script>
 function dashboardKeys() { return {
   open:false, keys:[], loading:true, error:'', modal:false, secret:'', name:'', saving:false, confirmAction:null, pendingId:null, copyError:'',
-  async loadKeys() { try { const r=await fetch('[[@{/dashboard/api/keys}]]'); if(!r.ok) throw Error(); this.keys=await r.json(); } catch(e) { this.error='API keys gagal dimuat. Coba lagi.'; } finally { this.loading=false; } },
+  async loadKeys() { try { const r=await fetch('[[@{/dashboard/api/keys}]]',{cache:'no-store'}); if(!r.ok) throw Error(); this.keys=(await r.json()).map(key=>({...key,showSecret:false})); } catch(e) { this.error='API keys gagal dimuat. Coba lagi.'; } finally { this.loading=false; } },
    async createKey() { this.saving=true; try { const r=await fetch('[[@{/dashboard/api/keys}]]',{method:'POST',headers:{'Content-Type':'application/json','X-XSRF-TOKEN':decodeURIComponent(document.cookie.match('(^|; )XSRF-TOKEN=([^;]*)')?.[2]||'')},body:JSON.stringify({name:this.name})}); if(!r.ok) throw Error(); const d=await r.json(); this.secret=d.secret||''; this.modal=false; this.name=''; await this.loadKeys(); } catch(e) { this.modal=false; this.error='API key gagal dibuat.'; } finally { this.saving=false; } },
   rotate() { this.confirmAction='rotate'; this.$nextTick(() => this.$refs.cancelConfirm.focus()); },
   revoke(id) { this.pendingId=id; this.confirmAction='revoke'; this.$nextTick(() => this.$refs.cancelConfirm.focus()); },
   async confirm() { const action=this.confirmAction, id=this.pendingId; this.confirmAction=null; try { const r=await fetch(action==='rotate' ? '[[@{/dashboard/api/keys/rotate}]]' : '[[@{/dashboard/api/keys/}]]'+id+'/revoke',{method:'POST',headers:{'X-XSRF-TOKEN':decodeURIComponent(document.cookie.match('(^|; )XSRF-TOKEN=([^;]*)')?.[2]||'')}}); if(!r.ok) throw Error(); if(action==='rotate') this.secret=(await r.json()).secret||''; await this.loadKeys(); } catch(e) { this.error=action==='rotate' ? 'API key gagal dirotasi.' : 'API key gagal dicabut.'; } },
-  async copySecret() { try { await navigator.clipboard.writeText(this.secret); this.secret=''; this.copyError=''; } catch(e) { this.copyError='Gagal menyalin. Secret tetap tersedia; coba lagi atau salin manual.'; } }
+   async copyKey(secret) { if(!secret) return; try { await navigator.clipboard.writeText(secret); this.copyError=''; } catch(e) { this.copyError='Gagal menyalin secret. Salin manual dari nilai yang tampil.'; } },
+   async copySecret() { try { await navigator.clipboard.writeText(this.secret); this.secret=''; this.copyError=''; } catch(e) { this.copyError='Gagal menyalin. Secret tetap tersedia; coba lagi atau salin manual.'; } }
 }; }
 lucide.createIcons();
 </script>
