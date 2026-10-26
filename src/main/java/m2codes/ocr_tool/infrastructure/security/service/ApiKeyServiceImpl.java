@@ -90,7 +90,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     }
 
     private String secret(ApiKey key) {
-        if (key.getSecretNonce() != null && key.getSecretCiphertext() != null) return apiKeyEncryption.decrypt(key.getSecretNonce(), key.getSecretCiphertext());
+        if (key.getSecretNonce() != null && key.getSecretCiphertext() != null) return apiKeyEncryption.decrypt(key.getSecretNonce(), key.getSecretCiphertext(), key.getSecretKeyVersion());
         return key.getApiKey();
     }
     private ApiKeyResponse response(ApiKey k, String secret) { return new ApiKeyResponse(k.getId(), k.getName(), isUsable(k), k.getCreatedAt(), k.getExpiresAt(), secret); }
