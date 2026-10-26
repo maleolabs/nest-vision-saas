@@ -70,10 +70,13 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     @Override public void revoke(String apiKey) { lookup(apiKey).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
     @Override public String clientId(String apiKey) { return lookup(apiKey).filter(this::isUsable).map(ApiKey::getClientId).orElse(null); }
     @Override @Transactional public List<ApiKeyResponse> list(String clientId) {
-        // Secrets are returned only by create/rotate. Returning them here defeats
-        // one-time display and exposes every active credential on each page load.
+        // Client-scoped listing returns copyable secrets only while keys remain usable.
+        // Revoked/expired keys keep metadata but never expose credentials.
         return apiKeyRepository.findAllByClientIdOrderByCreatedAtDesc(clientId).stream()
-                .map(k -> { migrateLegacy(k); return response(k, null); })
+                .map(k -> {
+                    migrateLegacy(k);
+                    return response(k, isUsable(k) ? secret(k) : null);
+                })
                 .toList();
     }
     @Override public void revokeForClient(Long id, String clientId) { apiKeyRepository.findById(id).filter(k -> clientId.equals(k.getClientId())).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
