@@ -9,6 +9,7 @@ import java.util.Optional;
 public interface ApiKeyRepository extends JpaRepository<ApiKey, Long> {
 
     Optional<ApiKey> findFirstByClientId(String clientId);
+    Optional<ApiKey> findByIdAndClientId(Long id, String clientId);
 
     Optional<ApiKey> findByKeyHash(String keyHash);
 
