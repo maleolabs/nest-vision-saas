@@ -14,11 +14,13 @@ public interface ApiKeyService {
 
     String rotate(String clientId);
     ApiKeyResponse rotateResponse(String clientId);
+    ApiKeyResponse rotateResponse(Long id, String clientId);
 
     void revoke(String apiKey);
 
     String clientId(String apiKey);
     List<ApiKeyResponse> list(String clientId);
     void revokeForClient(Long id, String clientId);
+    ApiKeyResponse rotateForClient(Long id, String clientId);
 
 }

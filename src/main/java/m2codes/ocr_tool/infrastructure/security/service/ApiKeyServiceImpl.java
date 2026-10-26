@@ -14,6 +14,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.List;
+import jakarta.persistence.EntityNotFoundException;
 import m2codes.ocr_tool.interfaces.dto.response.ApiKeyResponse;
 
 @RequiredArgsConstructor
@@ -67,6 +68,17 @@ public class ApiKeyServiceImpl implements ApiKeyService {
         ApiKey key = save(clientId, "Rotated API key", secret, expiresAt);
         return response(key, secret);
     }
+    @Override
+    @Transactional
+    public ApiKeyResponse rotateResponse(Long id, String clientId) {
+        ApiKey oldKey = apiKeyRepository.findByIdAndClientId(id, clientId)
+                .orElseThrow(() -> new EntityNotFoundException("API key not found"));
+        String secret = apiKeyGenerator.generate();
+        Instant expiresAt = Instant.now().plus(apiKeyLifetimeInDays, ChronoUnit.DAYS);
+        // Overlap policy: old key stays active until explicit revoke or expiry.
+        ApiKey key = save(clientId, oldKey.getName(), secret, expiresAt);
+        return response(key, secret);
+    }
     @Override public void revoke(String apiKey) { lookup(apiKey).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
     @Override public String clientId(String apiKey) { return lookup(apiKey).filter(this::isUsable).map(ApiKey::getClientId).orElse(null); }
     @Override @Transactional public List<ApiKeyResponse> list(String clientId) {
@@ -80,6 +92,14 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                 .toList();
     }
     @Override public void revokeForClient(Long id, String clientId) { apiKeyRepository.findById(id).filter(k -> clientId.equals(k.getClientId())).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
+    @Override @Transactional public ApiKeyResponse rotateForClient(Long id, String clientId) {
+        ApiKey source = apiKeyRepository.findById(id).filter(k -> clientId.equals(k.getClientId()) && isUsable(k))
+                .orElseThrow(() -> new IllegalArgumentException("API key tidak ditemukan atau tidak aktif"));
+        String secret = apiKeyGenerator.generate();
+        Instant expiresAt = Instant.now().plus(apiKeyLifetimeInDays, ChronoUnit.DAYS);
+        ApiKey key = save(clientId, source.getName(), secret, expiresAt);
+        return response(key, secret);
+    }
 
     private ApiKey save(String clientId, String name, String apiKey, Instant expiresAt) {
         var encrypted = apiKeyEncryption.encrypt(apiKey);
