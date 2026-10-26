@@ -37,6 +37,16 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     }
 
     @Override
+    @Transactional
+    public ApiKeyResponse createResponse(String clientId, String name) {
+        String secret = apiKeyGenerator.generate();
+        Instant expiresAt = Instant.now().plus(apiKeyLifetimeInDays, ChronoUnit.DAYS);
+        save(clientId, name, secret, expiresAt);
+        ApiKey key = apiKeyRepository.findByKeyHash(apiKeyGenerator.hash(secret)).orElseThrow();
+        return new ApiKeyResponse(key.getId(), key.getName(), true, key.getCreatedAt(), key.getExpiresAt(), secret);
+    }
+
+    @Override
     public boolean verify(String apiKey) {
         return lookup(apiKey).map(this::isUsable).orElse(false);
     }
@@ -52,7 +62,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     public String rotate(String clientId) { return create(clientId, "Rotated API key"); }
     @Override public void revoke(String apiKey) { lookup(apiKey).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
     @Override public String clientId(String apiKey) { return lookup(apiKey).filter(this::isUsable).map(ApiKey::getClientId).orElse(null); }
-    @Override public List<ApiKeyResponse> list(String clientId) { return apiKeyRepository.findAllByClientIdOrderByCreatedAtDesc(clientId).stream().map(k -> new ApiKeyResponse(k.getId(), k.getName(), isUsable(k), k.getCreatedAt(), k.getExpiresAt(), secret(k))).toList(); }
+    @Override public List<ApiKeyResponse> list(String clientId) { return apiKeyRepository.findAllByClientIdOrderByCreatedAtDesc(clientId).stream().map(k -> new ApiKeyResponse(k.getId(), k.getName(), isUsable(k), k.getCreatedAt(), k.getExpiresAt(), null)).toList(); }
     @Override public void revokeForClient(Long id, String clientId) { apiKeyRepository.findById(id).filter(k -> clientId.equals(k.getClientId())).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
 
     private void save(String clientId, String name, String apiKey, Instant expiresAt) {
@@ -82,9 +92,20 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                 && !key.getExpiresAt().isBefore(Instant.now());
     }
 
+    @Transactional
     private Optional<ApiKey> lookup(String token) {
         if (token == null || token.isBlank()) return Optional.empty();
-        return apiKeyRepository.findByKeyHash(apiKeyGenerator.hash(token));
+        Optional<ApiKey> current = apiKeyRepository.findByKeyHash(apiKeyGenerator.hash(token));
+        if (current.isPresent()) return current;
+        // One-time migration: legacy plaintext is accepted only for authentication, then removed.
+        return apiKeyRepository.findFirstByApiKey(token).map(legacy -> {
+            legacy.setKeyHash(apiKeyGenerator.hash(token));
+            legacy.setApiKey(null);
+            var encrypted = apiKeyEncryption.encrypt(token);
+            legacy.setSecretNonce(encrypted.nonce());
+            legacy.setSecretCiphertext(encrypted.ciphertext());
+            return apiKeyRepository.save(legacy);
+        });
     }
 
 }

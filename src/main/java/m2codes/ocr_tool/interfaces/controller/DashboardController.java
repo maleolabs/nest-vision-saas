@@ -70,8 +70,7 @@ public class DashboardController {
     public ResponseEntity<?> listApiKeys() { return noStore(apiKeyService.list(authService.getCurrentUser().getClient().getClientId())); }
     @PostMapping("/api/keys") @ResponseBody
     public ResponseEntity<?> createApiKey(@Valid @RequestBody CreateApiKeyRequest request) {
-        String secret = apiKeyService.create(authService.getCurrentUser().getClient().getClientId(), request.name());
-        return noStore(new ApiKeyResponse(null, request.name(), true, null, null, secret));
+         return noStore(apiKeyService.createResponse(authService.getCurrentUser().getClient().getClientId(), request.name()));
     }
     @PostMapping("/api/keys/rotate") @ResponseBody
     public ResponseEntity<?> rotateApiKey() { return noStore(new ApiKeyResponse(null, "Rotated API key", true, null, null, apiKeyService.rotate(authService.getCurrentUser().getClient().getClientId()))); }

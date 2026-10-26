@@ -10,9 +10,9 @@ public interface ApiKeyRepository extends JpaRepository<ApiKey, Long> {
 
     Optional<ApiKey> findFirstByClientId(String clientId);
 
-    Optional<ApiKey> findFirstByApiKey(String apiKey);
-
     Optional<ApiKey> findByKeyHash(String keyHash);
+
+    Optional<ApiKey> findFirstByApiKey(String apiKey);
 
     java.util.List<ApiKey> findAllByClientIdOrderByCreatedAtDesc(String clientId);
 
