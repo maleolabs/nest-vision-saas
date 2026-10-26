@@ -5,6 +5,7 @@ import m2codes.ocr_tool.domain.model.ApiKey;
 import m2codes.ocr_tool.domain.repository.ApiKeyRepository;
 import m2codes.ocr_tool.domain.service.ApiKeyService;
 import m2codes.ocr_tool.infrastructure.security.util.ApiKeyGenerator;
+import m2codes.ocr_tool.infrastructure.security.util.ApiKeyEncryption;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
     private final ApiKeyRepository apiKeyRepository;
     private final ApiKeyGenerator apiKeyGenerator;
+    private final ApiKeyEncryption apiKeyEncryption;
 
     @Value("${app.api-key.lifetime}")
     private int apiKeyLifetimeInDays;
@@ -50,20 +52,28 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     public String rotate(String clientId) { return create(clientId, "Rotated API key"); }
     @Override public void revoke(String apiKey) { lookup(apiKey).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
     @Override public String clientId(String apiKey) { return lookup(apiKey).filter(this::isUsable).map(ApiKey::getClientId).orElse(null); }
-    @Override public List<ApiKeyResponse> list(String clientId) { return apiKeyRepository.findAllByClientIdOrderByCreatedAtDesc(clientId).stream().map(k -> new ApiKeyResponse(k.getId(), k.getName(), isUsable(k), k.getCreatedAt(), k.getExpiresAt(), null)).toList(); }
+    @Override public List<ApiKeyResponse> list(String clientId) { return apiKeyRepository.findAllByClientIdOrderByCreatedAtDesc(clientId).stream().map(k -> new ApiKeyResponse(k.getId(), k.getName(), isUsable(k), k.getCreatedAt(), k.getExpiresAt(), secret(k))).toList(); }
     @Override public void revokeForClient(Long id, String clientId) { apiKeyRepository.findById(id).filter(k -> clientId.equals(k.getClientId())).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
 
     private void save(String clientId, String name, String apiKey, Instant expiresAt) {
+        var encrypted = apiKeyEncryption.encrypt(apiKey);
         apiKeyRepository.save(
                 ApiKey.builder()
                     .clientId(clientId)
                     .name(name)
                     .apiKey(null)
                     .keyHash(apiKeyGenerator.hash(apiKey))
+                    .secretNonce(encrypted.nonce())
+                    .secretCiphertext(encrypted.ciphertext())
                     .expiresAt(expiresAt)
                     .isActive(true)
                     .build()
         );
+    }
+
+    private String secret(ApiKey key) {
+        if (key.getSecretNonce() != null && key.getSecretCiphertext() != null) return apiKeyEncryption.decrypt(key.getSecretNonce(), key.getSecretCiphertext());
+        return key.getApiKey();
     }
 
     private boolean isUsable(ApiKey key) {
