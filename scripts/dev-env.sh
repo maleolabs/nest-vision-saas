@@ -28,6 +28,7 @@ if [ "${#_pepper}" -lt 32 ]; then
 fi
 export APP_API_KEY_PEPPER="$_pepper"
 unset _pepper _pepper_file
+export APP_API_KEY_ENCRYPTION_SECRET="${APP_API_KEY_ENCRYPTION_SECRET:-$(scripts/ensure-encryption-secret.sh)}"
 
 # --- JDK 25 ---
 if [ -d "$HOME/.local/opt/jdk-25" ] && [ -f "$HOME/.local/opt/jdk-25/bin/java" ]; then

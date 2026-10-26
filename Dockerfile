@@ -20,6 +20,9 @@ RUN ./mvnw -B clean package -DskipTests
 # would give tesseract 4.x at .../4.00/tessdata and break the native tess4j engine).
 # NOTE: Temurin publishes no Debian bookworm variant; noble is the closest match.
 FROM eclipse-temurin:25-jre-noble
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod 755 /usr/local/bin/docker-entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 WORKDIR /app
 

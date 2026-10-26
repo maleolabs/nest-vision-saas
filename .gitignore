@@ -8,6 +8,7 @@ HELP.md
 /src/main/resources/application-*.local.properties
 .env
 .env.local
+/.config/
 
 ### Secret material ###
 # Jangan commit keystore produksi. keystore.jks di root adalah dev keystore

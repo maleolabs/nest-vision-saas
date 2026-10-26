@@ -103,6 +103,8 @@ if (-not $pepper -or $pepper.Length -lt 32) {
     exit 1
 }
 $Config["APP_API_KEY_PEPPER"] = $pepper
+$secretScript = Join-Path $PSScriptRoot "ensure-encryption-secret.ps1"
+$Config["APP_API_KEY_ENCRYPTION_SECRET"] = if ($env:APP_API_KEY_ENCRYPTION_SECRET) { $env:APP_API_KEY_ENCRYPTION_SECRET } else { (& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $secretScript | Select-Object -Last 1).Trim() }
 
 Write-Host ""
 Write-Host "  ========================================" -ForegroundColor Green

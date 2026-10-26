@@ -37,6 +37,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/ocr_tool?createDatabaseIfNotExist=true
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - APP_API_KEY_PEPPER=${APP_API_KEY_PEPPER:?APP_API_KEY_PEPPER must be set; use stable secret, minimum 32 characters}
+      - APP_API_KEY_ENCRYPTION_SECRET=${APP_API_KEY_ENCRYPTION_SECRET:-}
       - TESSERACT_DATAPATH=/usr/share/tesseract-ocr/5/tessdata/
       - OCR_PYTHON_PATH=python3
       - OCR_SCRIPT_PATH=/app/opt/app/ocr/tesseract_ocr.py
@@ -82,6 +83,9 @@ services:
       db:
         condition: service_healthy
     restart: unless-stopped
+    volumes:
+      - ocr-tool-api-secret:/run/secrets
 
 volumes:
   ocr-tool-db-data:
+  ocr-tool-api-secret:
