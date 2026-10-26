@@ -41,9 +41,8 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     public ApiKeyResponse createResponse(String clientId, String name) {
         String secret = apiKeyGenerator.generate();
         Instant expiresAt = Instant.now().plus(apiKeyLifetimeInDays, ChronoUnit.DAYS);
-        save(clientId, name, secret, expiresAt);
-        ApiKey key = apiKeyRepository.findByKeyHash(apiKeyGenerator.hash(secret)).orElseThrow();
-        return new ApiKeyResponse(key.getId(), key.getName(), true, key.getCreatedAt(), key.getExpiresAt(), secret);
+        ApiKey key = save(clientId, name, secret, expiresAt);
+        return response(key, secret);
     }
 
     @Override
@@ -70,7 +69,13 @@ public class ApiKeyServiceImpl implements ApiKeyService {
     }
     @Override public void revoke(String apiKey) { lookup(apiKey).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
     @Override public String clientId(String apiKey) { return lookup(apiKey).filter(this::isUsable).map(ApiKey::getClientId).orElse(null); }
-    @Override @Transactional public List<ApiKeyResponse> list(String clientId) { return apiKeyRepository.findAllByClientIdOrderByCreatedAtDesc(clientId).stream().map(k -> { migrateLegacy(k); return response(k, isUsable(k) ? secret(k) : null); }).toList(); }
+    @Override @Transactional public List<ApiKeyResponse> list(String clientId) {
+        // Secrets are returned only by create/rotate. Returning them here defeats
+        // one-time display and exposes every active credential on each page load.
+        return apiKeyRepository.findAllByClientIdOrderByCreatedAtDesc(clientId).stream()
+                .map(k -> { migrateLegacy(k); return response(k, null); })
+                .toList();
+    }
     @Override public void revokeForClient(Long id, String clientId) { apiKeyRepository.findById(id).filter(k -> clientId.equals(k.getClientId())).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
 
     private ApiKey save(String clientId, String name, String apiKey, Instant expiresAt) {
