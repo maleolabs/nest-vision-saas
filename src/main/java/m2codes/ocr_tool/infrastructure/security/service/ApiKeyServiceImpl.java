@@ -94,7 +94,6 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                 .toList();
     }
     @Override public void revokeForClient(Long id, String clientId) { apiKeyRepository.findById(id).filter(k -> clientId.equals(k.getClientId())).ifPresent(k -> { k.setIsActive(false); apiKeyRepository.save(k); }); }
-    @Override public void deleteForClient(Long id, String clientId) { apiKeyRepository.findById(id).filter(k -> clientId.equals(k.getClientId()) && !isUsable(k)).ifPresent(apiKeyRepository::delete); }
     @Override @Transactional public void deleteForClient(Long id, String clientId) {
         ApiKey key = apiKeyRepository.findByIdAndClientId(id, clientId)
                 .orElseThrow(() -> new EntityNotFoundException("API key not found"));
