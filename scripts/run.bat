@@ -110,6 +110,15 @@ if not defined APP_API_KEY_PEPPER if exist ".env.local" (
 if not defined APP_API_KEY_PEPPER (
     for /f "usebackq delims=" %%p in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0ensure-pepper.ps1"`) do set "APP_API_KEY_PEPPER=%%p"
 )
+REM --- Encryption secret: env/.env override, else stable user file ---
+if not defined APP_API_KEY_ENCRYPTION_SECRET (
+    for /f "usebackq delims=" %%s in (`powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0ensure-encryption-secret.ps1"`) do set "APP_API_KEY_ENCRYPTION_SECRET=%%s"
+)
+if not defined APP_API_KEY_ENCRYPTION_SECRET (
+    echo  [ERROR] APP_API_KEY_ENCRYPTION_SECRET tidak tersedia.
+    pause
+    exit /b 1
+)
 set "_PEPPER_CHECK=!APP_API_KEY_PEPPER!"
 if "!_PEPPER_CHECK:~31!"=="" (
     echo  [ERROR] APP_API_KEY_PEPPER minimal 32 karakter.

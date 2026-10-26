@@ -94,7 +94,7 @@ TEST_DATASOURCE_USERNAME=ocr TEST_DATASOURCE_PASSWORD=ocr ./mvnw -B verify
 
 Override `TEST_DATASOURCE_URL`, `TEST_DATASOURCE_USERNAME`, `TEST_DATASOURCE_PASSWORD` untuk CI atau container test. Jangan arahkan test ke datasource development/production.
 
-`APP_API_KEY_ENCRYPTION_SECRET` wajib base64 yang decode menjadi 32 byte (AES-256). Linux/macOS memakai `source scripts/dev-env.sh`; Windows memakai `scripts/run.ps1`. Secret kosong dibuat dan disimpan stabil di `~/.config/ocr-tool/api-key-encryption-secret` atau `%USERPROFILE%\.config\ocr-tool\api-key-encryption-secret`. Docker menyimpan secret pada named volume `ocr-tool-api-secret`. Jangan hapus file/volume atau commit secret.
+`APP_API_KEY_ENCRYPTION_SECRET` wajib base64 yang decode menjadi 32 byte (AES-256). Linux/macOS memakai `source scripts/dev-env.sh`; Windows memakai `scripts/run.ps1` atau `scripts\run.bat`. Secret kosong dibuat sekali dan disimpan stabil di `~/.config/ocr-tool/api-key-encryption-secret` atau `%USERPROFILE%\.config\ocr-tool\api-key-encryption-secret`. Docker menyimpan secret pada named volume `ocr-tool-api-secret`; set `APP_API_KEY_ENCRYPTION_SECRET` dari secret manager untuk override produksi. Jangan hapus file/volume atau commit secret. Java 25 + Spring Boot 3.5 memakai secret ini langsung; restart tidak boleh menghasilkan secret baru.
 
 ### Windows (PowerShell)
 

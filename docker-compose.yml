@@ -37,7 +37,10 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/ocr_tool?createDatabaseIfNotExist=true
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - APP_API_KEY_PEPPER=${APP_API_KEY_PEPPER:?APP_API_KEY_PEPPER must be set; use stable secret, minimum 32 characters}
+      # Production override: set APP_API_KEY_ENCRYPTION_SECRET externally.
+      # Empty value uses stable named-volume file, never a new value per restart.
       - APP_API_KEY_ENCRYPTION_SECRET=${APP_API_KEY_ENCRYPTION_SECRET:-}
+      - APP_API_KEY_ENCRYPTION_SECRET_FILE=/run/secrets/app-api-key-encryption-secret
       - TESSERACT_DATAPATH=/usr/share/tesseract-ocr/5/tessdata/
       - OCR_PYTHON_PATH=python3
       - OCR_SCRIPT_PATH=/app/opt/app/ocr/tesseract_ocr.py

@@ -57,6 +57,9 @@ services:
       # API Key Configuration
       # Required stable secret; Compose fails fast when missing.
       - APP_API_KEY_PEPPER=${APP_API_KEY_PEPPER:?APP_API_KEY_PEPPER must be set; minimum 32 characters}
+      # Optional production override. If omitted, named volume stores stable secret.
+      - APP_API_KEY_ENCRYPTION_SECRET=${APP_API_KEY_ENCRYPTION_SECRET:-}
+      - APP_API_KEY_ENCRYPTION_SECRET_FILE=/run/secrets/app-api-key-encryption-secret
       - APP_API-KEY_LENGTH=32
       - APP_API-KEY_LIFETIME=180
 
