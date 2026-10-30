@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import m2codes.ocr_tool.application.dto.ExtractedTextDto;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
@@ -162,7 +163,10 @@ public class ExtractedTextMapper {
     public List<ExtractedTextDto> filterParsedDataByRequiredKeys(List<ExtractedTextDto> parsedData, List<String> requiredKeys) {
         if (requiredKeys == null || requiredKeys.isEmpty()) return parsedData;
         java.util.List<String> normalizedRequired = requiredKeys.stream().map(k -> k.toLowerCase().trim()).toList();
-        ListIterator<ExtractedTextDto> it = parsedData.listIterator();
+        // ponytail: parsedData bisa immutable (List.of) -> ListIterator.set() melempar
+        // UnsupportedOperationException; salin ke ArrayList agar rename tetap berjalan.
+        List<ExtractedTextDto> working = new ArrayList<>(parsedData);
+        ListIterator<ExtractedTextDto> it = working.listIterator();
         while (it.hasNext()) {
             var data = it.next();
             String dataKeyNorm = data.getTextKey().toLowerCase().trim();
@@ -190,7 +194,7 @@ public class ExtractedTextMapper {
                 it.set(data);
             }
         }
-        return parsedData;
+        return working;
     }
 
 }
