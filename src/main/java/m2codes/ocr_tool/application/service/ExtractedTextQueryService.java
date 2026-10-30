@@ -11,6 +11,18 @@ import m2codes.ocr_tool.interfaces.dto.response.ApiResponse;
 
 import java.util.*;
 
+/**
+ * Base template untuk query hasil OCR.
+ *
+ * <p><b>Proxy-safety:</b> saat ini {@link m2codes.ocr_tool.application.service.impl.ExtractedTextQueryServiceImpl}
+ * TIDAK di-advise (@Async/@Transactional/@Cacheable tidak ada) sehingga Spring tidak
+ * membuat proxy dan {@code final} sebenarnya aman. Method entry point tetap sengaja
+ * dibuat non-{@code final}: begitu subclass-nya diberi @Transactional/@Cacheable/@Async,
+ * CGLIB akan mem-proxy via Objenesis (constructor tidak dipanggil, field dependency null)
+ * dan method final tidak bisa di-override — pemanggilan lewat proxy akan mengeksekusi
+ * implementasi base pada instance proxy yang dependency-nya null. Lihat komentar di
+ * {@link TextProcessorService} untuk detail kasus nyata.
+ */
 public abstract class ExtractedTextQueryService {
 
     protected final ExtractedTextService extractedTextService;
@@ -25,7 +37,7 @@ public abstract class ExtractedTextQueryService {
         this.ocrRequestService = ocrRequestService;
     }
 
-    public final ApiResponse<OcrResponse> checkStatus(String requestId) {
+    public ApiResponse<OcrResponse> checkStatus(String requestId) {
         OcrRequest request = findRequestById(requestId);
         if (request == null) {
             return builResponse(null, false, "Request with id : " + requestId + " not found!");
@@ -41,7 +53,7 @@ public abstract class ExtractedTextQueryService {
         return builResponse(response, true, null);
     }
 
-    public final ApiResponse<OcrResponse2> getByRequestId(String requestId) {
+    public ApiResponse<OcrResponse2> getByRequestId(String requestId) {
         OcrRequest request = findRequestById(requestId);
         if (request == null) {
             return builResponse(null, false, "Request ID not found");
@@ -64,7 +76,7 @@ public abstract class ExtractedTextQueryService {
         return builResponse(ocrResponse, true, null);
     }
 
-    public final OcrResponse findByRequestId(String requestId) {
+    public OcrResponse findByRequestId(String requestId) {
         OcrRequest request = findRequestById(requestId);
         if (request == null) {
             return null;

@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.RejectedExecutionException;
 
@@ -33,10 +34,14 @@ public abstract class TextProcessorService {
             ExtractedTextService extractedTextService,
             OcrProcessingAsyncExecutor ocrProcessingAsyncExecutor
     ) {
-        this.ocrRequestService = ocrRequestService;
-        this.ocrResultService = ocrResultService;
-        this.extractedTextService = extractedTextService;
-        this.ocrProcessingAsyncExecutor = ocrProcessingAsyncExecutor;
+        // Fail-fast: subclass (OcrProcessorService) di-proxy CGLIB karena @Async/@Transactional,
+        // dan proxy-nya dibuat lewat Objenesis tanpa memanggil constructor ini — jadi field di
+        // instance proxy memang null. Null dependency di sini berarti wiring rusak dan harus
+        // meledak saat startup, bukan NPE acak saat request berjalan.
+        this.ocrRequestService = Objects.requireNonNull(ocrRequestService, "ocrRequestService");
+        this.ocrResultService = Objects.requireNonNull(ocrResultService, "ocrResultService");
+        this.extractedTextService = Objects.requireNonNull(extractedTextService, "extractedTextService");
+        this.ocrProcessingAsyncExecutor = Objects.requireNonNull(ocrProcessingAsyncExecutor, "ocrProcessingAsyncExecutor");
     }
 
     /**
@@ -45,8 +50,16 @@ public abstract class TextProcessorService {
      * dijalankan; menggabungkannya dalam tx HTTP membuat worker async bisa merge entitas
      * yang belum commit (race do-ocr fast-return). Pemanggilan @Async kini via
      * OcrProcessingAsyncExecutor agar proxy @Async tidak di-bypass self-invocation.
+     *
+     * <p><b>JANGAN tambahkan {@code final} pada method entry point ini.</b> Subclass
+     * (OcrProcessorService) di-proxy CGLIB karena @Async/@Transactional. CGLIB tidak bisa
+     * meng-override method final, sehingga pemanggilan lewat proxy akan mengeksekusi
+     * implementasi base pada instance proxy — instance yang dibuat Objenesis TANPA
+     * constructor, jadi seluruh field dependency di dalamnya null (NPE saat dispatch ke
+     * async executor). Tanpa {@code final}, proxy meng-intercept dan mendelegasikan ke
+     * target bean yang di-wire Spring.
      */
-    public final ApiResponse<?> processOcrRequestWithImageUrl(OcrDataRequest request, String clientId) {
+    public ApiResponse<?> processOcrRequestWithImageUrl(OcrDataRequest request, String clientId) {
         var status = isPoolAvailable() ? RequestStatus.PROCESSING : RequestStatus.WAITING;
 
         boolean preprocessed = usePreprocessedImage(request.getImageUrl(), clientId);
@@ -80,8 +93,11 @@ public abstract class TextProcessorService {
     /**
      * VIS-F01: @Transactional dihapus dengan alasan sama dengan processOcrRequestWithImageUrl —
      * save harus commit sebelum task async start.
+     *
+     * <p><b>JANGAN tambahkan {@code final}.</b> Lihat penjelasan Objenesis/final-method
+     * pitfall di {@link #processOcrRequestWithImageUrl(OcrDataRequest, String)}.
      */
-    public final ApiResponse<?> processOcrRequestWithUploadedImage(OcrDataRequest request, String clientId) {
+    public ApiResponse<?> processOcrRequestWithUploadedImage(OcrDataRequest request, String clientId) {
         var status = isPoolAvailable() ? RequestStatus.PROCESSING : RequestStatus.WAITING;
 
         String uploadedFileName;
