@@ -18,13 +18,16 @@ public class IdentityDocumentCheckController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<?>> submit(@ModelAttribute @Valid OcrDataRequest request, HttpServletRequest http) {
         if (!request.isUsingFile()) return ResponseEntity.badRequest().body(ApiResponse.error("image is required", HttpStatus.BAD_REQUEST));
-        var response = service.submit(request.getImage(), (String) http.getAttribute("clientId"));
+        var response = service.submit(request.getImage(), (String) http.getAttribute("clientId"), request.getRequiredKeys());
         return ResponseEntity.accepted().body(ApiResponse.success(response, HttpStatus.ACCEPTED));
     }
 
     @GetMapping("/{requestId}")
     public ResponseEntity<ApiResponse<?>> get(@PathVariable String requestId, HttpServletRequest http) {
         var response = service.get(requestId, (String) http.getAttribute("clientId"));
-        return response == null ? ResponseEntity.notFound().build() : ResponseEntity.ok(ApiResponse.success(response, HttpStatus.OK));
+        if (response == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.error("request not found", HttpStatus.NOT_FOUND));
+        }
+        return ResponseEntity.ok(ApiResponse.success(response, HttpStatus.OK));
     }
 }
