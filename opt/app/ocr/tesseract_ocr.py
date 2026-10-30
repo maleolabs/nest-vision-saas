@@ -34,13 +34,16 @@ for _k in ("TESSDATA_PREFIX", "TESSERACT_DATAPATH"):
         os.environ["TESSDATA_PREFIX"] = _v
         break
 
-# --- Wall-clock budget (OCR_TIME_BUDGET, seconds, default 60) ---
+# --- Wall-clock budget (OCR_TIME_BUDGET, seconds, default 120) ---
+# 60s terbukti tidak cukup untuk KTP resolusi tinggi (3084x1932 butuh ~85s
+# pada pytesseract). Downscale ke 1600px memang mempercepat tapi menurunkan
+# akurasi NIK, jadi budget yang dinaikkan adalah pilihan yang lebih aman.
 def get_time_budget():
     try:
-        v = float(os.environ.get("OCR_TIME_BUDGET", "60"))
-        return v if v > 0 else 60.0
+        v = float(os.environ.get("OCR_TIME_BUDGET", "120"))
+        return v if v > 0 else 120.0
     except (TypeError, ValueError):
-        return 60.0
+        return 120.0
 
 def deadline_exceeded(deadline):
     """True when the monotonic deadline has passed (None deadline = unlimited)."""
