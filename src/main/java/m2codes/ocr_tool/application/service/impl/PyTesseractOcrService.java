@@ -39,31 +39,19 @@ public class PyTesseractOcrService implements TextExtractionService {
                 return ocrResult;
             }
 
-            // P2.5 auto quality gate if not already preprocessed
-            if (!preprocessed) {
-                try {
-                    // quick blur estimate via image size + will be refined in python
-                    log.info("pyTesseract URL preprocessed={} - python will auto-assess quality", preprocessed);
-                } catch (Exception ignored) {}
-            }
-
             File tempFile = File.createTempFile("ocr_input_", ".png");
             ImageIO.write(image, "png", tempFile);
 
             long startTime = System.currentTimeMillis();
 
-            String result = excecutor.runOcrScript(tempFile.getAbsolutePath());
+            OcrResultDto pythonResult = runPython(tempFile);
 
             long duration = System.currentTimeMillis() - startTime;
 
-            ocrResult.setSuccess(true);
-            ocrResult.setExtractedText(result);
-            ocrResult.setDuration(duration);
-            ocrResult.setEngineUsed("pytesseract");
-            // try parse metrics from stderr if available (python script logs to stderr)
-            // for URL path we don't have stderr captured in this overload - confidence heuristic
-            ocrResult.setConfidence(Math.min(95, Math.max(10, result.length() / 10)));
+            pythonResult.setDuration(duration);
+            pythonResult.setEngineUsed("pytesseract");
             if (tempFile.exists()) tempFile.delete();
+            return pythonResult;
         } catch (Exception e) {
             ocrResult.setSuccess(false);
             ocrResult.setErrorMessage(e.getMessage());
@@ -84,16 +72,10 @@ public class PyTesseractOcrService implements TextExtractionService {
             // but we log it; python does full pipeline regardless, but flag controls SR trigger
             log.info("pyTesseract file {} preprocessed={}", file.getName(), preprocessed);
 
-            String result = excecutor.runOcrScript(file.getAbsolutePath());
+            ocrResult = runPython(file);
 
-            long duration = System.currentTimeMillis() - startTime;
-
-            ocrResult.setExtractedText(result);
-            ocrResult.setDuration(duration);
-            ocrResult.setSuccess(true);
+            ocrResult.setDuration(System.currentTimeMillis() - startTime);
             ocrResult.setEngineUsed("pytesseract");
-            ocrResult.setConfidence(Math.min(95, Math.max(10, result.length() / 8)));
-            // blur/quality will be logged via PythonOcrExcecutor stderr parsing in future
         } catch (Exception e) {
             ocrResult.setSuccess(false);
             ocrResult.setErrorMessage(e.getMessage());
@@ -101,6 +83,39 @@ public class PyTesseractOcrService implements TextExtractionService {
         }
 
         return ocrResult;
+    }
+
+    /**
+     * Jalankan script OCR python dan ambil confidence ASLI dari baris
+     * observability stderr `[OCR] ... conf=NN.N`.
+     *
+     * Sebelumnya confidence dipalsukan dari panjang teks
+     * (result.length()/8), yang membuatnya hampir selalu jatuh di bawah
+     * conf-threshold ensemble (55) dan memicu fallback engine lain pada
+     * setiap pass. Bila stderr tak ada baris [OCR] (script lama), jatuh
+     * kembali ke heuristik panjang teks demi kompatibilitas.
+     */
+    private OcrResultDto runPython(File file) throws Exception {
+        PythonOcrExcecutor.OcrScriptResult res = excecutor.runOcrScriptWithStderr(file.getAbsolutePath());
+
+        OcrResultDto ocrResult = new OcrResultDto();
+        ocrResult.setSuccess(true);
+        ocrResult.setExtractedText(res.stdout());
+        ocrResult.setConfidence(resolveConfidence(res));
+        return ocrResult;
+    }
+
+    /** protected untuk unit test tanpa menjalankan process python. */
+    protected int resolveConfidence(PythonOcrExcecutor.OcrScriptResult res) {
+        PythonOcrExcecutor.OcrMetrics metrics = excecutor.parseMetrics(res.stderr());
+        if (metrics != null) {
+            int conf = (int) Math.min(95, Math.max(10, metrics.conf()));
+            log.info("pyTesseract real conf={} blur={} psm={}", metrics.conf(), metrics.blur(), metrics.psm());
+            return conf;
+        }
+        int heuristic = Math.min(95, Math.max(10, res.stdout().length() / 8));
+        log.info("pyTesseract stderr metrics absent, heuristic conf={}", heuristic);
+        return heuristic;
     }
 
 }

@@ -32,6 +32,18 @@ public class PythonOcrExcecutor {
     private static final int READER_JOIN_MILLIS = 2_000;
 
     public String runOcrScript(String imagePath) throws IOException, InterruptedException {
+        return runOcrScriptWithStderr(imagePath).stdout();
+    }
+
+    /**
+     * Jalankan script OCR dan kembalikan stdout + stderr.
+     *
+     * stderr dibutuhkan caller (PyTesseractOcrService) untuk mengambil
+     * confidence OCR asli yang ditulis python sebagai baris observability
+     * [OCR] ... conf=NN.N — sebelumnya stdout saja sehingga confidence
+     * dipalsukan dari panjang teks.
+     */
+    public OcrScriptResult runOcrScriptWithStderr(String imagePath) throws IOException, InterruptedException {
         String scriptPath = resolveScriptPath(this.scriptPath);
 
         ProcessBuilder builder = new ProcessBuilder(pythonPath, scriptPath, imagePath);
@@ -76,8 +88,11 @@ public class PythonOcrExcecutor {
             throw new RuntimeException("Python script exited with code " + exitCode + ". Output: \n" + output + "\nStderr: \n" + stderrValue);
         }
 
-        return output.trim();
+        return new OcrScriptResult(output.trim(), stderrValue);
     }
+
+    /** stdout (teks OCR) + stderr (baris observability [OCR] ... conf=NN.N). */
+    public record OcrScriptResult(String stdout, String stderr) {}
 
     private Thread startReaderThread(InputStream in, StringBuilder target) {
         Thread reader = new Thread(() -> {
