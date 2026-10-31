@@ -1,6 +1,6 @@
 project:
     name: ocr-tool
-    version: 0.12.0
+    version: 0.12.1
     description: "OCR Tool - Tesseract + OpenCV text extraction service"
 artifact:
     include: []
