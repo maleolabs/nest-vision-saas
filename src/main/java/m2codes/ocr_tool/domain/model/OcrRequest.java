@@ -34,6 +34,10 @@ public class OcrRequest {
     @Column(name="requested_at", nullable = false, updatable = false)
     private Instant requestedAt;
 
+    /** Waktu selesai diproses (saat status mencapai DONE/FAILURE). */
+    @Column(name = "completed_at")
+    private Instant completedAt;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private RequestStatus status;

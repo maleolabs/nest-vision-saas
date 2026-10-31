@@ -48,7 +48,7 @@ public abstract class ExtractedTextQueryService {
                 .status(request.getStatus())
                 .build();
         if (request.getOcrResults() != null) {
-            response.setDuration((float) (request.getOcrResults().getDuration() / 1000));
+            response.setDuration(totalDurationSeconds(request));
         }
         return builResponse(response, true, null);
     }
@@ -66,7 +66,7 @@ public abstract class ExtractedTextQueryService {
 
         if (request.getOcrResults() != null) {
             var ocrResult = request.getOcrResults();
-            ocrResponse.setDuration((float) (ocrResult.getDuration() / 1000));
+            ocrResponse.setDuration(totalDurationSeconds(request));
             Map<String, String> extractedTexts = new HashMap<>();
             for (ExtractedText extractedText : ocrResult.getExtractedText()) {
                 extractedTexts.put(extractedText.getTextKey(), extractedText.getTextValue());
@@ -88,7 +88,7 @@ public abstract class ExtractedTextQueryService {
                 .build();
         if (request.getOcrResults() != null) {
             var ocrResult = request.getOcrResults();
-            ocrResponse.setDuration((float) (ocrResult.getDuration() / 1000));
+            ocrResponse.setDuration(totalDurationSeconds(request));
             ocrResponse.setOriginalExtractedText(ocrResult.getOriginalExtractedText());
 
             List<ExtractedTextResponse> extractedTexts = new ArrayList<>();
@@ -107,5 +107,17 @@ public abstract class ExtractedTextQueryService {
     protected abstract <T> ApiResponse<T> builResponse(T data, boolean success, String errorMessage);
 
     protected abstract OcrRequest findRequestById(String requestId);
+
+    /**
+     * Total wall-clock pemrosesan (requestedAt -> completedAt) dalam detik.
+     * Sebelumnya UI menampilkan OcrResult.duration (waktu 1 pass OCR engine saja)
+     * yang menyesatkan: 25.0s padahal user menunggu ~3 menit (queue + OCR + parse).
+     */
+    protected Float totalDurationSeconds(OcrRequest request) {
+        if (request == null || request.getRequestedAt() == null || request.getCompletedAt() == null) {
+            return null;
+        }
+        return (float) java.time.Duration.between(request.getRequestedAt(), request.getCompletedAt()).toMillis() / 1000f;
+    }
 
 }

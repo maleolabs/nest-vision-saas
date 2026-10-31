@@ -9,6 +9,7 @@ import m2codes.ocr_tool.domain.repository.OcrRequestRepository;
 import m2codes.ocr_tool.domain.service.OcrRequestService;
 import m2codes.ocr_tool.interfaces.dto.request.OcrDataRequest;
 
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -62,6 +63,11 @@ public class OcrRequestServiceImpl implements OcrRequestService {
     @Override
     public void updateStatus(OcrRequest request, RequestStatus status) {
         request.setStatus(status);
+        // status terminal -> catat wall-clock selesai; dipakai UI menampilkan
+        // total waktu (requestedAt -> completedAt), bukan hanya waktu engine OCR.
+        if (status == RequestStatus.DONE || status == RequestStatus.FAILURE) {
+            request.setCompletedAt(Instant.now());
+        }
         ocrRequestRepository.save(request);
     }
 
