@@ -76,6 +76,16 @@ public class PyTesseractOcrService implements TextExtractionService {
 
             ocrResult.setDuration(System.currentTimeMillis() - startTime);
             ocrResult.setEngineUsed("pytesseract");
+        } catch (InterruptedException e) {
+            // Pembatalan normal oleh ensemble early-exit: engine lain sudah menang,
+            // virtual thread di-cancel (f.cancel(true)) -> waitFor melempar interrupt.
+            // PythonOcrExcecutor sudah destroyForcibly proses python di titik ini.
+            // Bukan error — log ringan tanpa stack trace supaya tidak menyesatkan.
+            Thread.currentThread().interrupt();
+            ocrResult.setSuccess(false);
+            ocrResult.setEngineUsed("pytesseract");
+            ocrResult.setErrorMessage("pytesseract cancelled by ensemble early-exit");
+            log.warn("pyTesseract cancelled (ensemble early-exit), python process destroyed");
         } catch (Exception e) {
             ocrResult.setSuccess(false);
             ocrResult.setErrorMessage(e.getMessage());

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Paths;
 
@@ -58,11 +59,26 @@ public class RapidOcrService implements TextExtractionService {
             pb.redirectErrorStream(true);
             Process p = pb.start();
             StringBuilder out = new StringBuilder();
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
-                String line;
-                while ((line = br.readLine()) != null) out.append(line).append("\n");
+            // Reader thread daemon + waitFor: readLine() blocking I/O TIDAK responsif
+            // terhadap interrupt (Linux), jadi baca stream tidak boleh menahan thread
+            // pemanggil. Pola ini sama dengan PythonOcrExcecutor — saat interrupt,
+            // waitFor() melempar, kita destroyForcibly (stream EOF -> reader keluar).
+            Thread reader = startOutputReader(p, out);
+            int exit;
+            try {
+                exit = p.waitFor();
+            } catch (InterruptedException ie) {
+                // Dibatalkan ensemble early-exit (engine lain menang). Bunuh proses
+                // python supaya tidak yatim.
+                Thread.currentThread().interrupt();
+                p.destroyForcibly();
+                result.setSuccess(false);
+                result.setEngineUsed("rapid");
+                result.setErrorMessage("rapid cancelled by ensemble early-exit");
+                log.warn("RapidOCR cancelled (ensemble early-exit), python process destroyed");
+                return result;
             }
-            int exit = p.waitFor();
+            awaitReader(reader);
             if (exit != 0) {
                 result.setSuccess(false);
                 result.setErrorMessage("Rapid exit " + exit + ": " + out);
@@ -85,6 +101,28 @@ public class RapidOcrService implements TextExtractionService {
             log.error("RapidOCR failed", e);
         }
         return result;
+    }
+
+    private Thread startOutputReader(Process p, StringBuilder out) {
+        Thread reader = new Thread(() -> {
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+                String line;
+                while ((line = br.readLine()) != null) out.append(line).append("\n");
+            } catch (IOException ignored) {
+                // stream di-close via destroy — reader keluar diam-diam
+            }
+        }, "rapid-output-reader");
+        reader.setDaemon(true);
+        reader.start();
+        return reader;
+    }
+
+    private void awaitReader(Thread reader) {
+        try {
+            reader.join(2_000);
+        } catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private String resolveScriptPath(String configured) {
