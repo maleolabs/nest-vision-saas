@@ -24,21 +24,29 @@ public class ApiKeyAuthFilter extends OncePerRequestFilter {
         if (apiKey != null) {
             try {
                 if (!apiKeyService.verify(apiKey)) {
-                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response.getWriter().write("Token is invalid");
+                    reject(response, "Token is invalid");
                     return;
                 }
                 request.setAttribute("clientId", apiKeyService.clientId(apiKey));
             } catch (Exception e) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Token Verification Failed");
+                reject(response, "Token Verification Failed");
                 return;
             }
         } else {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Missing or Invalid Authorization Header");
+            reject(response, "Missing or Invalid Authorization Header");
             return;
         }
         chain.doFilter(request, response);
+    }
+
+    /**
+     * Penolakan selalu JSON supaya klien yang mem-parsing respons dengan res.json()
+     * tidak mendapat SyntaxError "Unexpected token 'T'". ponytail: klien lama yang
+     * membaca body teks mentah akan pecah; upgrade path = baca field errorMessage.
+     */
+    private void reject(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"success\":false,\"errorMessage\":\"" + message + "\"}");
     }
 }
