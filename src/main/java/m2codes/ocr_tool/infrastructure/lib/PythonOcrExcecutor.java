@@ -21,11 +21,15 @@ public class PythonOcrExcecutor {
     @Value("${ocr.script.path}")
     private String scriptPath;
 
-    // VIS-F09: budget keras runtime python — env OCR_PYTHON_TIMEOUT_MILLIS, default 120000.
+    // VIS-F09: budget keras runtime python — env OCR_PYTHON_TIMEOUT_MILLIS, default 180000.
     // Dibaca langsung dari Environment (pola env-var yang sama seperti OCR_RAPID_ENABLED dst),
     // application.properties tidak diubah. Sebelumnya process hang menahan thread pool
     // OCR (ocrTaskExecutor) selamanya.
-    @Value("${OCR_PYTHON_TIMEOUT_MILLIS:120000}")
+    // HARUS > OCR_TIME_BUDGET python (default 120s): budget python adalah deadline
+    // soft/graceful (exit rapi + teks parsial), timeout ini kill keras. Tanpa headroom,
+    // python yang sedang graceful-exit di 120s justru di-kill tepat saatnya dan
+    // teks parsialnya hilang. Headroom 60s untuk interpreter startup + preprocess.
+    @Value("${OCR_PYTHON_TIMEOUT_MILLIS:180000}")
     private long timeoutMillis;
 
     private static final int DESTROY_GRACE_MILLIS = 2_000;

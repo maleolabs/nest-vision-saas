@@ -94,7 +94,10 @@ export OCR_BLUR_THRESHOLD="${OCR_BLUR_THRESHOLD:-100}"
 export OCR_ENSEMBLE_FALLBACK="${OCR_ENSEMBLE_FALLBACK:-true}"
 export OCR_ENSEMBLE_PARALLEL="${OCR_ENSEMBLE_PARALLEL:-true}"
 export OCR_CONF_THRESHOLD="${OCR_CONF_THRESHOLD:-55}"
-export OCR_TIME_BUDGET="${OCR_TIME_BUDGET:-60}"
+export OCR_TIME_BUDGET="${OCR_TIME_BUDGET:-120}"
+# Kill keras Java; harus > OCR_TIME_BUDGET (python graceful-exit di budget,
+# kill hanya untuk proses macet total).
+export OCR_PYTHON_TIMEOUT_MILLIS="${OCR_PYTHON_TIMEOUT_MILLIS:-180000}"
 
 # --- PaddleOCR fallback (legacy, prefer Rapid) ---
 export OCR_PADDLE_ENABLED="${OCR_PADDLE_ENABLED:-false}"

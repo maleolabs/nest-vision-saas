@@ -32,7 +32,8 @@ $Config = @{
     OCR_ENSEMBLE_FALLBACK   = "true"
     OCR_ENSEMBLE_PARALLEL   = "true"
     OCR_CONF_THRESHOLD      = "55"
-    OCR_TIME_BUDGET         = "60"
+    OCR_TIME_BUDGET         = "120"
+    OCR_PYTHON_TIMEOUT_MILLIS = "180000"
     # PaddleOCR fallback (legacy, prefer Rapid)
     OCR_PADDLE_ENABLED      = "false"
     OCR_PADDLE_SCRIPT       = "opt/app/ocr/paddle_ocr.py"
