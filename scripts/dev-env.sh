@@ -92,6 +92,7 @@ export OCR_BLUR_THRESHOLD="${OCR_BLUR_THRESHOLD:-100}"
 
 # --- OCR ensemble fallback (pyTesseract -> native Tesseract -> RapidOCR -> PaddleOCR) ---
 export OCR_ENSEMBLE_FALLBACK="${OCR_ENSEMBLE_FALLBACK:-true}"
+export OCR_ENSEMBLE_PARALLEL="${OCR_ENSEMBLE_PARALLEL:-true}"
 export OCR_CONF_THRESHOLD="${OCR_CONF_THRESHOLD:-55}"
 export OCR_TIME_BUDGET="${OCR_TIME_BUDGET:-60}"
 
@@ -164,7 +165,7 @@ echo "  JAVA_HOME=$JAVA_HOME ($("$JAVA_HOME/bin/java" -version 2>&1 | head -1))"
 echo "  TESSERACT_DATAPATH=$TESSERACT_DATAPATH"
 echo "  DB: $SPRING_DATASOURCE_URL ($SPRING_DATASOURCE_USERNAME)"
 echo "  OCR_SCRIPT_PATH=$OCR_SCRIPT_PATH"
-echo "  OCR: preprocess=$OCR_PREPROCESSING_ENABLED ensemble=$OCR_ENSEMBLE_FALLBACK conf=$OCR_CONF_THRESHOLD budget=$OCR_TIME_BUDGET rapid=$OCR_RAPID_ENABLED paddle=$OCR_PADDLE_ENABLED sr=$OCR_SR_ENABLED perspective=$OCR_PERSPECTIVE_ENABLED osd=$OCR_OSD_ENABLED llm=$OCR_LLM_ENABLED"
+echo "  OCR: preprocess=$OCR_PREPROCESSING_ENABLED ensemble=$OCR_ENSEMBLE_FALLBACK parallel=$OCR_ENSEMBLE_PARALLEL conf=$OCR_CONF_THRESHOLD budget=$OCR_TIME_BUDGET rapid=$OCR_RAPID_ENABLED paddle=$OCR_PADDLE_ENABLED sr=$OCR_SR_ENABLED perspective=$OCR_PERSPECTIVE_ENABLED osd=$OCR_OSD_ENABLED llm=$OCR_LLM_ENABLED"
 echo "  KEYSTORE: alias=$KEYSTORE_ALIAS"
 echo ""
 echo "Next: ./mvnw verify  |  ./mvnw spring-boot:run  |  anvil pipeline build  |  anvil pipeline ci"

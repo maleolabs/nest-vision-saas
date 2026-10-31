@@ -30,6 +30,7 @@ $Config = @{
     OCR_BLUR_THRESHOLD      = "100"
     # Ensemble fallback
     OCR_ENSEMBLE_FALLBACK   = "true"
+    OCR_ENSEMBLE_PARALLEL   = "true"
     OCR_CONF_THRESHOLD      = "55"
     OCR_TIME_BUDGET         = "60"
     # PaddleOCR fallback (legacy, prefer Rapid)
