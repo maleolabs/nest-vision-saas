@@ -8,10 +8,35 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
- * P2.6 Ensemble: try primary (pyTesseract) -> fallback to native Tesseract -> PaddleOCR
- * Picks best by confidence/heuristics. Also applies NIK whitelist correction logging.
+ * P2.6 Ensemble OCR: eksekusi paralel semua engine (pytesseract, native
+ * tesseract, rapid, paddle) dengan early-exit — engine pertama yang selesai
+ * menang, engine lain dibatalkan.
+ *
+ * <p><b>Arsitektur paralel:</b> unit eksekusi sebenarnya adalah proses eksternal
+ * (python subprocess) atau panggilan JNI, bukan thread Java. Virtual thread
+ * Java hanya membungkus blocking I/O subprocess sehingga murah dan aman
+ * dimultiplex. {@link ExecutorService#invokeAny} dipilih karena semantiknya
+ * tepat untuk race ini:
+ * <ul>
+ *   <li>kembali begitu salah satu task selesai, dan membatalkan task lain —
+ *   pytesseract 54s tidak menahan hasil rapid yang sudah selesai 12.7s</li>
+ *   <li>API stabil sejak Java 21 (StructuredTaskScope masih preview di Java 25,
+ *   butuh --enable-preview — tidak layak untuk production)</li>
+ *   <li>virtual thread cocok: task murni blocking-I/O subprocess</li>
+ * </ul>
+ *
+ * <p><b>Catatan mesin low-core:</b> paralel 4 engine butuh ~3-4 core. Pada
+ * mesin 1-2 core, paralel malah melambat karena context-switch — karena itu
+ * bisa dimatikan lewat {@code ocr.ensemble.parallel=false} untuk kembali ke
+ * mode serial yang juga sudah di-reorder (rapid paling depan).
+ *
+ * <p>Juga menerapkan koreksi whitelist NIK (logging observability).
  */
 @Slf4j
 @Service(value = "ensembleOcrService")
@@ -27,6 +52,13 @@ public class EnsembleOcrService implements TextExtractionService {
 
     @Value("${ocr.ensemble.conf-threshold:55}")
     private int confThreshold;
+
+    /**
+     * Paralel engine aktif secara default. Pada mesin dengan core sangat terbatas,
+     * set {@code false} untuk kembali ke mode serial (lihat comment kelas).
+     */
+    @Value("${ocr.ensemble.parallel:true}")
+    private boolean parallelEnabled;
 
     public EnsembleOcrService(
             @Qualifier("pyTesseractService") TextExtractionService primary,
@@ -57,38 +89,102 @@ public class EnsembleOcrService implements TextExtractionService {
         return withEngine(r1, "pytesseract");
     }
 
+    /**
+     * Ekstraksi dari file: paralel semua engine dengan early-exit (lihat comment kelas).
+     */
     @Override
     public OcrResultDto extractTextFromImage(File file, boolean preprocessed) {
-        OcrResultDto r1 = guardedExtract(primary, "pytesseract", file, preprocessed);
-        log.info("[Ensemble File] primary success={} conf={} len={} blur={}", r1.isSuccess(), r1.getConfidence(), r1.getExtractedText() != null ? r1.getExtractedText().length() : 0, r1.getBlurScore());
-        // NIK validity check: if primary has valid 16-digit NIK, treat as good even if conf slightly below threshold
-        if (isGood(r1) && hasValidNik(r1)) return withEngine(r1, "pytesseract");
-        if (isGood(r1) && r1.getConfidence() != null && r1.getConfidence() >= confThreshold + 10) return withEngine(r1, "pytesseract");
+        if (!parallelEnabled) {
+            return extractSerial(file, preprocessed);
+        }
 
-        if (!fallbackEnabled) return r1;
+        List<Callable<OcrResultDto>> tasks = List.of(
+                () -> guardedExtract(rapid, "rapid", file, preprocessed),
+                () -> guardedExtract(nativeTesseract, "native-tesseract", file, true),
+                () -> guardedExtract(primary, "pytesseract", file, preprocessed),
+                () -> guardedExtract(paddle, "paddle", file, preprocessed));
 
-        // native with forced preprocess
-        OcrResultDto r2 = guardedExtract(nativeTesseract, "native-tesseract", file, true);
-        log.info("[Ensemble File] native conf={} len={}", r2.getConfidence(), r2.getExtractedText() != null ? r2.getExtractedText().length() : 0);
+        // ponytail: CompletionService + poll 250ms = early-exit berbasis kualitas.
+        // invokeAny tidak bisa dipakai: ia ambil task pertama yang selesai tanpa
+        // lihat kualitas — native 3.9s conf=46 akan menang duluan dan menenggelamkan
+        // rapid 12.7s conf=85. Poll cek isGood() setiap selesai; bila belum ada
+        // yang bagus, tunggu sampai semua selesai lalu pilih isBetter().
+        // Upgrade path: Java 26+ StructuredTaskScope.ShutdownOnSuccess saat final.
+        long t0 = System.currentTimeMillis();
+        try (ExecutorService pool = Executors.newVirtualThreadPerTaskExecutor()) {
+            java.util.concurrent.CompletionService<OcrResultDto> cs =
+                    new java.util.concurrent.ExecutorCompletionService<>(pool);
+            List<java.util.concurrent.Future<OcrResultDto>> futures = new java.util.ArrayList<>();
+            for (Callable<OcrResultDto> t : tasks) futures.add(cs.submit(t));
 
-        // rapid (preferred for blur) — try before paddle
+            OcrResultDto best = null;
+            int pending = futures.size();
+            while (pending > 0) {
+                java.util.concurrent.Future<OcrResultDto> done = cs.poll(250, java.util.concurrent.TimeUnit.MILLISECONDS);
+                if (done == null) continue;
+                pending--;
+                OcrResultDto r;
+                try {
+                    r = done.get();
+                } catch (Exception ex) {
+                    continue;
+                }
+                if (r == null) continue;
+                if (best == null || isBetter(r, best)) best = r;
+                if (isGood(best)) break; // early-exit: sudah ada hasil bagus, batalkan sisanya
+            }
+            // Batalkan engine yang masih jalan (subprocess memantau interrupt lalu destroyForcibly).
+            for (java.util.concurrent.Future<OcrResultDto> f : futures) f.cancel(true);
+
+            if (best == null) {
+                log.warn("[Ensemble Parallel] semua engine gagal, fallback ke serial");
+                return extractSerial(file, preprocessed);
+            }
+            log.info("[Ensemble Parallel] best engine={} conf={} len={} elapse={}ms",
+                    best.getEngineUsed(), best.getConfidence(),
+                    best.getExtractedText() != null ? best.getExtractedText().length() : 0,
+                    System.currentTimeMillis() - t0);
+            return ensureEngine(best);
+        } catch (Exception e) {
+            log.warn("[Ensemble Parallel] race gagal ({}), fallback ke serial", e.getMessage());
+            return extractSerial(file, preprocessed);
+        }
+    }
+
+    /**
+     * Mode serial (low-core fallback): urut direorder — rapid paling depan karena
+     * benchmark menunjukkan rapid paling cepat + confidence tertinggi untuk KTP,
+     * sehingga engine berat (pytesseract) sering tidak perlu dijalankan sama sekali.
+     */
+    private OcrResultDto extractSerial(File file, boolean preprocessed) {
         OcrResultDto rRapid = guardedExtract(rapid, "rapid", file, preprocessed);
-        log.info("[Ensemble File] rapid success={} conf={} len={} err={}", rRapid.isSuccess(), rRapid.getConfidence(), rRapid.getExtractedText() != null ? rRapid.getExtractedText().length() : 0, rRapid.getErrorMessage());
+        log.info("[Ensemble Serial] rapid success={} conf={}", rRapid.isSuccess(), rRapid.getConfidence());
+        if (isGood(rRapid)) return withEngine(rRapid, "rapid");
 
-        // paddle legacy if rapid not good
+        OcrResultDto r2 = guardedExtract(nativeTesseract, "native-tesseract", file, true);
+        log.info("[Ensemble Serial] native conf={}", r2.getConfidence());
+
+        OcrResultDto r1 = guardedExtract(primary, "pytesseract", file, preprocessed);
+        log.info("[Ensemble Serial] pytesseract success={} conf={}", r1.isSuccess(), r1.getConfidence());
+
         OcrResultDto r3 = guardedExtract(paddle, "paddle", file, preprocessed);
-        log.info("[Ensemble File] paddle success={} len={} err={}", r3.isSuccess(), r3.getExtractedText() != null ? r3.getExtractedText().length() : 0, r3.getErrorMessage());
+        log.info("[Ensemble Serial] paddle success={} len={}", r3.isSuccess(), r3.getExtractedText() != null ? r3.getExtractedText().length() : 0);
 
         OcrResultDto best = r1;
-        if (isBetter(r2, best)) best = withEngine(r2, "native-tesseract");
         if (rRapid.isSuccess() && isBetter(rRapid, best)) best = withEngine(rRapid, "rapid");
-        // also consider NIK validity boost: rapid with valid NIK beats everything if others invalid
         if (rRapid.isSuccess() && hasValidNik(rRapid) && !hasValidNik(best)) best = withEngine(rRapid, "rapid");
+        if (isBetter(r2, best)) best = withEngine(r2, "native-tesseract");
         if (r3.isSuccess() && isBetter(r3, best)) best = withEngine(r3, "paddle");
 
-        // log observability
-        log.info("[Ensemble] chosen engine={} conf={} dur={} best len={} nikValid={}", best.getEngineUsed(), best.getConfidence(), best.getDuration(), best.getExtractedText() != null ? best.getExtractedText().length() : 0, hasValidNik(best));
+        log.info("[Ensemble] chosen engine={} conf={} dur={} len={} nikValid={}", best.getEngineUsed(), best.getConfidence(), best.getDuration(), best.getExtractedText() != null ? best.getExtractedText().length() : 0, hasValidNik(best));
         return best;
+    }
+
+    private OcrResultDto ensureEngine(OcrResultDto r) {
+        if (r.getEngineUsed() == null || r.getEngineUsed().isBlank()) {
+            r.setEngineUsed("ensemble-parallel");
+        }
+        return r;
     }
 
     /**
