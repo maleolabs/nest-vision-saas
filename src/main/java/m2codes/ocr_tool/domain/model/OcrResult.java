@@ -51,6 +51,30 @@ public class OcrResult {
     @Column(name = "original_extracted_text", columnDefinition = "TEXT")
     private String originalExtractedText;
 
+    // Statistik observability OCR (untuk halaman hasil TryOCR & dashboard).
+    // Sebelumnya hanya ditulis ke log aplikasi (baris [OCR] di stderr python)
+    // dan hilang setelah request selesai.
+    @Column(name = "confidence")
+    private Integer confidence;
+
+    @Column(name = "blur_score")
+    private Double blurScore;
+
+    @Column(name = "brightness")
+    private Double brightness;
+
+    @Column(name = "contrast")
+    private Double contrast;
+
+    @Column(name = "psm_used")
+    private String psmUsed;
+
+    @Column(name = "engine_used")
+    private String engineUsed;
+
+    @Column(name = "super_resolution_applied")
+    private Boolean superResolutionApplied;
+
     @OneToMany(
             mappedBy="ocrResult",
             cascade=CascadeType.ALL,

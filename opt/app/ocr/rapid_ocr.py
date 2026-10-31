@@ -30,6 +30,21 @@ def main(image_path):
         sys.exit(1)
     engine = get_ocr()
     result, elapse = engine(image_path)
+    # Emit baris observability [OCR] yang sama dengan tesseract_ocr.py supaya
+    # statistik kualitas gambar (blur/brightness/contrast/psm/sr) bisa dipersist
+    # ke DB (V10) — sebelumnya hanya tesseract yang emit, jadi row rapid selalu
+    # NULL di kolom statistik. psm/sr tidak relevan untuk rapid: dummy value.
+    try:
+        import numpy as np
+        gray = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        if gray is not None:
+            blur = float(cv2.Laplacian(gray, cv2.CV_64F).var())
+            brightness = float(np.mean(gray))
+            contrast = float(np.std(gray))
+            avg_score = float(sum(float(s) for _, _, s in result if s is not None)) / max(1, len([s for _, _, s in result if s is not None]))
+            sys.stderr.write(f"[OCR] blur={blur:.1f} brightness={brightness:.1f} contrast={contrast:.1f} conf={avg_score * 100:.1f} psm=0 sr=False\n")
+    except Exception as e:
+        sys.stderr.write(f"rapid quality-metrics failed: {e}\n")
     # result: list of [box, text, score]
     lines = []
     for box, text, score in result if result else []:

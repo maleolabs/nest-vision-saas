@@ -42,6 +42,13 @@ public class OcrResultServiceImpl implements OcrResultService {
                 .errorMessage(ocrResultDto.getErrorMessage())
                 .duration(ocrResultDto.getDuration())
                 .originalExtractedText(ocrResultDto.getExtractedText())
+                .confidence(ocrResultDto.getConfidence())
+                .blurScore(ocrResultDto.getBlurScore())
+                .brightness(ocrResultDto.getBrightness())
+                .contrast(ocrResultDto.getContrast())
+                .psmUsed(ocrResultDto.getPsmUsed())
+                .engineUsed(ocrResultDto.getEngineUsed())
+                .superResolutionApplied(ocrResultDto.isSuperResolutionApplied())
                 .build();
 
         return ocrResultRepository.save(ocrResult);

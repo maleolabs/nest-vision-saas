@@ -112,7 +112,24 @@ public class PyTesseractOcrService implements TextExtractionService {
         ocrResult.setSuccess(true);
         ocrResult.setExtractedText(res.stdout());
         ocrResult.setConfidence(resolveConfidence(res));
+        fillMetrics(ocrResult, res);
         return ocrResult;
+    }
+
+    /**
+     * Isi metrik kualitas gambar (blur/brightness/contrast/psm/sr) ke DTO.
+     * Sebelumnya parseMetrics hanya dipakai untuk confidence — metrik lain
+     * sudah di-parse dari baris [OCR] stderr tapi dibuang, sehingga kolom
+     * statistik di DB (V10) selalu NULL untuk engine ini.
+     */
+    protected void fillMetrics(OcrResultDto dto, PythonOcrExcecutor.OcrScriptResult res) {
+        PythonOcrExcecutor.OcrMetrics metrics = excecutor.parseMetrics(res.stderr());
+        if (metrics == null) return;
+        dto.setBlurScore(metrics.blur());
+        dto.setBrightness(metrics.brightness());
+        dto.setContrast(metrics.contrast());
+        dto.setPsmUsed(String.valueOf(metrics.psm()));
+        dto.setSuperResolutionApplied(metrics.sr());
     }
 
     /** protected untuk unit test tanpa menjalankan process python. */

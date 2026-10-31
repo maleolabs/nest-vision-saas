@@ -2,6 +2,7 @@ package m2codes.ocr_tool.application.service;
 
 import m2codes.ocr_tool.domain.model.ExtractedText;
 import m2codes.ocr_tool.domain.model.OcrRequest;
+import m2codes.ocr_tool.domain.model.OcrResult;
 import m2codes.ocr_tool.domain.service.ExtractedTextService;
 import m2codes.ocr_tool.domain.service.OcrRequestService;
 import m2codes.ocr_tool.interfaces.dto.response.ExtractedTextResponse;
@@ -67,6 +68,7 @@ public abstract class ExtractedTextQueryService {
         if (request.getOcrResults() != null) {
             var ocrResult = request.getOcrResults();
             ocrResponse.setDuration(totalDurationSeconds(request));
+            fillStatistics(ocrResponse, ocrResult);
             Map<String, String> extractedTexts = new HashMap<>();
             for (ExtractedText extractedText : ocrResult.getExtractedText()) {
                 extractedTexts.put(extractedText.getTextKey(), extractedText.getTextValue());
@@ -90,6 +92,7 @@ public abstract class ExtractedTextQueryService {
             var ocrResult = request.getOcrResults();
             ocrResponse.setDuration(totalDurationSeconds(request));
             ocrResponse.setOriginalExtractedText(ocrResult.getOriginalExtractedText());
+            fillStatistics(ocrResponse, ocrResult);
 
             List<ExtractedTextResponse> extractedTexts = new ArrayList<>();
             for (ExtractedText extractedText : ocrResult.getExtractedText()) {
@@ -118,6 +121,31 @@ public abstract class ExtractedTextQueryService {
             return null;
         }
         return (float) java.time.Duration.between(request.getRequestedAt(), request.getCompletedAt()).toMillis() / 1000f;
+    }
+
+    /**
+     * Isi statistik observability OCR (conf, blur, brightness, contrast, psm,
+     * engine, SR) ke response. Data ini sudah dipersist OcrResultServiceImpl
+     * sejak V10 — sebelumnya hanya tampil di log aplikasi.
+     */
+    protected void fillStatistics(OcrResponse response, OcrResult ocrResult) {
+        response.setConfidence(ocrResult.getConfidence());
+        response.setBlurScore(ocrResult.getBlurScore());
+        response.setBrightness(ocrResult.getBrightness());
+        response.setContrast(ocrResult.getContrast());
+        response.setPsmUsed(ocrResult.getPsmUsed());
+        response.setEngineUsed(ocrResult.getEngineUsed());
+        response.setSuperResolutionApplied(ocrResult.getSuperResolutionApplied());
+    }
+
+    protected void fillStatistics(OcrResponse2 response, OcrResult ocrResult) {
+        response.setConfidence(ocrResult.getConfidence());
+        response.setBlurScore(ocrResult.getBlurScore());
+        response.setBrightness(ocrResult.getBrightness());
+        response.setContrast(ocrResult.getContrast());
+        response.setPsmUsed(ocrResult.getPsmUsed());
+        response.setEngineUsed(ocrResult.getEngineUsed());
+        response.setSuperResolutionApplied(ocrResult.getSuperResolutionApplied());
     }
 
 }

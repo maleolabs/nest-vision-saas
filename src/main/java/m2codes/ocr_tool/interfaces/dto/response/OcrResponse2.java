@@ -20,6 +20,15 @@ public class OcrResponse2 {
 
     private Float duration;
 
+    // Statistik observability (sama dengan OcrResponse, untuk konsistensi API).
+    private Integer confidence;
+    private Double blurScore;
+    private Double brightness;
+    private Double contrast;
+    private String psmUsed;
+    private String engineUsed;
+    private Boolean superResolutionApplied;
+
     private Map<String, String> extractedTexts;
 
 }

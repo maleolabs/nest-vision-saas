@@ -21,6 +21,15 @@ public class OcrResponse {
 
     private Float duration;
 
+    // Statistik observability untuk halaman hasil TryOCR (dashboard statistik).
+    private Integer confidence;
+    private Double blurScore;
+    private Double brightness;
+    private Double contrast;
+    private String psmUsed;
+    private String engineUsed;
+    private Boolean superResolutionApplied;
+
     private String originalExtractedText;
 
     private List<ExtractedTextResponse> extractedTexts = new ArrayList<>();

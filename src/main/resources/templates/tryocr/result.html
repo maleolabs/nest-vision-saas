@@ -5,6 +5,21 @@
     <link rel="stylesheet" th:href="@{/css/app.css}">
     <title>Hasil Ekstraksi — Nestara Vision</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <style>
+        /* ponytail: animasi lokal untuk dashboard statistik. Tailwind utilities
+           tidak mencakup keyframes count-up/gauge —ditulis disini, bukan library. */
+        @keyframes nv-fade-up { from { opacity:0; transform:translateY(10px) } to { opacity:1; transform:none } }
+        @keyframes nv-grow { from { transform:scaleY(0) } to { transform:scaleY(1) } }
+        .nv-anim { animation: nv-fade-up .5s ease-out both; }
+        .nv-bar-anim { animation: nv-grow .9s cubic-bezier(.22,1,.36,1) both; transform-origin:bottom; }
+        .nv-gauge circle { transition: stroke-dashoffset 1.1s cubic-bezier(.22,1,.36,1); }
+        .nv-reveal { opacity:0; }
+        .nv-reveal.nv-in { opacity:1; transition: opacity .7s ease-out; }
+        details>summary { list-style:none; cursor:pointer; }
+        details>summary::-webkit-details-marker { display:none; }
+        details[open] .nv-chev { transform:rotate(180deg); }
+        .nv-chev { transition: transform .2s ease; }
+    </style>
 </head>
 <body class="min-h-screen bg-slate-50">
 <header class="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-slate-200">
@@ -17,8 +32,8 @@
     </div>
 </header>
 
-<div class="max-w-4xl mx-auto px-6 py-8">
-    <div class="flex items-center gap-2 text-xs font-semibold mb-6 justify-center">
+<div class="max-w-6xl mx-auto px-6 py-8">
+    <div class="flex items-center gap-2 text-xs font-semibold mb-6 justify-center nv-anim">
         <span class="inline-flex items-center gap-2 bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full">1 Upload <i data-lucide="check" class="w-3.5 h-3.5 shrink-0"></i></span>
         <span class="w-6 h-px bg-slate-300"></span>
         <span class="inline-flex items-center gap-2 bg-slate-200 text-slate-600 px-3 py-1.5 rounded-full">2 Ekstraksi <i data-lucide="check" class="w-3.5 h-3.5 shrink-0"></i></span>
@@ -26,68 +41,240 @@
         <span class="inline-flex items-center gap-2 bg-emerald-600 text-white px-3 py-1.5 rounded-full">3 Hasil</span>
     </div>
 
-    <div class="bg-white border border-slate-200 rounded-[24px] shadow-sm overflow-hidden">
-        <div class="bg-white border-b border-slate-200 p-7">
-            <div class="flex items-start justify-between gap-4">
-                <div>
-                    <div class="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full text-xs font-semibold text-emerald-700"><i data-lucide="check-circle-2" class="w-3.5 h-3.5 shrink-0"></i> Selesai • <span th:text="${ocrResult.getDuration()} + 's'">0s</span></div>
-                    <h1 class="mt-3 text-2xl font-extrabold tracking-tight">Hasil Ekstraksi</h1>
-                    <p class="text-sm text-slate-600 mt-1">Berikut teks yang berhasil diekstrak. Salin atau export sebagai JSON.</p>
+    <div class="grid lg:grid-cols-3 gap-5">
+        <!-- ===================== KIRI: STATISTIK UTAMA ===================== -->
+        <div class="lg:col-span-2 space-y-5">
+            <!-- Hero: gauge conf + ringkasan -->
+            <div class="nv-anim bg-white border border-slate-200 rounded-[24px] shadow-sm p-7">
+                <div class="flex items-start gap-6 flex-col sm:flex-row">
+                    <!-- Gauge confidence (SVG ring) -->
+                    <div class="shrink-0 grid place-items-center relative w-36 h-36">
+                        <svg class="nv-gauge -rotate-90" width="144" height="144" viewBox="0 0 144 144">
+                            <circle cx="72" cy="72" r="60" fill="none" stroke="#e2e8f0" stroke-width="13"></circle>
+                            <circle id="confArc" cx="72" cy="72" r="60" fill="none" stroke="#2563eb"
+                                    stroke-width="13" stroke-linecap="round"
+                                    stroke-dasharray="376.99" stroke-dashoffset="376.99"></circle>
+                        </svg>
+                        <div class="absolute grid place-items-center text-center">
+                            <div class="text-3xl font-extrabold tracking-tight"><span id="confValue" th:text="${ocrResult.getConfidence() != null ? ocrResult.getConfidence() : 0}">0</span><span class="text-base text-slate-500">%</span></div>
+                            <div class="text-[11px] font-bold tracking-wide uppercase text-slate-500">Confidence</div>
+                        </div>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full text-xs font-semibold text-emerald-700"><i data-lucide="check-circle-2" class="w-3.5 h-3.5 shrink-0"></i> Ekstraksi selesai</div>
+                        <h1 class="mt-3 text-2xl font-extrabold tracking-tight">Hasil Ekstraksi</h1>
+                        <p class="text-sm text-slate-600 mt-1">Statistik pemrosesan OCR dan field yang berhasil diekstrak dari gambar.</p>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            <span class="inline-flex items-center gap-1.5 text-xs font-semibold bg-slate-100 text-slate-700 px-3 py-1.5 rounded-full"><i data-lucide="clock" class="w-3.5 h-3.5"></i> Total <span id="durValue" class="font-extrabold">0.0s</span></span>
+                            <span class="inline-flex items-center gap-1.5 text-xs font-semibold bg-slate-100 text-slate-700 px-3 py-1.5 rounded-full"><i data-lucide="cpu" class="w-3.5 h-3.5"></i> Engine: <b th:text="${ocrResult.getEngineUsed() != null ? ocrResult.getEngineUsed() : 'n/a'}">rapid</b></span>
+                            <span class="inline-flex items-center gap-1.5 text-xs font-semibold bg-slate-100 text-slate-700 px-3 py-1.5 rounded-full"><i data-lucide="layers" class="w-3.5 h-3.5"></i> <b id="fieldCount">0</b> field</span>
+                            <th:block th:if="${ocrResult.getSuperResolutionApplied() != null and ocrResult.getSuperResolutionApplied()}">
+                                <span class="inline-flex items-center gap-1.5 text-xs font-semibold bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Super-resolution aktif</span>
+                            </th:block>
+                        </div>
+                    </div>
                 </div>
-                <div class="hidden sm:flex gap-2">
-                    <button onclick="copyAll()" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-blue-700">Copy JSON</button>
-                    <a th:href="@{/ocr/extract}" class="bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-xl text-sm font-semibold hover:bg-slate-50">Baru</a>
+            </div>
+
+            <!-- Bar statistik waktu + kualitas gambar -->
+            <div class="nv-anim grid sm:grid-cols-2 gap-5" style="animation-delay:.08s">
+                <!-- Breakdown waktu -->
+                <div class="bg-white border border-slate-200 rounded-[24px] shadow-sm p-6">
+                    <h3 class="font-bold flex items-center gap-2 text-sm"><span class="w-7 h-7 rounded-lg bg-blue-600 text-white grid place-items-center"><i data-lucide="timer" class="w-4 h-4"></i></span> Waktu Pemrosesan</h3>
+                    <div class="mt-5 space-y-4">
+                        <div>
+                            <div class="flex justify-between text-xs font-semibold text-slate-600"><span>Confidence target (55)</span><span>Total wall-clock</span></div>
+                            <div class="mt-1.5 h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                                <div id="durBar" class="nv-bar-anim h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600" style="width:0%"></div>
+                            </div>
+                            <div class="mt-1.5 flex justify-between items-baseline">
+                                <span class="text-[11px] text-slate-500">Ambang bangkit engine: <b>55%</b></span>
+                                <span class="text-lg font-extrabold tracking-tight"><span id="durValue2">0.0</span><span class="text-xs text-slate-500">s</span></span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 pt-1">
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-3">
+                                <div class="text-[11px] font-bold tracking-wide uppercase text-slate-500">Engine</div>
+                                <div class="mt-0.5 font-bold capitalize" th:text="${ocrResult.getEngineUsed() != null ? ocrResult.getEngineUsed() : 'n/a'}">rapid</div>
+                            </div>
+                            <div class="rounded-xl bg-slate-50 border border-slate-200 p-3">
+                                <div class="text-[11px] font-bold tracking-wide uppercase text-slate-500">Mode segmentasi</div>
+                                <div class="mt-0.5 font-bold font-mono" th:text="${ocrResult.getPsmUsed() != null ? ocrResult.getPsmUsed() : 'n/a'}">3</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Kualitas gambar -->
+                <div class="bg-white border border-slate-200 rounded-[24px] shadow-sm p-6">
+                    <h3 class="font-bold flex items-center gap-2 text-sm"><span class="w-7 h-7 rounded-lg bg-violet-600 text-white grid place-items-center"><i data-lucide="image" class="w-4 h-4"></i></span> Kualitas Gambar</h3>
+                    <div class="mt-5 space-y-3.5">
+                        <div th:with="blur=${ocrResult.getBlurScore()}">
+                            <div class="flex justify-between text-xs font-semibold"><span class="text-slate-600">Ketajaman (blur)</span><span class="font-mono text-slate-500" th:text="${blur != null ? #numbers.formatDecimal(blur,1,1) : 'n/a'}">0.0</span></div>
+                            <div class="mt-1.5 h-2.5 rounded-full bg-slate-100 overflow-hidden"><div class="nv-bar-anim h-full rounded-full bg-gradient-to-r from-violet-500 to-violet-600" th:style="'width:' + ${blur != null ? (blur.intValue() > 400 ? 100 : blur.intValue()/4) : 0} + '%'"></div></div>
+                            <div class="mt-1 text-[10px] text-slate-400">Makin tinggi makin tajam — di bawah ~100 dianggap buram</div>
+                        </div>
+                        <div th:with="br=${ocrResult.getBrightness()}">
+                            <div class="flex justify-between text-xs font-semibold"><span class="text-slate-600">Kecerahan</span><span class="font-mono text-slate-500" th:text="${br != null ? #numbers.formatDecimal(br,1,1) : 'n/a'}">0.0</span></div>
+                            <div class="mt-1.5 h-2.5 rounded-full bg-slate-100 overflow-hidden"><div class="nv-bar-anim h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-500" th:style="'width:' + ${br != null ? (br.intValue() > 255 ? 100 : br.intValue()/255*100) : 0} + '%'"></div></div>
+                        </div>
+                        <div th:with="ct=${ocrResult.getContrast()}">
+                            <div class="flex justify-between text-xs font-semibold"><span class="text-slate-600">Kontras</span><span class="font-mono text-slate-500" th:text="${ct != null ? #numbers.formatDecimal(ct,1,1) : 'n/a'}">0.0</span></div>
+                            <div class="mt-1.5 h-2.5 rounded-full bg-slate-100 overflow-hidden"><div class="nv-bar-anim h-full rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500" th:style="'width:' + ${ct != null ? (ct.intValue() > 100 ? 100 : ct.intValue()) : 0} + '%'"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Field terstruktur (section utama, dipertahankan) -->
+            <div class="nv-anim bg-white border border-slate-200 rounded-[24px] shadow-sm p-7" style="animation-delay:.16s">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-blue-600 text-white grid place-items-center"><i data-lucide="table-2" class="w-4 h-4"></i></span> Field Terstruktur</h3>
+                        <p class="text-xs text-slate-500 mt-1">Field yang berhasil diparsing otomatis — gunakan untuk autofill form.</p>
+                    </div>
+                    <span class="text-xs font-bold bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full"><span id="fieldBadge">0</span> terdeteksi</span>
+                </div>
+                <div th:if="${ocrResult.getExtractedTexts() != null and !#lists.isEmpty(ocrResult.getExtractedTexts())}" class="mt-4 grid sm:grid-cols-2 gap-3">
+                    <div th:each="et,iter : ${ocrResult.getExtractedTexts()}" class="nv-reveal rounded-xl border border-slate-200 bg-white p-4 flex flex-col min-w-0 hover:border-blue-300 transition" th:style="'animation-delay:' + ${iter.index*40} + 'ms'">
+                        <div class="text-[11px] font-bold tracking-wide uppercase text-slate-500" th:text="${et.getTextKey()}">NIK</div>
+                        <div class="mt-1 min-w-0 font-semibold text-slate-900 break-words" th:text="${et.getTextValue()}">value</div>
+                        <button th:attr="data-value=${et.getTextValue()}" onclick="navigator.clipboard.writeText(this.getAttribute('data-value')); this.innerText='Copied!'; setTimeout(()=>this.innerText='Copy',1200)" class="mt-3 self-start text-xs font-semibold border border-slate-200 px-3 py-1 rounded-full hover:bg-slate-50">Copy</button>
+                    </div>
+                </div>
+                <div th:if="${ocrResult.getExtractedTexts() == null or #lists.isEmpty(ocrResult.getExtractedTexts())}" class="mt-4 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">Tidak ada field terstruktur yang terdeteksi — lihat teks original di detail.</div>
             </div>
         </div>
 
-        <div class="p-7">
-            <!-- original text -->
-            <div class="flex items-center justify-between">
-                <h3 class="font-bold flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-slate-900 text-white grid place-items-center"><i data-lucide="align-left" class="w-4 h-4"></i></span> Teks Original</h3>
-                <button onclick="copyText('originalText')" class="text-xs font-semibold border border-slate-200 bg-white px-3 py-1.5 rounded-full hover:bg-slate-50">Copy</button>
-            </div>
-            <div id="originalText" class="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-4 max-h-64 overflow-auto">
-                <p th:text="${ocrResult.getOriginalExtractedText()}" class="text-sm leading-6 whitespace-pre-wrap text-slate-800">—</p>
-                <p th:if="${ocrResult.getOriginalExtractedText() == null or #strings.isEmpty(ocrResult.getOriginalExtractedText())}" class="text-sm text-slate-500">Tidak ada teks original (mungkin tidak tersedia).</p>
-            </div>
-
-            <h3 class="mt-8 font-bold flex items-center gap-2"><span class="w-8 h-8 rounded-lg bg-blue-600 text-white grid place-items-center"><i data-lucide="table-2" class="w-4 h-4"></i></span> Informasi Terstruktur</h3>
-            <p class="text-xs text-slate-500 mt-1">Field yang berhasil diparsing otomatis — gunakan untuk autofill form.</p>
-
-            <div th:if="${ocrResult.getExtractedTexts() != null and !#lists.isEmpty(ocrResult.getExtractedTexts())}" class="mt-4 grid sm:grid-cols-2 gap-3">
-                <div th:each="et : ${ocrResult.getExtractedTexts()}" class="rounded-xl border border-slate-200 bg-white p-4 flex flex-col min-w-0">
-                    <div class="text-[11px] font-bold tracking-wide uppercase text-slate-500" th:text="${et.getTextKey()}">NIK</div>
-                    <div class="mt-1 min-w-0 font-semibold text-slate-900 break-words" th:text="${et.getTextValue()}">value</div>
-                    <button th:attr="data-value=${et.getTextValue()}" onclick="navigator.clipboard.writeText(this.getAttribute('data-value')); this.innerText='Copied!'; setTimeout(()=>this.innerText='Copy',1200)" class="mt-3 self-start text-xs font-semibold border border-slate-200 px-3 py-1 rounded-full hover:bg-slate-50">Copy</button>
+        <!-- ===================== KANAN: DONUT + DETAIL ===================== -->
+        <div class="space-y-5">
+            <!-- Donut distribusi conf vs threshold -->
+            <div class="nv-anim bg-white border border-slate-200 rounded-[24px] shadow-sm p-6" style="animation-delay:.12s">
+                <h3 class="font-bold flex items-center gap-2 text-sm"><span class="w-7 h-7 rounded-lg bg-emerald-600 text-white grid place-items-center"><i data-lucide="pie-chart" class="w-4 h-4"></i></span> Ringkasan</h3>
+                <div class="mt-5 flex items-center justify-center">
+                    <div class="relative grid place-items-center w-40 h-40">
+                        <svg class="-rotate-90" width="160" height="160" viewBox="0 0 160 160">
+                            <circle cx="80" cy="80" r="64" fill="none" stroke="#e2e8f0" stroke-width="16"></circle>
+                            <circle id="confDonut" class="nv-gauge" cx="80" cy="80" r="64" fill="none" stroke="#059669"
+                                    stroke-width="16" stroke-linecap="round"
+                                    stroke-dasharray="402.12" stroke-dashoffset="402.12"></circle>
+                        </svg>
+                        <div class="absolute grid place-items-center text-center">
+                            <div class="text-2xl font-extrabold"><span id="donutValue">0</span><span class="text-sm text-slate-500">%</span></div>
+                            <div class="text-[10px] font-bold tracking-wide uppercase text-slate-500">Target 55%</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 space-y-2 text-xs">
+                    <div class="flex items-center gap-2 text-slate-600"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Hasil dipakai <b class="ml-auto" th:text="${ocrResult.getEngineUsed() != null ? ocrResult.getEngineUsed() : 'n/a'}">rapid</b></div>
+                    <div class="flex items-center gap-2 text-slate-600"><span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span> Mode <b class="ml-auto font-mono" th:text="${ocrResult.getPsmUsed() != null ? ocrResult.getPsmUsed() : 'n/a'}">3</b></div>
                 </div>
             </div>
-            <div th:if="${ocrResult.getExtractedTexts() == null or #lists.isEmpty(ocrResult.getExtractedTexts())}" class="mt-4 rounded-xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">Tidak ada field terstruktur yang terdeteksi — lihat teks original di atas.</div>
 
-            <!-- JSON -->
-            <div class="mt-8">
-                <div class="flex items-center justify-between"><h4 class="font-bold text-sm">JSON Response</h4><span class="text-xs bg-slate-900 text-white px-2 py-1 rounded-full" th:text="${ocrResult.getDuration()} + 's'">0s</span></div>
-                <pre id="jsonBlock" class="mt-3 bg-slate-950 text-slate-200 p-4 rounded-xl text-xs font-mono overflow-auto max-h-80" th:text="${'{&quot;duration&quot;:' + ocrResult.getDuration() + ',&quot;original&quot;:&quot;…&quot;}'}">{"duration": 0.0}</pre>
-                <script th:inline="javascript">
-                    const extracted = /*[[${ocrResult.getExtractedTexts()}]]*/ [];
-                    const original = /*[[${ocrResult.getOriginalExtractedText()}]]*/ "";
-                    const duration = /*[[${ocrResult.getDuration()}]]*/ 0;
-                    const json = { duration, originalExtractedText: original, extractedTexts: Array.isArray(extracted) ? extracted.reduce((a,c)=>{a[c.textKey||c.textkey||c.key]=c.textValue||c.textvalue||c.value; return a;},{}) : extracted };
-                    document.getElementById('jsonBlock').textContent = JSON.stringify(json, null, 2);
-                    function copyAll(){ navigator.clipboard.writeText(document.getElementById('jsonBlock').textContent); const b=document.activeElement; if(b) b.innerText='Copied!'; }
-                    function copyText(id){ navigator.clipboard.writeText(document.getElementById(id).innerText); }
-                </script>
-            </div>
+            <!-- Detail (dilipat): teks original + JSON — section 2&3 lama digruntukan ke sini -->
+            <div class="nv-anim bg-white border border-slate-200 rounded-[24px] shadow-sm p-6" style="animation-delay:.2s">
+                <h3 class="font-bold flex items-center gap-2 text-sm"><span class="w-7 h-7 rounded-lg bg-slate-900 text-white grid place-items-center"><i data-lucide="align-left" class="w-4 h-4"></i></span> Detail Lengkap</h3>
+                <p class="text-[11px] text-slate-500 mt-1">Teks mentah dan respons JSON mentah dari engine.</p>
 
-            <div class="mt-8 flex flex-col sm:flex-row gap-3">
-                <a th:href="@{/ocr/extract}" class="flex-1 inline-flex justify-center items-center gap-2 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700"><i data-lucide="rotate-cw" class="w-4 h-4"></i> Ekstraksi Lagi</a>
-                <a th:href="@{/dashboard}" class="flex-1 inline-flex justify-center items-center gap-2 bg-white border border-slate-200 py-3 rounded-xl font-semibold hover:bg-slate-50">Ke Dashboard</a>
+                <details class="mt-4 group" open>
+                    <summary class="flex items-center justify-between text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200 px-3 py-2 rounded-lg hover:bg-slate-100">
+                        <span>Teks Original</span><i data-lucide="chevron-down" class="nv-chev w-4 h-4 text-slate-500"></i>
+                    </summary>
+                    <div id="originalText" class="mt-2 rounded-lg border border-slate-200 bg-slate-50 p-3 max-h-44 overflow-auto">
+                        <p th:text="${ocrResult.getOriginalExtractedText()}" class="text-xs leading-6 whitespace-pre-wrap text-slate-800 font-mono">—</p>
+                        <p th:if="${ocrResult.getOriginalExtractedText() == null or #strings.isEmpty(ocrResult.getOriginalExtractedText())}" class="text-xs text-slate-500">Tidak tersedia.</p>
+                    </div>
+                </details>
+
+                <details class="mt-3 group">
+                    <summary class="flex items-center justify-between text-xs font-semibold text-slate-700 bg-slate-50 border border-slate-200 px-3 py-2 rounded-lg hover:bg-slate-100">
+                        <span>JSON Response</span><i data-lucide="chevron-down" class="nv-chev w-4 h-4 text-slate-500"></i>
+                    </summary>
+                    <pre id="jsonBlock" class="mt-2 bg-slate-950 text-slate-200 p-3 rounded-lg text-[11px] font-mono overflow-auto max-h-60">…</pre>
+                </details>
+
+                <div class="mt-4 flex gap-2">
+                    <button onclick="copyAll()" class="flex-1 bg-blue-600 text-white py-2 rounded-xl text-xs font-semibold hover:bg-blue-700">Copy JSON</button>
+                    <button onclick="copyText('originalText')" class="flex-1 bg-white border border-slate-200 text-slate-700 py-2 rounded-xl text-xs font-semibold hover:bg-slate-50">Copy Teks</button>
+                </div>
             </div>
         </div>
     </div>
 
+    <div class="mt-8 flex flex-col sm:flex-row gap-3 nv-anim" style="animation-delay:.26s">
+        <a th:href="@{/ocr/extract}" class="flex-1 inline-flex justify-center items-center gap-2 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700"><i data-lucide="rotate-cw" class="w-4 h-4"></i> Ekstraksi Lagi</a>
+        <a th:href="@{/dashboard}" class="flex-1 inline-flex justify-center items-center gap-2 bg-white border border-slate-200 py-3 rounded-xl font-semibold hover:bg-slate-50">Ke Dashboard</a>
+    </div>
+
     <div class="mt-6 text-center text-xs text-slate-400">© 2026 Nestara Vision • Hasil disimpan sementara • Jangan bagikan data sensitif</div>
 </div>
+
+<script th:inline="javascript">
+    const confidence = /*[[${ocrResult.getConfidence() != null ? ocrResult.getConfidence() : 0}]]*/ 0;
+    const duration = /*[[${ocrResult.getDuration() != null ? ocrResult.getDuration() : 0}]]*/ 0;
+    const fieldCount = /*[[${ocrResult.getExtractedTexts() != null ? ocrResult.getExtractedTexts().size() : 0}]]*/ 0;
+    const extracted = /*[[${ocrResult.getExtractedTexts()}]]*/ [];
+    const original = /*[[${ocrResult.getOriginalExtractedText()}]]*/ "";
+
+    // --- Count-up angka (durasi, conf, field) ---
+    function countUp(el, target, decimals, suffix) {
+        const dur = 1100, t0 = performance.now();
+        function tick(now) {
+            const p = Math.min((now - t0) / dur, 1);
+            const ease = 1 - Math.pow(1 - p, 3);
+            el.textContent = (target * ease).toFixed(decimals) + (suffix || '');
+            if (p < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+    }
+
+    // Gauge arc animasi (stroke-dashoffset)
+    function animateArc(id, percent, circumference) {
+        const c = document.getElementById(id);
+        if (!c) return;
+        const offset = circumference * (1 - Math.max(0, Math.min(100, percent)) / 100);
+        requestAnimationFrame(() => { c.style.strokeDashoffset = offset; });
+    }
+
+    // Bar goals: dari 0 ke nilai akhir
+    document.querySelectorAll('.nv-bar-anim').forEach(el => {
+        const w = el.style.width; el.style.width = '0%';
+        requestAnimationFrame(() => requestAnimationFrame(() => { el.style.width = w; }));
+    });
+
+    const conf = Math.round(confidence || 0);
+    animateArc('confArc', conf, 376.99);
+    animateArc('confDonut', conf, 402.12);
+    countUp(document.getElementById('confValue'), conf, 0, '');
+    countUp(document.getElementById('donutValue'), conf, 0, '');
+    countUp(document.getElementById('durValue'), duration, 1, 's');
+    countUp(document.getElementById('durValue2'), duration, 1, '');
+    countUp(document.getElementById('fieldCount'), fieldCount, 0, '');
+    countUp(document.getElementById('fieldBadge'), fieldCount, 0, '');
+
+    // Bar waktu: proporsi conf terhadap ambang 55 (visual, bukan data teknis)
+    const durBar = document.getElementById('durBar');
+    if (durBar) durBar.style.width = Math.min(100, (conf / 55) * 100) + '%';
+
+    // Field cards: staggered fade-in
+    document.querySelectorAll('.nv-reveal').forEach((el, i) => {
+        setTimeout(() => el.classList.add('nv-in'), 120 + i * 45);
+    });
+
+    // JSON block
+    const json = {
+        duration,
+        confidence: conf,
+        engine: extracted.engineUsed,
+        originalExtractedText: original,
+        extractedTexts: Array.isArray(extracted)
+            ? extracted.reduce((a, c) => { a[c.textKey||c.textkey||c.key] = c.textValue||c.textvalue||c.value; return a; }, {})
+            : extracted
+    };
+    document.getElementById('jsonBlock').textContent = JSON.stringify(json, null, 2);
+    function copyAll(){ navigator.clipboard.writeText(document.getElementById('jsonBlock').textContent); const b=document.activeElement; if(b) b.innerText='Copied!'; }
+    function copyText(id){ navigator.clipboard.writeText(document.getElementById(id).innerText); }
+</script>
 <script th:src="@{/js/vendor/lucide.min.js}"></script>
 <script>lucide.createIcons();</script>
 </body>

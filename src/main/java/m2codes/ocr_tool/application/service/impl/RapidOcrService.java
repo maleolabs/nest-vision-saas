@@ -3,6 +3,8 @@ package m2codes.ocr_tool.application.service.impl;
 import lombok.extern.slf4j.Slf4j;
 import m2codes.ocr_tool.application.dto.OcrResultDto;
 import m2codes.ocr_tool.application.service.TextExtractionService;
+import m2codes.ocr_tool.infrastructure.lib.PythonOcrExcecutor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +31,13 @@ public class RapidOcrService implements TextExtractionService {
 
     @Value("${ocr.rapid.enabled:true}")
     private boolean enabled;
+
+    /**
+     * Dipakai untuk parse baris [OCR] ... yang sekarang dipancarkan rapid_ocr.py
+     * (redirectErrorStream(true) menyatukan stderr ke stdout jadi terbaca di out).
+     */
+    @Autowired
+    private PythonOcrExcecutor executor;
 
     @Override
     public OcrResultDto extractTextFromImage(String imageUrl, boolean preprocessed) {
@@ -85,10 +94,27 @@ public class RapidOcrService implements TextExtractionService {
                 return result;
             }
             String text = out.toString().trim();
+            // rapid_ocr.py memancarkan baris [OCR] ... lewat stderr yang
+            // redirectErrorStream(true) satukan ke stdout. Strip baris itu dari
+            // teks hasil supaya tidak bocor ke output OCR, lalu parse metriknya.
+            PythonOcrExcecutor.OcrMetrics metrics = null;
+            java.util.regex.Matcher m = java.util.regex.Pattern
+                    .compile("^\\[OCR\\] .*$", java.util.regex.Pattern.MULTILINE).matcher(text);
+            if (m.find()) {
+                metrics = executor.parseMetrics(m.group(0));
+                text = m.replaceAll("").trim();
+            }
             result.setExtractedText(text);
             result.setSuccess(true);
             result.setDuration(System.currentTimeMillis() - start);
             result.setEngineUsed("rapid");
+            if (metrics != null) {
+                result.setBlurScore(metrics.blur());
+                result.setBrightness(metrics.brightness());
+                result.setContrast(metrics.contrast());
+                result.setPsmUsed(String.valueOf(metrics.psm()));
+                result.setSuperResolutionApplied(metrics.sr());
+            }
             // heuristic confidence: if NIK 16 digits present, high confidence
             int conf = 70;
             if (text.contains("nik:") && text.matches("(?s).*nik:\\s*\\d{16}.*")) conf = 85;
