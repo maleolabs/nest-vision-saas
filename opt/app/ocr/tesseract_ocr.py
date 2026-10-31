@@ -184,16 +184,48 @@ def deskew_hough(gray):
         return gray, 0.0
 
 # --- C: OSD orientation 0/90/180/270 ---
+def orientation_score(text):
+    """Skor orientasi berbasis SEMANTIK, bukan panjang teks.
+
+    Bug lama: brute-force memilih rotasi berdasarkan len(txt) > 40. Asumsi itu
+    salah — tesseract membaca noise menjadi karakter acak saat orientasi salah,
+    sehingga teks rotasi-serong justru LEBIH PANJANG dari teks orientasi benar.
+    KTP2 yang sudah tegak diputar 180° padahal sudah benar (conf 42 vs 85).
+
+    Keyword KTP + NIK 16-digit hanya bisa dirangkai tesseract saat orientasi
+    benar (sifat text recognition), jadi ini sinyal yang dapat diandalkan.
+    """
+    if not text:
+        return 0.0
+    s = 0.0
+    low = text.lower()
+    for kw in ("provinsi", "kabupaten", "kota", "nik", "nama", "tempat/tgl lahir",
+               "jenis kelamin", "alamat", "rt/rw", "kecamatan", "desa", "kelurahan",
+               "agama", "status perkawinan", "pekerjaan", "kewarganegaraan",
+               "berlaku hingga", "golongan darah"):
+        if kw in low:
+            s += 10.0
+    # NIK 16-digit: sinyal terkuat (hanya muncul saat orientasi benar)
+    if re.search(r"\b\d{16}\b", text):
+        s += 50.0
+    return s
+
+
 def correct_orientation(gray, lang="ind", deadline=None):
     """Detect 90/180/270 rotation via Tesseract OSD. Brute-force guarded: skip if blurry or budget low."""
     try:
         if deadline_exceeded(deadline):
             sys.stderr.write("[OSD] budget exhausted before orientation check, skip\n")
             return gray, 0
-        # Guard: if very blurry, OSD is unreliable and brute will waste budget -> skip
+        # Guard: if EXTREMELY blurry, OSD is unreliable and brute will waste budget -> skip.
+        # Ambang 15 (bukan 50): Laplacian variance invarian terhadap rotasi, jadi
+        # ambang 50 mem-block brute pada SEMUA KTP (KTP1 var=42, KTP2 var=21) —
+        # koreksi rotasi praktis tidak pernah aktif. Brute-force sekarang pakai
+        # orientation_score (keyword+NIK) yang memvalidasi hasilnya sendiri:
+        # skor 0 = tak ada keyword terbaca = tak ada rotasi yang dipilih.
         try:
             bv = laplacian_variance(gray)
-            if bv < 50:
+            if bv < 15:
                 sys.stderr.write(f"[OSD] skip brute, too blurry (var={bv:.1f})\n")
                 # still try single OSD, but no brute
                 try:
@@ -241,10 +273,17 @@ def correct_orientation(gray, lang="ind", deadline=None):
             return gray, 0
         h, w = gray.shape[:2]
         best = gray
-        best_len = 0
+        best_score = 0.0
         best_angle = 0
         thumb = cv2.resize(gray, (400, int(400*h/w))) if w>h else cv2.resize(gray, (int(400*w/h), 400))
         brute_attempts = 0
+        # Baseline: skor orientasi saat ini (angle 0). Harus dikalahkan secara
+        # meyakinkan, bukan cuma "sedikit lebih panjang".
+        try:
+            base_txt = pytesseract.image_to_string(thumb, config='--oem 1 --psm 6 -l ind', timeout=ts_timeout(deadline, cap=5))
+            best_score = orientation_score(base_txt)
+        except Exception:
+            pass
         for ang, code in [(90, cv2.ROTATE_90_CLOCKWISE), (180, cv2.ROTATE_180)]:  # 270 rarely needed for KTP
             if deadline_exceeded(deadline):
                 sys.stderr.write(f"[OSD-BRUTE] deadline reached after {brute_attempts} candidate(s), keep best so far\n")
@@ -253,15 +292,16 @@ def correct_orientation(gray, lang="ind", deadline=None):
             try:
                 rot = cv2.rotate(thumb, code)
                 txt = pytesseract.image_to_string(rot, config='--oem 1 --psm 6 -l ind', timeout=ts_timeout(deadline, cap=5))
-                l = len(txt.strip())
-                if l > best_len and l > 20:
-                    best_len = l
+                sc = orientation_score(txt)
+                if sc > best_score:
+                    best_score = sc
                     best_angle = ang
             except Exception:
                 pass
-        # require stronger evidence: len>40 (was 30)
-        if best_angle != 0 and best_len > 40:
-            sys.stderr.write(f"[OSD-BRUTE] chose angle={best_angle} len={best_len}\n")
+        # Ambang berbasis makna: minimal 1 keyword (10) atau NIK (50).
+        # Sebelumnya len>40 yang ditipu oleh noise karakter rotasi.
+        if best_angle != 0 and best_score >= 30:
+            sys.stderr.write(f"[OSD-BRUTE] chose angle={best_angle} score={best_score:.0f}\n")
             if best_angle == 90:
                 return cv2.rotate(gray, cv2.ROTATE_90_CLOCKWISE), 90
             elif best_angle == 180:
